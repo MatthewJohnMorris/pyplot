@@ -34,3 +34,5 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+pyplot/__pycache__/pyplot.cpython-39.pyc
+*.pyc
