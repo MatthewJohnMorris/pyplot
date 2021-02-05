@@ -41,7 +41,6 @@ class CMYKConverters:
 
         raise Exception("Cannot convert RGB for this pen type")
 
-    @staticmethod
     def PigmaMicron(r, g, b):
 
         # Use with Sakura Pigma Micron coloured pens, here the colours to use are:
