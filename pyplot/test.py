@@ -385,16 +385,6 @@ def test_hearts(d):
     for c in range(0, 8):
         d.add_dot((44 + 12*c, 228), 5, xy_func=xy_heart, r_start = 5 * (c+1) / 8)
 
-def rotate_about(point, centre, a):
-
-    c = math.cos(a)
-    s = math.sin(a)
-    dx = point[0] - centre[0]
-    dy = point[1] - centre[1]
-    x = c * dx + s * dy
-    y = c * dy - s * dx
-    return (centre[0] + x, centre[1] + y)
-
 def add_checkboard(d, layerA, layerB, topleft, sqsize, sep):
 
     d.add_square((topleft[0] + 0*sep, topleft[1] + 0*sep), sqsize, container=layerA, stroke=svgwrite.rgb(0, 255, 0, '%'))
@@ -411,6 +401,8 @@ def add_checkboard(d, layerA, layerB, topleft, sqsize, sep):
 def valentine(d):
     pen_width = d.pen_type.pen_width
 
+    centre = (100,140)
+
     layer1 = d.add_layer('1-white')
     d.image_spiral_single(layer1, 'bear3.jpg', (100, 140), 20)
     
@@ -423,37 +415,22 @@ def valentine(d):
     
     layer3 = d.add_layer('3-red')
     points = d.make_dot((100, 110), 3, xy_func=xy_heart, r_start = 2)
-    for ih in range(0, 16):
-        a = 2 * math.pi * ih / 16
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(255, 0, 0, '%'), container=layer3)
+    d.add_rotated_polyline(points, centre, 16, stroke=svgwrite.rgb(255, 0, 0, '%'), container=layer3)
         
     points = d.make_dot((100, 79), 8, xy_func=xy_heart, r_start = 6)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(255, 0, 0, '%'), container=layer3)
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(255, 0, 0, '%'), container=layer3)
     
     layer4 = d.add_layer('4-blue')
     points = d.make_dot((100, 181), 1)
-    for ih in range(0, 32):
-        a = 2 * math.pi * ih / 32
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer4)
+    d.add_rotated_polyline(points, centre, 32, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer4)
     
     layer5 = d.add_layer('5-purple')
     points = d.make_dot((100, 181), 1)
-    for ih in range(0, 32):
-        a = 2 * math.pi * (ih + 0.5) / 32
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(255, 0, 255, '%'), container=layer5)
+    d.add_rotated_polyline(points, centre, 32, phase_add=0.5, stroke=svgwrite.rgb(255, 0, 255, '%'), container=layer5)
     
     layer6 = d.add_layer('6-silver')
     points = d.make_dot((100, 184), 1)
-    for ih in range(0, 64):
-        a = 2 * math.pi * (ih + 0.5) / 64
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(128, 128, 127, '%'), container=layer6)
+    d.add_rotated_polyline(points, centre, 64, phase_add=0.5, stroke=svgwrite.rgb(128, 128, 127, '%'), container=layer6)
 
     layer7 = d.add_layer('7-green')
     layer8 = d.add_layer('8-pink')
@@ -465,38 +442,19 @@ def valentine(d):
     layer9 = d.add_layer('9-blue')
     
     points = d.make_dot((120, 82), 5, r_start=4.25)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
     points = d.make_dot((80, 82), 5, r_start=4.25)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
     points = d.make_dot((120, 82), 1)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
     points = d.make_dot((80, 82), 1)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(0, 0, 255, '%'), container=layer9)
 
     layer10 = d.add_layer('10-purple')
     points = d.make_dot((120, 82), 3, r_start=2.25)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(255, 0, 255, '%'), container=layer10)
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(255, 0, 255, '%'), container=layer10)
     points = d.make_dot((80, 82), 3, r_start=2.25)
-    for ih in range(0, 4):
-        a = 2 * math.pi * ih / 4
-        rot_points = [rotate_about(x, (100,140), a) for x in points]
-        d.add_polyline(rot_points, stroke=svgwrite.rgb(255, 0, 255, '%'), container=layer10)
-
+    d.add_rotated_polyline(points, centre, 4, stroke=svgwrite.rgb(255, 0, 255, '%'), container=layer10)
             
     layer12 = d.add_layer('12-test')
     d.add_square((50, 90), 100, start_size=99, container=layer12, stroke=svgwrite.rgb(255, 255, 0, '%'))
@@ -515,8 +473,10 @@ def test_height(d):
         for y in range(20, 280, 40):
             d.add_dot((x, y), dotsize)
 
-# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+
+valentine(d)
 
 '''
 valentine(d)
