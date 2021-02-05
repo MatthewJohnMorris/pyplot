@@ -13,7 +13,7 @@ Usage
 
 You will need to have the following other packages installed 
 * noise (for perlin stuff)
-* pycairo (for text_wisth)
+* pycairo (for text_width)
 * opencv-python (for image reading and processing)
 * svgwrite (for anything at all)
 
