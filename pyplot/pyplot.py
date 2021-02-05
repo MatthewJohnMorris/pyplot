@@ -479,7 +479,63 @@ class StandardDrawing:
             stroke_rgb = [255, 255, 255]
             stroke_rgb[cmy_index] = 0
             self.image_spiral_single(layer, file, centre, scale, stroke=svgwrite.rgb(stroke_rgb[0], stroke_rgb[1], stroke_rgb[2], '%'), colour=True, cmy_index=cmy_index)
-  
+
+    def plot_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, container=None, stroke=None, fontsize=6):
+
+        points = []
+        points.append(centre)
+        r = 0.5 # initial radius
+        a = 0 # starting angle
+        c_size = self.pen_type.pen_width # constant distance travelled: something like the nib width is probably best
+        r_per_circle = fontsize
+        
+        i = 0
+        # Let the spiral get going before we start plotting
+        segments_to_next_letter = int(fontsize / c_size) + 1
+
+        # Burroughs quote
+        if text is None:
+            text = "In the City Market is the Meet Café. Followers of obsolete, unthinkable trades doodling in Etruscan, addicts of drugs not yet synthesized, pushers of souped-up harmine, junk reduced to pure habit offering precarious vegetable serenity, liquids to induce Latah, Tithonian longevity serums, black marketeers of World War III, excusers of telepathic sensitivity, osteopaths of the spirit, investigators of infractions denounced by bland paranoid chess players, servers of fragmentary warrants taken down in hebephrenic shorthand charging unspeakable mutilations of the spirit, bureaucrats of spectral departments, officials of unconstituted police states, a Lesbian dwarf who has perfected operation Bang-utot, the lung erection that strangles a sleeping enemy, sellers of orgone tanks and relaxing machines, brokers of exquisite dreams and memories..."
+
+        # draw until we've hit the desired size
+        j = 0
+        while r <= scale:
+        
+            # Archimedian spiral with constant length of path
+            a_inc = c_size / r
+            a += a_inc
+            r += r_per_circle * a_inc / (2 * math.pi)
+            
+            # output location
+            s = math.sin(a)
+            c = math.cos(a)
+            x = centre[0] + r * c
+            y = centre[1] + r * s
+            
+            i += 1
+            if i == segments_to_next_letter:
+                pos = j % len(text)
+                letter = text[pos]
+                j += 1
+                if j == len(text) and not repeat:
+                    return
+                # add_spiral_letter works in degrees rather than radians
+                degrees = a / (2*math.pi) * 360 + 90
+                family = 'CNC Vector' # good machine font
+                # family = 'CutlingsGeometric' # spaces too big!
+                # family = 'CutlingsGeometricRound' # spaces too big!
+                # family = 'HersheyScript1smooth' # good "handwriting" font
+                # family = 'Stymie Hairline' # a bit cutsey, but ok
+                r_use = r + radial_adjust
+                (w, h) = self.add_spiral_letter(letter, fontsize, centre, r_use, degrees, family=family, container=container, stroke=stroke)
+                
+                # FUDGE FACTOR TO SPREAD THINGS OUT A LITTLE, GIVEN ROTATION
+                fudge_factor = 1.2
+                
+                segments_to_next_letter = int(w * fudge_factor / c_size)
+                i = 0
+        
+      
     def fill_in_paths(self, path_gen_func):
 
         pen_width = self.pen_type.pen_width

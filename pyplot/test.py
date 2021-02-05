@@ -20,60 +20,6 @@ from noise import pnoise1, pnoise2
 
 from pyplot import CircleBlock, PenType, StandardDrawing
   
-def plot_spiral_text(drawing, centre, scale, radial_adjust=0, repeat=False, text=None, container=None, stroke=None):
-
-    points = []
-    points.append(centre)
-    r = 0.5 # initial radius
-    a = 0 # starting angle
-    r_per_circle = 6 # gap between spiral paths: 1 is tightest
-    c_size = 0.05 # constant distance travelled: something like the nib width is probably best
-    
-    i = 0
-    every = 5
-
-    if text is None:
-        text = "In the City Market is the Meet Café. Followers of obsolete, unthinkable trades doodling in Etruscan, addicts of drugs not yet synthesized, pushers of souped-up harmine, junk reduced to pure habit offering precarious vegetable serenity, liquids to induce Latah, Tithonian longevity serums, black marketeers of World War III, excusers of telepathic sensitivity, osteopaths of the spirit, investigators of infractions denounced by bland paranoid chess players, servers of fragmentary warrants taken down in hebephrenic shorthand charging unspeakable mutilations of the spirit, bureaucrats of spectral departments, officials of unconstituted police states, a Lesbian dwarf who has perfected operation Bang-utot, the lung erection that strangles a sleeping enemy, sellers of orgone tanks and relaxing machines, brokers of exquisite dreams and memories tested on the sensitized cells of junk sickness and bartered for raw materials of the will, doctors skilled in the treatment of diseases dormant in the black dust of ruined cities, gathering virulence in the white blood of eyeless worms feeling slowly to the surface and the human host, maladies of the ocean floor and the stratosphere, maladies of the laboratory and atomic war... A place where the unknown past and the emergent future meet in a vibrating soundless hum... Larval entities waiting for a Live One..."
-        text = "In the City Market is the Meet Café. Followers of obsolete, unthinkable trades doodling in Etruscan, addicts of drugs not yet synthesized, pushers of souped-up harmine, junk reduced to pure habit offering precarious vegetable serenity, liquids to induce Latah, Tithonian longevity serums, black marketeers of World War III, excusers of telepathic sensitivity, osteopaths of the spirit, investigators of infractions denounced by bland paranoid chess players, servers of fragmentary warrants taken down in hebephrenic shorthand charging unspeakable mutilations of the spirit, bureaucrats of spectral departments, officials of unconstituted police states, a Lesbian dwarf who has perfected operation Bang-utot, the lung erection that strangles a sleeping enemy, sellers of orgone tanks and relaxing machines, brokers of exquisite dreams and memories..."
-
-    # draw until we've hit the desired size
-    j = 0
-    while r <= scale:
-    
-        # Archimedian spiral with constant length of path
-        a_inc = c_size / r
-        a += a_inc
-        r += r_per_circle * a_inc / (2 * math.pi)
-        
-        # output location
-        s = math.sin(a)
-        c = math.cos(a)
-        x = centre[0] + r * c
-        y = centre[1] + r * s
-        
-        fontsize = 6
-        i += 1
-        if i == every:
-            pos = j % len(text)
-            letter = text[pos]
-            j += 1
-            if j == len(text) and not repeat:
-                return
-            degrees = a / (2*math.pi) * 360 + 90
-            # family = 'CNC Vector' # good machine font
-            # family = 'CutlingsGeometric' # spaces too big!
-            # family = 'CutlingsGeometricRound' # spaces too big!
-            # family = 'HersheyScript1smooth' # good "handwriting" font
-            # family = 'Stymie Hairline' # a bit cutsey, but ok
-            r_use = r + radial_adjust
-            (w, h) = drawing.add_spiral_letter(letter, fontsize, centre, r_use, degrees, family='CNC Vector', container=container, stroke=stroke) # 'CNC Vector') 'Stymie Hairline'
-            
-            # FUDGE FACTOR TO SPREAD THINGS OUT A LITTLE, GIVEN ROTATION
-            fudge_factor = 1.2
-            
-            every = int(w * fudge_factor / c_size)
-            i = 0
-    
 def draw_riley(drawing):    
     
     nslice = 40    
@@ -94,6 +40,7 @@ def draw_unknown_pleasures(drawing):
 
     min_y = {}
     data = []
+    # File from https://github.com/igorol/unknown_pleasures_plot/blob/master/pulsar.csv
     with open('pulsar.csv') as csvfile:
         reader = csv.reader(csvfile)
         reader = csv.reader(csvfile)
@@ -320,9 +267,9 @@ def text_smear(drawing):
     centre = (100,160)
     scale = 60
     text="testing, testing, one two three"
-    plot_spiral_text(d, centre, scale, text=text, container=drawing.add_layer('1'), stroke=svgwrite.rgb(255, 0, 255, '%'), radial_adjust=-0.8)
-    plot_spiral_text(d, centre, scale, text=text, container=drawing.add_layer('2'), stroke=svgwrite.rgb(255, 0, 0, '%'), radial_adjust=-0.4)
-    plot_spiral_text(d, centre, scale, text=text, container=drawing.add_layer('3'), stroke=svgwrite.rgb(255, 255, 255, '%'), radial_adjust=-0.0)
+    d.plot_spiral_text(centre, scale, text=text, container=drawing.add_layer('1'), stroke=svgwrite.rgb(255, 0, 255, '%'), radial_adjust=-0.8)
+    d.plot_spiral_text(centre, scale, text=text, container=drawing.add_layer('2'), stroke=svgwrite.rgb(255, 0, 0, '%'), radial_adjust=-0.4)
+    d.plot_spiral_text(centre, scale, text=text, container=drawing.add_layer('3'), stroke=svgwrite.rgb(255, 255, 255, '%'), radial_adjust=-0.0)
 
 def text_in_circle(drawing):
 
@@ -338,7 +285,13 @@ def burroughs_medal(d):
     # print("medal")
     d.image_spiral_single(d.add_layer('2'), 'burroughs.jpg', (100, 160), 25)
     text_in_circle(d)
-    
+   
+# Experimental. Can we get an even fill for large polygons?
+# Ideally we would go for some sort of hatching/rasterization and make this
+# fully generic. There is an issue with larger lines since the acceleration
+# of GRBL results in gapping for ink. 
+# One way out of this might be to have different speed limits for pen-up 
+# pen-down and get fourxidraw.py to send the appropriate GRBL codes.   
 def make_solid_poly(points, pen_width, inner_ratio=0):
     
     (cx, cy) = (0, 0)
@@ -562,17 +515,8 @@ def test_height(d):
         for y in range(20, 280, 40):
             d.add_dot((x, y), dotsize)
 
-d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-
-# test_height(d)
-# plot_surface(d)
-# burroughs_medal(d)
-valentine(d)
-# d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
-# plot_perlin_drape_spiral(d, 6)
-# plot_perlin_drape_spiral(d, 8)
-# draw_riley(d)
+# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
 '''
 valentine(d)
@@ -590,7 +534,7 @@ random_rects(d)
 plot_perlin_spirals(d)
 d.add_spiral((60, 60), 30)
 d.add_spiral((61.6666, 61.666), 30)
-plot_spiral_text(d, (100.75, 100.75), 60)
+d.plot_spiral_text((100.75, 100.75), 60)
 draw_riley(d)
 draw_unknown_pleasures(d)
 d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
