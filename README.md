@@ -24,7 +24,7 @@ See test.py for a wide range of examples.
 Single-Line Fonts
 -----------------
 
-Text-writing works best (IMO) with single-line fonts. These are tricky to find, with most of the pages I've found attempting to list them ending in broken links.
+Text-writing for plotter art works best (IMO) with single-line fonts. These are tricky to find, with most of the pages I've found attempting to list them ending in broken links.
 
 However as of Feb2021, some reasonable ones are:
 
@@ -33,3 +33,5 @@ However as of Feb2021, some reasonable ones are:
 * CutlingsGeometricRound: http://cutlings.wasbo.net/single-line-fonts-options/
 * HersheyScript1smooth: http://cutlings.wasbo.net/single-line-fonts-options/
 * Stymie Hairline: https://fieldsofhether.blogspot.com/2017/11/6-single-line-fonts-that-will-write.html?m=1 (this has many other fonts too)
+
+Note that to render these in a plot in Inkscape, you'll need to select everything and choose menu option "Path - Object To Path".
