@@ -607,3 +607,141 @@ class CircleBlock:
         path.append(outer_p)
         return path
 
+class ShapeFiller:
+
+    def __init__(self, shapes):
+        self.shapes = shapes
+        
+    def get_paths(self, row_width):
+        y_min = min([min([p[1] for p in shape]) for shape in self.shapes])
+        y_max = max([max([p[1] for p in shape]) for shape in self.shapes])
+        y = y_min
+        all_crossings = []
+        while y <= y_max:
+            all_crossings.append((y, self.get_crossings(y)))
+            y += row_width
+        n_scans = len(all_crossings)
+            
+        # sanity check
+        for crossings in all_crossings:
+            if len(crossings[1]) % 2 != 0:
+                raise Exception(f'y-value {crossings[0]} has odd number of crossings: {len(crossings[1])}')
+                
+        max_num_crossings = max([len(crossings[1]) for crossings in all_crossings])
+        num_paths = int(max_num_crossings / 2)
+        # print(f'num_paths={num_paths}')        
+        
+        paths = []
+        for ix_path in range(0, num_paths):
+            path_points = []
+            last_crossing_on_path = None
+            for ix_scan in range(0, n_scans):
+                crossings = all_crossings[ix_scan]
+                y_for_scan = crossings[0]
+                if len(crossings[1]) < 2 * (ix_path + 1):
+                    last_crossing_on_path = None
+                else:
+                    c_s = crossings[1][2 * ix_path]
+                    c_e = crossings[1][2 * ix_path + 1]
+                    if ix_scan == 0:
+                        path_points.append((c_s['x'], y_for_scan))
+                        path_points.append((c_e['x'], y_for_scan))
+                        last_crossing_on_path = c_e
+                    else:
+                        if last_crossing_on_path is None:
+                            if len(path_points) > 0:
+                                paths.append(path_points)
+                                path_points = []
+                            path_points.append((c_s['x'], y_for_scan))
+                            path_points.append((c_e['x'], y_for_scan))
+                            last_crossing_on_path = c_e
+                        else:
+                            prev_vertex_s = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_s']}"
+                            prev_vertex_e = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_e']}"
+                            new_s_vertex_s = f"{c_s['shape']}:{c_s['ix_s']}"
+                            new_s_vertex_e = f"{c_s['shape']}:{c_s['ix_e']}"
+                            new_e_vertex_s = f"{c_e['shape']}:{c_e['ix_s']}"
+                            new_e_vertex_e = f"{c_e['shape']}:{c_e['ix_e']}"
+                            
+                            # if s has anything in common with prev_vertex, do s, e on current
+                            if new_s_vertex_s in [prev_vertex_s, prev_vertex_e] or new_s_vertex_e in [prev_vertex_s, prev_vertex_e]:
+                                path_points.append((c_s['x'], y_for_scan))
+                                path_points.append((c_e['x'], y_for_scan))
+                                last_crossing_on_path = c_e
+                            # if e has anything in common with prev_vertex, do e, s on current
+                            elif new_e_vertex_s in [prev_vertex_s, prev_vertex_e] or new_e_vertex_e in [prev_vertex_s, prev_vertex_e]:
+                                path_points.append((c_e['x'], y_for_scan))
+                                path_points.append((c_s['x'], y_for_scan))
+                                last_crossing_on_path = c_s
+                            # else start a NEW path
+                            else:
+                                if len(path_points) > 0:
+                                    paths.append(path_points)
+                                    path_points = []
+                                path_points.append((c_s['x'], y_for_scan))
+                                path_points.append((c_e['x'], y_for_scan))
+                                last_crossing_on_path = c_e
+
+            paths.append(path_points)
+
+        # append closed loop for each shape
+        for shape in self.shapes:
+            a = [s for s in shape]
+            a.append(a[0])
+            paths.append(a)
+            
+        return paths
+
+    @staticmethod
+    def are_we_passing_through_scan_line(shape, hits, ix_shape, ix_s, ix_e):
+        if len(hits) == 0:
+            return False
+        if hits[-1]['shape'] != ix_shape or hits[-1]['ix_e'] != ix_s:
+            return False
+        yPrev = shape[hits[-1]['ix_s']][1]
+        y = shape[ix_s][1]
+        yNext = shape[ix_e][1]
+        return (yPrev > y and yNext < y) or (yPrev < y and yNext > y)
+        
+    def get_crossings(self, y):
+        hits = []
+        for ix_shape in range(0, len(self.shapes)):
+            shape = self.shapes[ix_shape]
+            n_points = len(shape)
+            for ix_s in range(0, n_points):
+                ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
+                p_s = shape[ix_s]
+                p_e = shape[ix_e]
+                y_s = p_s[1]
+                y_e = p_e[1]
+                # print(f"shape:{ix_shape},ix_s:{ix_s}: ({p_s[0]},{p_s[1]})->({p_e[0]},{p_e[1]})")
+                if y_e == y and y_s == y:
+                    # do nothing
+                    hits = hits
+                elif y_e == y:
+                    hits.append({ 'x': p_e[0], 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
+                elif y_s == y:
+                    # Bit of subtlety here. If we're starting on y then the previous segment (ignoring all segments along y)
+                    # ended on y. If this segment and the previous segment have the non-y ends both above y or both below y-value
+                    # then we should add an extra crossing point. But if the non-y ends are different sides of the y-line we
+                    # are passing through and should not count this as a crossing.
+                    ix_before_s = ix_s
+                    while shape[ix_before_s][1] == y:
+                        ix_before_s = n_points - 1 if ix_before_s == 0 else ix_before_s - 1
+                    y_prev = shape[ix_before_s][1]
+                    sign_prev = -1 if y_prev < y else +1
+                    sign_next = -1 if y_e < y else +1
+                    if sign_prev == sign_next:
+                        hits.append({ 'x': p_s[0], 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
+                elif (y_s < y and y_e > y) or (y_s > y and y_e < y):
+                    x_s = p_s[0]
+                    x_e = p_e[0]
+                    x = x_s + (x_e - x_s) * (y - y_s) / (y_e - y_s)
+                    hits.append({ 'x': x, 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
+                        
+        # sort by x-value
+        hits = sorted(hits, key=lambda hit: hit['x'])
+        
+        return hits
+    
+

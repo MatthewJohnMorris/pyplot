@@ -18,7 +18,7 @@ import math
 
 from noise import pnoise1, pnoise2
 
-from pyplot import CircleBlock, PenType, StandardDrawing
+from pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
   
 def draw_riley(drawing):    
     
@@ -212,9 +212,14 @@ def draw_letter(dwg, letter, position, fontsize, angle=0, family='Arial'):
     (width2, foo) = StandardDrawing.text_bound(f"x{letter}x", fontsize, family)
     width = width2 - 2 * width1
     
-    return (x + width, y)
+    # these choices reproduce the result of plotting a string - but why the need for a weight?
+    # return (x + width * 0.81, y) # CNC Vector
+    # return (x + width * 0.852, y) # CutlingsGeometric
+    # return (x + width * 0.852, y) # CutlingsGeometricRound
+    # return (x + width * 1.03, y) # HersheyScript1smooth
+    return (x + width * 0.94, y) # Stymie Hairline
     
-def draw_text_by_letter(drawing, family='Arial'):
+def draw_text_by_letter(drawing, family='Arial', s=None):
        
     fontsize = 10
     
@@ -222,20 +227,16 @@ def draw_text_by_letter(drawing, family='Arial'):
     # family = 'CutlingsGeometric' # spaces too big!
     # family = 'CutlingsGeometricRound' # spaces too big!
     # family = 'HersheyScript1smooth' # good "handwriting" font
-    family = 'Stymie Hairline' # a bit cutsey, but ok
+    # family = 'Stymie Hairline' # a bit cutsey, but ok
     
-    ys = 40
-    s = "all work and no play makes Jack a dull boy"
+    ys = 80
+    s = "all work and no play makes Jack a dull boy" if s is None else s
     (x, y) = (20, ys)
     for c in s:
         (x, y) = draw_letter(drawing.dwg, c, (x, y), fontsize, family=family)
             
     g = drawing.dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
     g.add(drawing.dwg.text(s, insert=(20, ys+20)))
-    drawing.dwg.add(g)
-            
-    g = drawing.dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
-    g.add(drawing.dwg.text("Jack ack Jack ack", insert=(20, ys+40)))
     drawing.dwg.add(g)
 
 def r_z_func(norm_coord, seed):
@@ -285,6 +286,50 @@ def burroughs_medal(d):
     # print("medal")
     d.image_spiral_single(d.add_layer('2'), 'burroughs.jpg', (100, 160), 25)
     text_in_circle(d)
+   
+# Fills for arbitrary polygons.
+
+# Start with convex. You have a bunch of vertexes: v0, ..., vn
+# So you have edges [v0, v1], ..., [vn, v0]
+# WLOG rasterise on the y axis.
+# Start with min(v0.y, ..., vn.y)
+# figure out crossings - there should be one exactly
+# First point is there
+# Then increment y to (say) y + width/2 - keep that constant
+# Now check intersections. There should be at most 2 lines
+# So you have a min-x and max-x_max
+# Rinse and repeat until you're at the top_left
+
+def make_solid_poly2(d, points, pen_width):
+
+    # Get lowest-y point
+    points = []
+    min_y_point = points[0]
+    for point in points[1:]:
+        if point[1] < min_y_point[1]:
+            min_y_point = point
+
+    points.append(point)
+    
+    y = min_y_point[1]
+    
+    while(true):
+        crossings = calc_crossings(y, points)
+        if len(crossings) == 0:
+            break
+        if len(crossings) > 2:
+            raise Exception(f"oh god, no! wrong number of crossings: {len(crossings)}")
+        points.append(crossings)
+        
+        y += d.pen_type.pen_width / 2
+
+def calc_crossings(point, points):
+    return None
+
+# Next stop is stars etc
+# Keep track of which veritices you're between
+# When you change veritices, if you're decreasing y then law off for now
+# The furthest current x-c
    
 # Experimental. Can we get an even fill for large polygons?
 # Ideally we would go for some sort of hatching/rasterization and make this
@@ -473,10 +518,19 @@ def test_height(d):
         for y in range(20, 280, 40):
             d.add_dot((x, y), dotsize)
 
-d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-valentine(d)
+yd = -15
+points = [[(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)], [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)], [(55, 150+yd), (60, 155+yd), (55, 160+yd), (50, 155+yd)],]
+sf = ShapeFiller(points)
+
+# print(sf.get_crossings(100))
+
+for path in sf.get_paths(d.pen_type.pen_width / 2):
+    d.add_polyline(path)
+    
+    
 
 '''
 valentine(d)
