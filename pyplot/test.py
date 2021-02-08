@@ -550,6 +550,9 @@ for i in range(0, 8):
 # Looks like we have a jump between the effective areas between scan lines
 # A line is being drawn because there's a vertex in common
 # So the question might be framed as how we can stop this kind of common vertex causing problems with disconnected areas
+
+# IDEA 1: if both vertexes not in common, check that common vertex has y-value in between the other two (so we aren't looking over a corner)
+# IDEA 2: if scan for this line of path is disjoint with prev scan for path, don't try to join up
 star = []    
 n = 5
 for i in range(0, 2 * n):
