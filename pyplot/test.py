@@ -547,6 +547,9 @@ for i in range(0, 8):
 '''
 
 # This shows an artefact - what's up here?
+# Looks like we have a jump between the effective areas between scan lines
+# A line is being drawn because there's a vertex in common
+# So the question might be framed as how we can stop this kind of common vertex causing problems with disconnected areas
 star = []    
 n = 5
 for i in range(0, 2 * n):
@@ -561,7 +564,8 @@ points.append(d.make_circle((100, 150), 22, int(24*2*math.pi*2)))
 points.append(d.make_circle((100, 150), 36, int(24*2*math.pi*2)))
 points.append(d.make_circle((100, 150), 40, int(24*2*math.pi*2)))
 sf = ShapeFiller(points)
-for path in sf.get_paths(d.pen_type.pen_width / 5):
+# for path in sf.get_paths(d.pen_type.pen_width / 5):
+for path in sf.get_paths(3):
     d.add_polyline(path)
 
 '''
