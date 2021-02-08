@@ -613,6 +613,8 @@ class ShapeFiller:
         self.shapes = shapes
         
     def get_paths(self, row_width):
+    
+        # scan all y-lines in range and get the crossing points
         y_min = min([min([p[1] for p in shape]) for shape in self.shapes])
         y_max = max([max([p[1] for p in shape]) for shape in self.shapes])
         y = y_min
@@ -622,11 +624,12 @@ class ShapeFiller:
             y += row_width
         n_scans = len(all_crossings)
             
-        # sanity check
+        # sanity check - we should never have an odd number of crossings for any scan line
         for crossings in all_crossings:
             if len(crossings[1]) % 2 != 0:
                 raise Exception(f'y-value {crossings[0]} has odd number of crossings: {len(crossings[1])}')
-                
+
+        # each pair of crossings is something that we want to plot
         max_num_crossings = max([len(crossings[1]) for crossings in all_crossings])
         num_paths = int(max_num_crossings / 2)
         # print(f'num_paths={num_paths}')        
@@ -638,49 +641,64 @@ class ShapeFiller:
             for ix_scan in range(0, n_scans):
                 crossings = all_crossings[ix_scan]
                 y_for_scan = crossings[0]
+                
+                # If there's nothing for path #ix_path on this scan line, then mark that fact and continue
                 if len(crossings[1]) < 2 * (ix_path + 1):
                     last_crossing_on_path = None
+                    continue
+
+                # Get the start and end of our crossing segment
+                c_s = crossings[1][2 * ix_path]
+                c_e = crossings[1][2 * ix_path + 1]
+                
+                # We are at the bottom scan line - we know there's no previous plotting to worry about
+                if ix_scan == 0:
+                    path_points.append((c_s['x'], y_for_scan))
+                    path_points.append((c_e['x'], y_for_scan))
+                    last_crossing_on_path = c_e
+                    continue
+                    
+                # We didn't have any crossing on the previous scan line - flush any current path and start a new one
+                if last_crossing_on_path is None:
+                    if len(path_points) > 0:
+                        paths.append(path_points)
+                        path_points = []
+                    path_points.append((c_s['x'], y_for_scan))
+                    path_points.append((c_e['x'], y_for_scan))
+                    last_crossing_on_path = c_e
+                    continue
+                    
+                # We had a crossing on the previous scan line. Try to pick this up, zigzagging our way up the scan lines.
+                # We know what shape edge the presious scan line ended at - if either end of our new line has a vertex
+                # in common with that, then do that end first, and the other end second. Record which order we did things 
+                # in, so the next scan line knows what shape edge we ended at.
+                prev_vertex_s = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_s']}"
+                prev_vertex_e = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_e']}"
+                prev_edge = [prev_vertex_s, prev_vertex_e]
+                
+                new_s_vertex_s = f"{c_s['shape']}:{c_s['ix_s']}"
+                new_s_vertex_e = f"{c_s['shape']}:{c_s['ix_e']}"
+                new_e_vertex_s = f"{c_e['shape']}:{c_e['ix_s']}"
+                new_e_vertex_e = f"{c_e['shape']}:{c_e['ix_e']}"
+                
+                # if s has anything in common with prev_vertex, do s, e on current
+                if new_s_vertex_s in prev_edge or new_s_vertex_e in prev_edge:
+                    path_points.append((c_s['x'], y_for_scan))
+                    path_points.append((c_e['x'], y_for_scan))
+                    last_crossing_on_path = c_e
+                # if e has anything in common with prev_vertex, do e, s on current
+                elif new_e_vertex_s in prev_edge or new_e_vertex_e in prev_edge:
+                    path_points.append((c_e['x'], y_for_scan))
+                    path_points.append((c_s['x'], y_for_scan))
+                    last_crossing_on_path = c_s
+                # damn - no zigzagging for us: start a new path
                 else:
-                    c_s = crossings[1][2 * ix_path]
-                    c_e = crossings[1][2 * ix_path + 1]
-                    if ix_scan == 0:
-                        path_points.append((c_s['x'], y_for_scan))
-                        path_points.append((c_e['x'], y_for_scan))
-                        last_crossing_on_path = c_e
-                    else:
-                        if last_crossing_on_path is None:
-                            if len(path_points) > 0:
-                                paths.append(path_points)
-                                path_points = []
-                            path_points.append((c_s['x'], y_for_scan))
-                            path_points.append((c_e['x'], y_for_scan))
-                            last_crossing_on_path = c_e
-                        else:
-                            prev_vertex_s = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_s']}"
-                            prev_vertex_e = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_e']}"
-                            new_s_vertex_s = f"{c_s['shape']}:{c_s['ix_s']}"
-                            new_s_vertex_e = f"{c_s['shape']}:{c_s['ix_e']}"
-                            new_e_vertex_s = f"{c_e['shape']}:{c_e['ix_s']}"
-                            new_e_vertex_e = f"{c_e['shape']}:{c_e['ix_e']}"
-                            
-                            # if s has anything in common with prev_vertex, do s, e on current
-                            if new_s_vertex_s in [prev_vertex_s, prev_vertex_e] or new_s_vertex_e in [prev_vertex_s, prev_vertex_e]:
-                                path_points.append((c_s['x'], y_for_scan))
-                                path_points.append((c_e['x'], y_for_scan))
-                                last_crossing_on_path = c_e
-                            # if e has anything in common with prev_vertex, do e, s on current
-                            elif new_e_vertex_s in [prev_vertex_s, prev_vertex_e] or new_e_vertex_e in [prev_vertex_s, prev_vertex_e]:
-                                path_points.append((c_e['x'], y_for_scan))
-                                path_points.append((c_s['x'], y_for_scan))
-                                last_crossing_on_path = c_s
-                            # else start a NEW path
-                            else:
-                                if len(path_points) > 0:
-                                    paths.append(path_points)
-                                    path_points = []
-                                path_points.append((c_s['x'], y_for_scan))
-                                path_points.append((c_e['x'], y_for_scan))
-                                last_crossing_on_path = c_e
+                    if len(path_points) > 0:
+                        paths.append(path_points)
+                        path_points = []
+                    path_points.append((c_s['x'], y_for_scan))
+                    path_points.append((c_e['x'], y_for_scan))
+                    last_crossing_on_path = c_e
 
             paths.append(path_points)
 
@@ -691,17 +709,6 @@ class ShapeFiller:
             paths.append(a)
             
         return paths
-
-    @staticmethod
-    def are_we_passing_through_scan_line(shape, hits, ix_shape, ix_s, ix_e):
-        if len(hits) == 0:
-            return False
-        if hits[-1]['shape'] != ix_shape or hits[-1]['ix_e'] != ix_s:
-            return False
-        yPrev = shape[hits[-1]['ix_s']][1]
-        y = shape[ix_s][1]
-        yNext = shape[ix_e][1]
-        return (yPrev > y and yNext < y) or (yPrev < y and yNext > y)
         
     def get_crossings(self, y):
         hits = []
@@ -716,15 +723,24 @@ class ShapeFiller:
                 y_e = p_e[1]
                 # print(f"shape:{ix_shape},ix_s:{ix_s}: ({p_s[0]},{p_s[1]})->({p_e[0]},{p_e[1]})")
                 if y_e == y and y_s == y:
-                    # do nothing
+                    # We are wholly along the y-line - we ignore segments like this
                     hits = hits
                 elif y_e == y:
+                    # We are starting at the y-line - we always include a crossing in this case
                     hits.append({ 'x': p_e[0], 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
                 elif y_s == y:
-                    # Bit of subtlety here. If we're starting on y then the previous segment (ignoring all segments along y)
-                    # ended on y. If this segment and the previous segment have the non-y ends both above y or both below y-value
-                    # then we should add an extra crossing point. But if the non-y ends are different sides of the y-line we
-                    # are passing through and should not count this as a crossing.
+                    # We are ENDING at the y-line - here we need to be careful.
+                    # 
+                    # We may be crossing the y-line, or rebounding at it (a "corner"). If we are crossing then we 
+                    # don't want to add a crossing record here as there will already be one for the case of the
+                    # next segment starting at the y-line. Wo we need to figure out whether we're crossing the y-line,
+                    # or forming a corner at it.
+                    # 
+                    # We look for the previous segment of the shape (ignoring all segments that are wholly along y) that started on y.
+                    # There has to be one that is distinct from this segment as we know that this segment can't start at y, so if 
+                    # nowhere else we will loop round and hit the segment after this one. We then see whether the y-line is being
+                    # approached from the same direction both before and after it is hit: if so, then it's a corner (and we DO want
+                    # to add this segment, else it's a crossing (and we DON'T want to add this segment).
                     ix_before_s = ix_s
                     while shape[ix_before_s][1] == y:
                         ix_before_s = n_points - 1 if ix_before_s == 0 else ix_before_s - 1
@@ -734,12 +750,17 @@ class ShapeFiller:
                     if sign_prev == sign_next:
                         hits.append({ 'x': p_s[0], 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
                 elif (y_s < y and y_e > y) or (y_s > y and y_e < y):
+                    # We are crossing the y-line - these segments always get added as a crossing point
                     x_s = p_s[0]
                     x_e = p_e[0]
                     x = x_s + (x_e - x_s) * (y - y_s) / (y_e - y_s)
                     hits.append({ 'x': x, 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
                         
-        # sort by x-value
+        # sort by x-value - if there's some structure to paths this may help us get maximal connected segments
+        # although it loses when we have a lot of disparate regions.
+        # ideally we would enumerate connected regions and attempt to group together hits in those
+        # problem there being how to deal with bifurcations/joinings
+        # but I imagine that there is no brilliant generic solution here - at some point the rasterisation approach will end up dominating, given sufficiently pathological choices
         hits = sorted(hits, key=lambda hit: hit['x'])
         
         return hits

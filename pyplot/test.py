@@ -521,16 +521,48 @@ def test_height(d):
 # d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-yd = -15
-points = [[(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)], [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)], [(55, 150+yd), (60, 155+yd), (55, 160+yd), (50, 155+yd)],]
+'''
+yd = -45
+points = [
+    [(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)],
+    [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)],
+    [(55, 150+yd), (60, 155+yd), (55, 160+yd), (50, 155+yd)],
+    [(50, 150+yd), (55, 150+yd), (55, 155+yd), (50, 155+yd)],
+    [(55, 155+yd), (60, 155+yd), (60, 160+yd), (55, 160+yd)],
+    [(50, 150+yd), (50, 160+yd), (60, 150+yd)],
+    [(50, 150+yd), (50, 160+yd), (60, 160+yd)],
+    ]
+'''
+
+'''
+points = []
+points.append(d.make_circle((100, 100), 12, int(24*2*math.pi*2)))
+points.append(d.make_circle((100, 100), 9, int(20*2*math.pi*2)))
+points.append(d.make_circle((100, 100), 6, int(24*2*math.pi*2)))
+points.append(d.make_circle((100, 100), 4, int(24*2*math.pi*2)))
+for i in range(0, 8):
+    a = 2 * math.pi * i / 8
+    c = d.get_circle_point((100,100), 9, a)
+    points.append(d.make_circle(c, 2.8, int(1.5*2*math.pi*2)))
+'''
+
+# This shows an artefact - what's up here?
+star = []    
+n = 5
+for i in range(0, 2 * n):
+    a = 2 * math.pi * i / (2*n)
+    r = 16 + 24 * (i % 2)
+    c = d.get_circle_point((100,150), r, a)
+    star.append(c)
+points = [star]
+# points = []
+points.append(d.make_circle((100, 150), 18, int(24*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 22, int(24*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 36, int(24*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 40, int(24*2*math.pi*2)))
 sf = ShapeFiller(points)
-
-# print(sf.get_crossings(100))
-
-for path in sf.get_paths(d.pen_type.pen_width / 2):
+for path in sf.get_paths(d.pen_type.pen_width / 5):
     d.add_polyline(path)
-    
-    
 
 '''
 valentine(d)
