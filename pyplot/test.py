@@ -526,6 +526,14 @@ yd = -45
 points = [
     [(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)],
     [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)],
+    ]
+    '''
+    
+'''
+yd = -45
+points = [
+    [(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)],
+    [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)],
     [(55, 150+yd), (60, 155+yd), (55, 160+yd), (50, 155+yd)],
     [(50, 150+yd), (55, 150+yd), (55, 155+yd), (50, 155+yd)],
     [(55, 155+yd), (60, 155+yd), (60, 160+yd), (55, 160+yd)],
@@ -557,18 +565,20 @@ star = []
 n = 5
 for i in range(0, 2 * n):
     a = 2 * math.pi * i / (2*n)
-    r = 16 + 24 * (i % 2)
+    r = 7 + 13 * (i % 2)
     c = d.get_circle_point((100,150), r, a)
     star.append(c)
 points = [star]
 # points = []
-points.append(d.make_circle((100, 150), 18, int(24*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 22, int(24*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 36, int(24*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 40, int(24*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 7, int(5*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 9, int(9*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 11, int(11*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 18, int(18*2*math.pi*2)))
+points.append(d.make_circle((100, 150), 20, int(20*2*math.pi*2)))
+
 sf = ShapeFiller(points)
-# for path in sf.get_paths(d.pen_type.pen_width / 5):
-for path in sf.get_paths(3):
+for path in sf.get_paths(d.pen_type.pen_width / 5):
+# for path in sf.get_paths(3):
     d.add_polyline(path)
 
 '''

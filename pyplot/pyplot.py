@@ -612,7 +612,9 @@ class ShapeFiller:
     def __init__(self, shapes):
         self.shapes = shapes
         
-    def get_paths(self, row_width):
+    # straightforward, but prone to end up with lots of disconnected sections
+    # also can glitch if we are sharing a vertex that's a "corner" (surrounding y both above or both below)
+    def get_paths_simple(self, row_width):
     
         # scan all y-lines in range and get the crossing points
         y_min = min([min([p[1] for p in shape]) for shape in self.shapes])
@@ -706,10 +708,231 @@ class ShapeFiller:
         for shape in self.shapes:
             a = [s for s in shape]
             a.append(a[0])
-            paths.append(a)
+            # paths.append(a)
             
         return paths
+
+    # "Clever" plotting of crossings
+    # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
+    # Could try to reorder to get optimal TSP type path between sections but won't really make much difference to time
+    def get_paths(self, row_width):
+    
+        # scan all y-lines in range and get the crossing points
+        y_min = min([min([p[1] for p in shape]) for shape in self.shapes])
+        y_max = max([max([p[1] for p in shape]) for shape in self.shapes])
+        y = y_min
+        all_crossings = []
+        while y <= y_max:
+            all_crossings.append((y, self.get_crossings(y)))
+            y += row_width
+        n_scans = len(all_crossings)
+            
+        # sanity check - we should never have an odd number of crossings for any scan line
+        for crossings in all_crossings:
+            if len(crossings[1]) % 2 != 0:
+                raise Exception(f'y-value {crossings[0]} has odd number of crossings: {len(crossings[1])}')
+
+        # each pair of crossings is a line at our current y-level
+        # how many connected sections can we keep on the go at once - this is the maximum number
+        # of separate plotted regions for any scan line
+        max_num_crossings = max([len(crossings[1]) for crossings in all_crossings])
+        num_paths = int(max_num_crossings / 2)
+        # print(f'num_paths={num_paths}')        
+
+        # these are the points we will actually plot
+        # it's a list of polylines
+        all_paths = []
+ 
+        path_states = [{'path': [], 'c_prev': None, 'connected': False} for i in range(0, num_paths)]
         
+        # Take one scan line at a time, trying to connect up as many regions to the prevous scan line
+        # as possible at each step.
+        for ix_scan in range(0, n_scans):
+
+            # This scan line's crossings
+            crossings = all_crossings[ix_scan]
+            y_for_scan = crossings[0]
+
+            # print(f'crossings: {len(crossings[1])}')
+            # print(f'crossings: {crossings[1]}')
+
+            # To start with, no paths have been connected
+            for ix_path in range(0, num_paths):
+                path_states[ix_path]['connected'] = False
+
+            # For each path in this scan line, try to hook up with the previous scan line
+            for ix_path in range(0, num_paths):
+            
+                # Skip if we don't have anything in this section for this scan line
+                if len(crossings[1]) < 2 * (ix_path + 1):
+                    continue
+
+                # Get the start and end of our crossing segment
+                # Each crossing has x, ix_shape and indexes into the shape ix_s, ix_e
+                c_s = crossings[1][2 * ix_path]
+                c_e = crossings[1][2 * ix_path + 1]
+                
+                # Try to hook up with a preceding, unconnected path
+                # If we can hook up, then we "claim" that path, swapping it into our index and marking it as connected
+                # and appending our path to it
+                for ix_prev_path in range(0, num_paths):
+                    prev_path_state = path_states[ix_prev_path]
+                    # This path is already connected so is not available for further connections at this scan line
+                    if prev_path_state['connected']:
+                        continue
+                    # This path didn't have anything in the previous scan line so we can't connect to it
+                    if prev_path_state['c_prev'] == None:
+                        continue
+                    # Try to connect to the previous scan line - can we reach either of our two crossing points by
+                    # going around the shape that the previous line ended on, without y decreasing?
+                    c_prev = prev_path_state['c_prev']
+                    connection = ""
+                    if self.is_on_continuation_of(c_s, c_prev):
+                        # We can reach c_s by continuing around the shape from c_prev
+                        connection = "s"
+                    elif self.is_on_continuation_of(c_e, c_prev):
+                        # We can reach c_e by continuing around the shape from c_prev
+                        connection = "e"
+                    # Successful connection
+                    if connection != "":
+                        # swap the section we've connected to, to move it over to our index
+                        tmp = path_states[ix_path]
+                        path_states[ix_path] = path_states[ix_prev_path]
+                        path_states[ix_prev_path] = tmp
+                        path_state = path_states[ix_path]
+                        # mark as connected - this means another section won't be able to hook up
+                        # I *think* that it's not possible to get mutiple hookups but am not 100% sure of this
+                        # if it is impossible, perhaps we should instead throw an exception on multiple connections
+                        path_state['connected'] = True
+                        # add points in correct order - connected point first so we zigzag nicely
+                        p_start = c_s if connection == "s" else c_e
+                        p_end = c_e if connection == "s" else c_s
+                        path_points = path_state['path']
+                        path_points.append((p_start['x'], y_for_scan))
+                        path_points.append((p_end['x'], y_for_scan))
+                        # keep track of which pointt we ended with for this scan line and section
+                        path_state['c_prev'] = p_end
+                        # we've found a connection so no need to look at other sections for previous scan line
+                        break
+
+            # for ix_path in range(0, num_paths):
+            #     path_state = path_states[ix_path]
+            #     print(f'path[{ix_path}]: connected={path_state["connected"]}')
+
+            # Deal with unconnected paths - here we want to flush anything not yet written
+            # and start again (if there is anything on this scan line to start with)
+            for ix_path in range(0, num_paths):
+
+                # Skip if connected
+                path_state = path_states[ix_path]
+                if path_state['connected']:
+                    continue
+
+                # Flush any existing set
+                if len(path_state['path']) > 0:
+                    # print(f'path[{ix_path}]: flushing path {path_state["path"]}')
+                    all_paths.append([x for x in path_state['path']])
+                    path_state['path'] = []
+
+                # If there's nothing for path #ix_path on this scan line, then mark that fact and continue
+                if len(crossings[1]) < 2 * (ix_path + 1):
+                    path_state['c_prev'] = None
+                    continue
+                    
+                # Otherwise add points
+                # print(f'path[{ix_path}]: starting new path')
+                c_s = crossings[1][2 * ix_path]
+                c_e = crossings[1][2 * ix_path + 1]
+                path_state['path'].append((c_s['x'], y_for_scan))
+                path_state['path'].append((c_e['x'], y_for_scan))
+                path_state['c_prev'] = c_e
+
+        # Flush all remaining sets (ongoing connected sections)
+        for ix_path in range(0, num_paths):
+            path_state = path_states[ix_path]
+            if len(path_state['path']) > 0:
+                all_paths.append(path_state['path'])
+
+        # append closed loop for each shape = tidies things up at the boundaries
+        for shape in self.shapes:
+            a = [s for s in shape]
+            a.append(a[0])
+            all_paths.append(a)
+            
+        return all_paths
+        
+    def is_on_continuation_of(self, c, c_prev):
+        # "Can we reach c by continuing around the shape c_prev is on, without decreaing our y-value?"
+        # 
+        # Each crossing has x, shape, ix_s, ix_e
+        # shape = index of shape : shape[shape][ix_vertex] is then [0, 1] for x, y
+        # ix_s = vertex at one end of shape edge being crossed
+        # ix_e = vertex at other end of shape edge being crossed
+        # We traverse the shape starting at c_prev in non-decreating y-direction. If we hit c then there's a match
+        
+        # Must be the same shape!
+        if c['shape'] != c_prev['shape']:
+            return False
+          
+        # What we are trying to find
+        curr_edge = [c['ix_s'], c['ix_e']]
+        ix_shape = c_prev['shape']
+        shape = self.shapes[ix_shape]
+        # print(f"Searching for {curr_edge}: {shape[curr_edge[0]]}->{shape[curr_edge[1]]}")
+
+        # Where we're starting from
+        prev_ix1 = c_prev['ix_s']
+        prev_ix2 = c_prev['ix_e']
+        # print(f"Previous is {[prev_ix1, prev_ix2]}: {shape[prev_ix1]}->{shape[prev_ix2]}")
+        if prev_ix1 in curr_edge and prev_ix2 in curr_edge:
+            # print("Search: on same edge")
+            return True
+        
+        # Figure out which direction to start looking in - need y to be increasing. Note that y cannot
+        # be the same on both ends because we don't do crossings for such edges in get_crossings()
+        prev_p1 = shape[prev_ix1]
+        prev_p2 = shape[prev_ix2]
+        y1 = prev_p1[1]
+        y2 = prev_p2[1]
+        if y1 == y2:
+            raise Exception(f"We should not have a constant-Y edge with a crossing. ix_shape={ix_shape}, c_prev={prev_p1},{prev_pw})")
+        inc = -1 if y1 > y2 else +1
+        ix_start = prev_ix1 if y1 > y2 else prev_ix2
+
+        # Search around the shape. We should terminate before we get back to the start, since y has to start
+        # coming back down at some point.
+        ix = ix_start
+        y_curr = max(y1, y2)
+        while True:
+            ix_next = (ix + inc) % len(shape)
+            # print(f"Search: {[ix, ix_next]} {shape[ix]}->{shape[ix_next]}")
+            if ix_next == ix_start:
+                raise Exception(f"We have gone all around a shape, which should be impossible. ix_shape={ix_shape}, c_prev={prev_p1},{prev_pw})")
+            y_next = shape[ix_next][1]
+            # y has started decreasing - give up
+            if y_next < y_curr:
+                # print("Search: not found")
+                return False
+            # we have reached our edge
+            if ix in curr_edge and ix_next in curr_edge:
+                # print("Search: found")
+                return True
+            # keep looking
+            y_curr = y_next
+            ix = ix_next
+
+    # For a given y-value, get all the crossings with all shapes. There should be an even number of such crossings as we assume
+    # the shapes are polygons. 
+    # 
+    # There is some subtlety involved in deciding what a crossing actually is:
+    # * edges with a constant y-value don't yield crossings, only ones where y is changing along the line
+    # * if an edge is a "true" crossing, e.g. the point of crossing isn't at one end or the other, we always include it
+    # * if an edge crosses at the start, we always include it
+    # * if an edge crosses at the end, we only include it if the y-value is a peak or a trough at the crossing point
+    # 
+    # So if we have y at 50, and vectices A=(10, 40), B=(20, 50), C=(30, 40) there is a crossing for AB and for AC
+    # But if we have y at 50, and vectices A=(10, 40), B=(20, 50), C=(30, 60) there is only a crossing for BC, we don't count AC
+    # And if we have y at 50, and vectices A=(10, 50), B=(20, 50), C=(30, 50) there no crossiung for either, since both segments are constant in Y
     def get_crossings(self, y):
         hits = []
         for ix_shape in range(0, len(self.shapes)):
@@ -722,6 +945,8 @@ class ShapeFiller:
                 y_s = p_s[1]
                 y_e = p_e[1]
                 # print(f"shape:{ix_shape},ix_s:{ix_s}: ({p_s[0]},{p_s[1]})->({p_e[0]},{p_e[1]})")
+                
+                # We want to be a bit careful about *what* crossings we add!
                 if y_e == y and y_s == y:
                     # We are wholly along the y-line - we ignore segments like this
                     hits = hits
@@ -756,13 +981,18 @@ class ShapeFiller:
                     x = x_s + (x_e - x_s) * (y - y_s) / (y_e - y_s)
                     hits.append({ 'x': x, 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
                         
-        # sort by x-value - if there's some structure to paths this may help us get maximal connected segments
-        # although it loses when we have a lot of disparate regions.
-        # ideally we would enumerate connected regions and attempt to group together hits in those
-        # problem there being how to deal with bifurcations/joinings
-        # but I imagine that there is no brilliant generic solution here - at some point the rasterisation approach will end up dominating, given sufficiently pathological choices
+        # sort by x-value - this helps when we are using a naive strategy for plotting
+        # doubt if it makes any real difference for the more intelligent connection strategy we are now using by dfault.
         hits = sorted(hits, key=lambda hit: hit['x'])
         
         return hits
     
+class EdgeHit:
+
+    def __init__(self, x, ix_shape, ix_s, ix_e):
+        self.x = x
+        self.ix_shape
+        self.ix_s = ix_s
+        self.ix_e = ix_e
+
 
