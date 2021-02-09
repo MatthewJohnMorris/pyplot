@@ -378,7 +378,7 @@ class StandardDrawing:
         points.append(p2)
         points.append(new_point)
 
-    def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0):
+    def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
 
         if colour:
             intensity_converter = lambda r, g, b: self.pen_type.rgb_converter(r, g, b)[cmy_index]
@@ -440,7 +440,7 @@ class StandardDrawing:
             # output location
             s = math.sin(a)
             c = math.cos(a)
-            x = centre[0] + r * c * r_factor
+            x = centre[0] + r * c * r_factor * x_scale
             y = centre[1] + r * s * r_factor
 
             # image location (note x/y swap)
@@ -463,7 +463,7 @@ class StandardDrawing:
         # print(f'# points = {len(points)}')
         # print(r)
         # print(image.shape)
-            
+    
         self.add_polyline(points, stroke, container=container)
 
         # cv2.imshow("OpenCV Image Reading", image)
@@ -552,6 +552,14 @@ class StandardDrawing:
             a = 2 * math.pi * (ih + phase_add) / n
             rot_points = [StandardDrawing.rotate_about(x, centre, a) for x in points]
             self.add_polyline(rot_points, stroke=stroke, container=container)
+      
+    @staticmethod
+    def scale_x(points, factor):
+    
+        min_x = min(p[0] for p in points)
+        max_x = min(p[0] for p in points)
+        mid_x = (min_x + max_x) / 2
+        return [(mid_x + (p[0] - mid_x) * factor, p[1]) for p in points]
       
     def fill_in_paths(self, path_gen_func):
 

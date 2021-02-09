@@ -552,10 +552,11 @@ def test_shape_filler(d):
         d.add_polyline(path)
 
 
-# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-test_shape_filler(d)
+d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 50), 30, x_scale = 0.8)
+
 '''
 test_shape_filler(d)
 valentine(d)
