@@ -888,8 +888,9 @@ class ShapeFiller:
             # print("Search: on same edge")
             return True
         
-        # Figure out which direction to start looking in - need y to be increasing. Note that y cannot
-        # be the same on both ends because we don't do crossings for such edges in get_crossings()
+        # We're not on the same edge as c_prev. But are we on a subsequent one? Figure out which direction
+        # to start looking in - need y to be increasing. Note that y cannot be the same on both ends because
+        # we don't do crossings for such edges in get_crossings()
         prev_p1 = shape[prev_ix1]
         prev_p2 = shape[prev_ix2]
         y1 = prev_p1[1]
@@ -925,7 +926,7 @@ class ShapeFiller:
     # the shapes are polygons. 
     # 
     # There is some subtlety involved in deciding what a crossing actually is:
-    # * edges with a constant y-value don't yield crossings, only ones where y is changing along the line
+    # * edges with a constant y-value don't yield crossings - we only consider edges where y is changing along the line
     # * if an edge is a "true" crossing, e.g. the point of crossing isn't at one end or the other, we always include it
     # * if an edge crosses at the start, we always include it
     # * if an edge crosses at the end, we only include it if the y-value is a peak or a trough at the crossing point
