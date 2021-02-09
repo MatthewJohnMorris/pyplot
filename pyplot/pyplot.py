@@ -103,6 +103,9 @@ class PenType:
 
     @staticmethod
     def GellyRollOnBlack():
+        # Note - if you use GellyRollOnBlack you will have a black rectangle added so you can get some idea of what
+        # things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
+        # before plotting, or write your plots into named layers and print them via the "Layers" tab.
         return PenType('GellyRollOnBlack', True, 0.6, '0.45px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
         
     @staticmethod
