@@ -186,18 +186,23 @@ class StandardDrawing:
     def get_circle_point(self, middle, radius, theta):
         s = math.sin(theta)
         c = math.cos(theta)
-        return (middle[0] + radius * s, middle[1] + radius * c)
+        return (middle[0] + radius * s, middle[1] - radius * c)
 
-    def make_circle(self, middle, r, n, stroke=None):
+    # Default circle granularity: divide into parts no bigger than the width of the pen
+    def default_circle_path_count(self, r):
+        return int(2 * math.pi * r / self.pen_type.pen_width) + 1
+
+    def make_circle(self, middle, r, n=None, stroke=None):
+        n = self.default_circle_path_count(r) if n is None else n
         stroke = self.default_stroke(stroke)
         points = []
-        for i in range(0, n + 1):    
+        for i in range(0, n):    
             angle = 2 * math.pi * i / n
             p = self.get_circle_point(middle, r, angle)
             points.append( p )
         return points
 
-    def add_circle(self, middle, r, n, stroke=None, container=None):
+    def add_circle(self, middle, r, n=None, stroke=None, container=None):
         points = self.make_circle(middle, r, n, stroke)
         self.add_polygon(points, stroke=stroke, container=container)
 

@@ -24,3 +24,18 @@ def test_rotate_sense():
     assert r3[1] == pytest.approx(-1)
     assert r4[0] == pytest.approx(1)
     assert r4[1] == pytest.approx(0)
+
+def test_circle_sense():
+
+    # again, want clockwise direction
+    d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+    c = d.make_circle((0,0), 1, n=4)
+    assert(len(c) == 4)
+    assert(c[0][0] == pytest.approx(0))
+    assert(c[0][1] == pytest.approx(-1))
+    assert(c[1][0] == pytest.approx(1))
+    assert(c[1][1] == pytest.approx(0))
+    assert(c[2][0] == pytest.approx(0))
+    assert(c[2][1] == pytest.approx(1))
+    assert(c[3][0] == pytest.approx(-1))
+    assert(c[3][1] == pytest.approx(0))    

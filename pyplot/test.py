@@ -528,12 +528,12 @@ def test_shape_filler(d):
         ]
         '''
 
-    centre = (100,100)
+    centre = (100,200)
     star = []    
     n = 5
     for i in range(0, 2 * n):
         a = 2 * math.pi * i / (2*n)
-        r = 7 + 13 * (i % 2)
+        r = 7 + 11 * (i % 2)
         c = d.get_circle_point(centre, r, a)
         star.append(c)
     points = [star]
@@ -545,17 +545,20 @@ def test_shape_filler(d):
     points.append(d.make_circle(centre, 20, int(20*2*math.pi*2)))
 
     angle = 0.05*math.pi+(105/360)*2*math.pi
-    angle=0
+    # angle=0
     sf = ShapeFiller(points)
-    for path in sf.get_paths(10*d.pen_type.pen_width / 5, angle=angle):
+    for path in sf.get_paths(d.pen_type.pen_width / 5, angle=angle):
     # for path in sf.get_paths(3):
         d.add_polyline(path)
-
-
+        
+# Note - if you use GellyRollOnBlack you will have a black rectangle added so you can get some idea of what
+# things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
+# before plotting, or write your plots into named layers and print them via the "Layers" tab.
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 50), 30, x_scale = 0.8)
+# d.image_spiral_single(d.dwg, 'burroughs.jpg', (50, 50), 30, x_scale = 0.8)
+d.add_circle((100, 100), 10, n=4)
 
 '''
 test_shape_filler(d)
