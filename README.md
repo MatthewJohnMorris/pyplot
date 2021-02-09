@@ -17,6 +17,8 @@ You will need to have the following other packages installed
 * opencv-python (for image reading and processing)
 * svgwrite (for anything at all)
 
+Also pytest if you want to run the tests.
+
 To do this, you can create a venv and install within that.
 
 See test.py for a wide range of examples.

@@ -542,8 +542,8 @@ class StandardDrawing:
         s = math.sin(a)
         dx = point[0] - centre[0]
         dy = point[1] - centre[1]
-        x = c * dx + s * dy
-        y = c * dy - s * dx
+        x = c * dx - s * dy
+        y = c * dy + s * dx
         return (centre[0] + x, centre[1] + y)
 
     def add_rotated_polyline(self, points, centre, n, phase_add=0, stroke=None, container=None):
@@ -610,120 +610,24 @@ class CircleBlock:
 class ShapeFiller:
 
     def __init__(self, shapes):
-        self.shapes = shapes
-        
-    # straightforward, but prone to end up with lots of disconnected sections
-    # also can glitch if we are sharing a vertex that's a "corner" (surrounding y both above or both below)
-    def get_paths_simple(self, row_width):
-    
-        # scan all y-lines in range and get the crossing points
-        y_min = min([min([p[1] for p in shape]) for shape in self.shapes])
-        y_max = max([max([p[1] for p in shape]) for shape in self.shapes])
-        y = y_min
-        all_crossings = []
-        while y <= y_max:
-            all_crossings.append((y, self.get_crossings(y)))
-            y += row_width
-        n_scans = len(all_crossings)
-            
-        # sanity check - we should never have an odd number of crossings for any scan line
-        for crossings in all_crossings:
-            if len(crossings[1]) % 2 != 0:
-                raise Exception(f'y-value {crossings[0]} has odd number of crossings: {len(crossings[1])}')
-
-        # each pair of crossings is something that we want to plot
-        max_num_crossings = max([len(crossings[1]) for crossings in all_crossings])
-        num_paths = int(max_num_crossings / 2)
-        # print(f'num_paths={num_paths}')        
-        
-        paths = []
-        for ix_path in range(0, num_paths):
-            path_points = []
-            last_crossing_on_path = None
-            for ix_scan in range(0, n_scans):
-                crossings = all_crossings[ix_scan]
-                y_for_scan = crossings[0]
-                
-                # If there's nothing for path #ix_path on this scan line, then mark that fact and continue
-                if len(crossings[1]) < 2 * (ix_path + 1):
-                    last_crossing_on_path = None
-                    continue
-
-                # Get the start and end of our crossing segment
-                c_s = crossings[1][2 * ix_path]
-                c_e = crossings[1][2 * ix_path + 1]
-                
-                # We are at the bottom scan line - we know there's no previous plotting to worry about
-                if ix_scan == 0:
-                    path_points.append((c_s['x'], y_for_scan))
-                    path_points.append((c_e['x'], y_for_scan))
-                    last_crossing_on_path = c_e
-                    continue
-                    
-                # We didn't have any crossing on the previous scan line - flush any current path and start a new one
-                if last_crossing_on_path is None:
-                    if len(path_points) > 0:
-                        paths.append(path_points)
-                        path_points = []
-                    path_points.append((c_s['x'], y_for_scan))
-                    path_points.append((c_e['x'], y_for_scan))
-                    last_crossing_on_path = c_e
-                    continue
-                    
-                # We had a crossing on the previous scan line. Try to pick this up, zigzagging our way up the scan lines.
-                # We know what shape edge the presious scan line ended at - if either end of our new line has a vertex
-                # in common with that, then do that end first, and the other end second. Record which order we did things 
-                # in, so the next scan line knows what shape edge we ended at.
-                prev_vertex_s = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_s']}"
-                prev_vertex_e = f"{last_crossing_on_path['shape']}:{last_crossing_on_path['ix_e']}"
-                prev_edge = [prev_vertex_s, prev_vertex_e]
-                
-                new_s_vertex_s = f"{c_s['shape']}:{c_s['ix_s']}"
-                new_s_vertex_e = f"{c_s['shape']}:{c_s['ix_e']}"
-                new_e_vertex_s = f"{c_e['shape']}:{c_e['ix_s']}"
-                new_e_vertex_e = f"{c_e['shape']}:{c_e['ix_e']}"
-                
-                # if s has anything in common with prev_vertex, do s, e on current
-                if new_s_vertex_s in prev_edge or new_s_vertex_e in prev_edge:
-                    path_points.append((c_s['x'], y_for_scan))
-                    path_points.append((c_e['x'], y_for_scan))
-                    last_crossing_on_path = c_e
-                # if e has anything in common with prev_vertex, do e, s on current
-                elif new_e_vertex_s in prev_edge or new_e_vertex_e in prev_edge:
-                    path_points.append((c_e['x'], y_for_scan))
-                    path_points.append((c_s['x'], y_for_scan))
-                    last_crossing_on_path = c_s
-                # damn - no zigzagging for us: start a new path
-                else:
-                    if len(path_points) > 0:
-                        paths.append(path_points)
-                        path_points = []
-                    path_points.append((c_s['x'], y_for_scan))
-                    path_points.append((c_e['x'], y_for_scan))
-                    last_crossing_on_path = c_e
-
-            paths.append(path_points)
-
-        # append closed loop for each shape
-        for shape in self.shapes:
-            a = [s for s in shape]
-            a.append(a[0])
-            # paths.append(a)
-            
-        return paths
+        self.unrotated_shapes = shapes
 
     # "Clever" plotting of crossings
     # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
     # Could try to reorder to get optimal TSP type path between sections but won't really make much difference to time
-    def get_paths(self, row_width):
+    def get_paths(self, row_width, angle=0):
+    
+        shapes = []
+        for unrotated_shape in self.unrotated_shapes:
+            shapes.append([StandardDrawing.rotate_about(x, (0,0), angle) for x in unrotated_shape])
     
         # scan all y-lines in range and get the crossing points
-        y_min = min([min([p[1] for p in shape]) for shape in self.shapes])
-        y_max = max([max([p[1] for p in shape]) for shape in self.shapes])
+        y_min = min([min([p[1] for p in shape]) for shape in shapes])
+        y_max = max([max([p[1] for p in shape]) for shape in shapes])
         y = y_min
         all_crossings = []
         while y <= y_max:
-            all_crossings.append((y, self.get_crossings(y)))
+            all_crossings.append((y, ShapeFiller.get_crossings(shapes, y)))
             y += row_width
         n_scans = len(all_crossings)
             
@@ -787,10 +691,10 @@ class ShapeFiller:
                     # going around the shape that the previous line ended on, without y decreasing?
                     c_prev = prev_path_state['c_prev']
                     connection = ""
-                    if self.is_on_continuation_of(c_s, c_prev):
+                    if ShapeFiller.is_on_continuation_of(shapes, c_s, c_prev):
                         # We can reach c_s by continuing around the shape from c_prev
                         connection = "s"
-                    elif self.is_on_continuation_of(c_e, c_prev):
+                    elif ShapeFiller.is_on_continuation_of(shapes, c_e, c_prev):
                         # We can reach c_e by continuing around the shape from c_prev
                         connection = "e"
                     # Successful connection
@@ -854,14 +758,20 @@ class ShapeFiller:
                 all_paths.append(path_state['path'])
 
         # append closed loop for each shape = tidies things up at the boundaries
-        for shape in self.shapes:
+        for shape in shapes:
             a = [s for s in shape]
             a.append(a[0])
             all_paths.append(a)
             
-        return all_paths
+        # now reverse the rotation
+        returned_paths = []
+        for rotated_path in all_paths:
+            returned_paths.append([StandardDrawing.rotate_about(x, (0,0), -angle) for x in rotated_path])
+            
+        return returned_paths
         
-    def is_on_continuation_of(self, c, c_prev):
+    @staticmethod
+    def is_on_continuation_of(shapes, c, c_prev):
         # "Can we reach c by continuing around the shape c_prev is on, without decreaing our y-value?"
         # 
         # Each crossing has x, shape, ix_s, ix_e
@@ -877,7 +787,7 @@ class ShapeFiller:
         # What we are trying to find
         curr_edge = [c['ix_s'], c['ix_e']]
         ix_shape = c_prev['shape']
-        shape = self.shapes[ix_shape]
+        shape = shapes[ix_shape]
         # print(f"Searching for {curr_edge}: {shape[curr_edge[0]]}->{shape[curr_edge[1]]}")
 
         # Where we're starting from
@@ -934,10 +844,11 @@ class ShapeFiller:
     # So if we have y at 50, and vectices A=(10, 40), B=(20, 50), C=(30, 40) there is a crossing for AB and for AC
     # But if we have y at 50, and vectices A=(10, 40), B=(20, 50), C=(30, 60) there is only a crossing for BC, we don't count AC
     # And if we have y at 50, and vectices A=(10, 50), B=(20, 50), C=(30, 50) there no crossiung for either, since both segments are constant in Y
-    def get_crossings(self, y):
+    @staticmethod
+    def get_crossings(shapes, y):
         hits = []
-        for ix_shape in range(0, len(self.shapes)):
-            shape = self.shapes[ix_shape]
+        for ix_shape in range(0, len(shapes)):
+            shape = shapes[ix_shape]
             n_points = len(shape)
             for ix_s in range(0, n_points):
                 ix_e = 0 if ix_s == n_points - 1 else ix_s + 1

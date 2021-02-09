@@ -518,70 +518,46 @@ def test_height(d):
         for y in range(20, 280, 40):
             d.add_dot((x, y), dotsize)
 
+def test_shape_filler(d):
+
+    '''
+    yd = -45
+    points = [
+        [(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)],
+        [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)],
+        ]
+        '''
+
+    centre = (100,100)
+    star = []    
+    n = 5
+    for i in range(0, 2 * n):
+        a = 2 * math.pi * i / (2*n)
+        r = 7 + 13 * (i % 2)
+        c = d.get_circle_point(centre, r, a)
+        star.append(c)
+    points = [star]
+    # points = []
+    points.append(d.make_circle(centre, 7, int(5*2*math.pi*2)))
+    points.append(d.make_circle(centre, 9, int(9*2*math.pi*2)))
+    points.append(d.make_circle(centre, 11, int(11*2*math.pi*2)))
+    points.append(d.make_circle(centre, 18, int(18*2*math.pi*2)))
+    points.append(d.make_circle(centre, 20, int(20*2*math.pi*2)))
+
+    angle = 0.05*math.pi+(105/360)*2*math.pi
+    angle=0
+    sf = ShapeFiller(points)
+    for path in sf.get_paths(10*d.pen_type.pen_width / 5, angle=angle):
+    # for path in sf.get_paths(3):
+        d.add_polyline(path)
+
+
 # d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
+test_shape_filler(d)
 '''
-yd = -45
-points = [
-    [(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)],
-    [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)],
-    ]
-    '''
-    
-'''
-yd = -45
-points = [
-    [(50, 150+yd), (50, 160+yd), (60, 160+yd), (60, 150+yd)],
-    [(53, 153+yd), (53, 157+yd), (57, 157+yd), (57, 153+yd)],
-    [(55, 150+yd), (60, 155+yd), (55, 160+yd), (50, 155+yd)],
-    [(50, 150+yd), (55, 150+yd), (55, 155+yd), (50, 155+yd)],
-    [(55, 155+yd), (60, 155+yd), (60, 160+yd), (55, 160+yd)],
-    [(50, 150+yd), (50, 160+yd), (60, 150+yd)],
-    [(50, 150+yd), (50, 160+yd), (60, 160+yd)],
-    ]
-'''
-
-'''
-points = []
-points.append(d.make_circle((100, 100), 12, int(24*2*math.pi*2)))
-points.append(d.make_circle((100, 100), 9, int(20*2*math.pi*2)))
-points.append(d.make_circle((100, 100), 6, int(24*2*math.pi*2)))
-points.append(d.make_circle((100, 100), 4, int(24*2*math.pi*2)))
-for i in range(0, 8):
-    a = 2 * math.pi * i / 8
-    c = d.get_circle_point((100,100), 9, a)
-    points.append(d.make_circle(c, 2.8, int(1.5*2*math.pi*2)))
-'''
-
-# This shows an artefact - what's up here?
-# Looks like we have a jump between the effective areas between scan lines
-# A line is being drawn because there's a vertex in common
-# So the question might be framed as how we can stop this kind of common vertex causing problems with disconnected areas
-
-# IDEA 1: if both vertexes not in common, check that common vertex has y-value in between the other two (so we aren't looking over a corner)
-# IDEA 2: if scan for this line of path is disjoint with prev scan for path, don't try to join up
-star = []    
-n = 5
-for i in range(0, 2 * n):
-    a = 2 * math.pi * i / (2*n)
-    r = 7 + 13 * (i % 2)
-    c = d.get_circle_point((100,150), r, a)
-    star.append(c)
-points = [star]
-# points = []
-points.append(d.make_circle((100, 150), 7, int(5*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 9, int(9*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 11, int(11*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 18, int(18*2*math.pi*2)))
-points.append(d.make_circle((100, 150), 20, int(20*2*math.pi*2)))
-
-sf = ShapeFiller(points)
-for path in sf.get_paths(d.pen_type.pen_width / 5):
-# for path in sf.get_paths(3):
-    d.add_polyline(path)
-
-'''
+test_shape_filler(d)
 valentine(d)
 burroughs_medal(d)
 test_height(d)
