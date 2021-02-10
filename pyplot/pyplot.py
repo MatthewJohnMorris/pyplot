@@ -304,6 +304,33 @@ class StandardDrawing:
     
         points = self.make_square(topleft, size, start_size)
         self.add_polyline(points, stroke=stroke, container=container)
+        
+    def make_surface(self, top_left, x_size, y_size, z_function):
+    
+        # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
+        min_adj_y_for_x = {}
+        all_points = []
+        for y in range(0, y_size + 1, 2)[::-1]:
+            points = []
+            for x in range(0, x_size + 1):
+                norm_coord = (x / x_size, y / y_size)
+                z = z_function(norm_coord)
+                a = math.pi * 3 /8
+                y_adj = math.cos(a) * y + math.sin(a) * z
+                min_adj_y = min_adj_y_for_x.get(x, 1000)
+                if y_adj < min_adj_y:
+                    min_adj_y_for_x[x] = y_adj
+                else:
+                    y_adj = min_adj_y
+                points.append((top_left[0] + x, top_left[1] + y_adj))
+            all_points.append(points)
+        return all_points
+
+    def add_surface(self, top_left, x_size, y_size, z_func, stroke=None, container=None):
+    
+        all_points = self.make_surface(top_left, x_size, y_size, z_func)
+        for points in all_points:
+            self.add_polyline(points, stroke=stroke, container=container)
 
     @staticmethod
     def text_bound(text, fontsize=14, family='Arial'):

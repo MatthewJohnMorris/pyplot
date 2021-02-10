@@ -88,29 +88,6 @@ def z_func(norm_coord, seed):
                                         base=seed)
     return z
   
-def plot_surface(drawing):
-
-    # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
-    top_left = (130, 80)
-    x_size = 70
-    y_size = 20
-    min_adj_y_for_x = {}
-    seed = 200
-    for y in range(0, y_size + 1, 2)[::-1]:
-        points = []
-        for x in range(0, x_size + 1):
-            norm_coord = (x / x_size, y / y_size)
-            z = z_func(norm_coord, seed) * 50
-            a = math.pi * 3 /8
-            y_adj = math.cos(a) * y + math.sin(a) * z
-            min_adj_y = min_adj_y_for_x.get(x, 1000)
-            if y_adj < min_adj_y:
-                min_adj_y_for_x[x] = y_adj
-            else:
-                y_adj = min_adj_y
-            points.append((top_left[0] + x, top_left[1] + y_adj))
-        drawing.add_polyline(points)
-  
 def plot_perlin_drape_spiral(drawing, seed):  
 
     centre = (100, 70)
@@ -421,7 +398,15 @@ def complex_fill(d):
     for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
         d.add_polyline(path)
 
+def plot_surface(drawing):
 
+    # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
+    top_left = (30, 30)
+    x_size = 140
+    y_size = 140
+    seed = 200
+    z_function = lambda k: z_func(k, seed) * 50
+    d.add_surface(top_left, x_size, y_size, z_function)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -439,9 +424,7 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
     # return (x + width * 1.03, y) # HersheyScript1smooth
     # return (x + width * 0.94, y) # Stymie Hairline
 
-d.plot_spiral_text((100.75, 100.75), 60)
-draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-# valentine(d)
+plot_surface(d)
 
 '''
 test_shape_filler(d)
