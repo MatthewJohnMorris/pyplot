@@ -311,7 +311,7 @@ class StandardDrawing:
         projection_angle = math.pi * 3 /8
         min_adj_y_for_x = {}
         all_points = []
-        for y in range(0, y_size + 1, 2)[::-1]:
+        for y in range(0, y_size + 1, 5)[::-1]:
             points = []
             for x in range(0, x_size + 1):
                 norm_coord = (x / x_size, y / y_size)

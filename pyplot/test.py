@@ -4,21 +4,18 @@
 # * pycairo (for text)
 # * svgwrite
 
-import cv2
 import csv
 
 import svgwrite
 from svgwrite.extensions import Inkscape
 
 from random import random, seed
-# seed random number generator
 seed(10)
 
 import math
 
-from noise import pnoise1, pnoise2
-
 from pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
+from perlin import PerlinNoise
   
 def draw_riley(drawing):    
     
@@ -71,23 +68,6 @@ def draw_unknown_pleasures(drawing):
             path.append((x, y))
         drawing.add_polyline(path)
 
-# coord is on [1, 1]
-def z_func(norm_coord, seed):
-
-    octaves = 2
-    # 0 = perfectly smooth
-    persistence = 0.5
-    lacunarity = 6
-    repeat = 1
-    z = pnoise2(norm_coord[0]*repeat, norm_coord[1]*repeat,
-                                        octaves=octaves,
-                                        persistence=persistence,
-                                        lacunarity=lacunarity,
-                                        repeatx=repeat,
-                                        repeaty=repeat,
-                                        base=seed)
-    return z
-  
 def plot_perlin_drape_spiral(drawing, seed):  
 
     centre = (100, 70)
@@ -98,11 +78,13 @@ def plot_perlin_drape_spiral(drawing, seed):
     target = n * ni
     iscale = r_base / ni * 2
     points = []
+    p = PerlinNoise(seed=seed)
+    
     for t in range(0, target):
         a = 2 * math.pi * (t / n)
         c = math.cos(a)
         s = math.sin(a)
-        r_noise = z_func((a / (2 * math.pi), 0), seed)
+        r_noise = p.calc2d((a / (2 * math.pi), 0))
         r_adj = r_base + r_noise * 150 * t / target
         pt = (centre[0] + r_adj * c, centre[1] + iscale * (t / n) + r_adj * s)
         points.append(pt)
@@ -114,6 +96,7 @@ def plot_perlin_spiral(drawing, centre, r_start, r_end, r_layer, seed, stroke=No
     n = int(circ) * 2
     points = []
     layers = (r_end - r_start) / r_layer
+    p = PerlinNoise(seed=seed)
     for t in range(0, int(n * layers)):
         a = 2 * math.pi * (t / n)
         c = math.cos(a)
@@ -125,12 +108,7 @@ def plot_perlin_spiral(drawing, centre, r_start, r_end, r_layer, seed, stroke=No
         lacunarity = 7
         repeat = 1
         x = a / (2 * math.pi)
-        z = pnoise1(x,
-            octaves=octaves,
-            persistence=persistence,
-            lacunarity=lacunarity,
-            repeat=repeat,
-            base=seed)
+        z = p.calc1d(x)
         
         r_now = r_start + (r_end - r_start) * t / (n * layers)
         r_adj = r_now + z * r_now * t / (n * layers)
@@ -189,22 +167,6 @@ def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None
         (x, y) = drawing.draw_letter(c, (x, y), fontsize, family=family)
            
     drawing.draw_text(s, (20, ys+20), fontsize, family=family)
-
-def r_z_func(norm_coord, seed):
-
-    octaves = 2
-    # 0 = perfectly smooth
-    persistence = 0.5
-    lacunarity = 6
-    repeat = 1
-    z = pnoise2(norm_coord[0]*repeat, norm_coord[1]*repeat,
-                                        octaves=octaves,
-                                        persistence=persistence,
-                                        lacunarity=lacunarity,
-                                        repeatx=repeat,
-                                        repeaty=repeat,
-                                        base=seed)
-    return z
 
 def multi_burroughs(drawing):
     layer1 = drawing.add_layer('1')
@@ -404,28 +366,14 @@ def plot_surface(drawing):
     top_left = (30, 30)
     x_size = 140
     y_size = 240
-    seed = 200
-    z_function = lambda k: z_func((k[0]*1,k[1]*1), seed) * 100
-    d.add_surface(top_left, x_size, y_size, z_function)
+    p = PerlinNoise(scale=100)
+    d.add_surface(top_left, x_size, y_size, p.calc2d)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-
-# d.image_spiral_single(d.dwg, 'burroughs.jpg', (150, 150), 30, x_scale = 0.8)
-# d.add_circle((100, 100), 10, n=4)
-
-# complex_fill(d)
-    # return (x + width * 0.81, y) # CNC Vector
-    # return (x + width * 0.852, y) # CutlingsGeometric
-    # return (x + width * 0.852, y) # CutlingsGeometricRound
-    # return (x + width * 1.03, y) # HersheyScript1smooth
-    # return (x + width * 0.94, y) # Stymie Hairline
-
-draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-d.plot_spiral_text((100.75, 100.75), 60)
 
 '''
 test_shape_filler(d)
@@ -449,7 +397,7 @@ draw_riley(d)
 draw_unknown_pleasures(d)
 d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
 d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
-d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80, r_factor_func=r_z_func)
+d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80)
 d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
 plot_surface(d)
 plot_perlin_drape_spiral(d, 6)
