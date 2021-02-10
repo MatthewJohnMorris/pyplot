@@ -529,7 +529,7 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
         style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
-        print(style)
+        # print(style)
         g = self.dwg.g(style=style)
         
         # unadjusted y is at bottom left (high y, low x)

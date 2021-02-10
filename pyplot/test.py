@@ -405,7 +405,7 @@ def plot_surface(drawing):
     x_size = 140
     y_size = 240
     seed = 200
-    z_function = lambda k: z_func(k, seed) * 100
+    z_function = lambda k: z_func((k[0]*1,k[1]*1), seed) * 100
     d.add_surface(top_left, x_size, y_size, z_function)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
@@ -424,7 +424,8 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
     # return (x + width * 1.03, y) # HersheyScript1smooth
     # return (x + width * 0.94, y) # Stymie Hairline
 
-plot_surface(d)
+draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
+d.plot_spiral_text((100.75, 100.75), 60)
 
 '''
 test_shape_filler(d)
