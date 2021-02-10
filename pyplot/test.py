@@ -425,9 +425,9 @@ def complex_fill(d):
 
 
         
-# Note - if you use GellyRollOnBlack you will have a black rectangle added so you can get some idea of what
-# things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
-# before plotting, or write your plots into named layers and print them via the "Layers" tab.
+# Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
+# can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
+# before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 # d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
@@ -440,6 +440,8 @@ d = StandardDrawing(pen_type = PenType.PigmaMicron05())
     # return (x + width * 0.852, y) # CutlingsGeometricRound
     # return (x + width * 1.03, y) # HersheyScript1smooth
     # return (x + width * 0.94, y) # Stymie Hairline
+
+d.plot_spiral_text((100.75, 100.75), 60)
 
 '''
 test_shape_filler(d)

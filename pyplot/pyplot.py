@@ -103,9 +103,9 @@ class PenType:
 
     @staticmethod
     def GellyRollOnBlack():
-        # Note - if you use GellyRollOnBlack you will have a black rectangle added so you can get some idea of what
-        # things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
-        # before plotting, or write your plots into named layers and print them via the "Layers" tab.
+        # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
+        # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
+        # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
         return PenType('GellyRollOnBlack', True, 0.6, '0.45px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
         
     @staticmethod
@@ -325,8 +325,9 @@ class StandardDrawing:
         w = w1 - w2
         return (w, h3)
 
-    def draw_letter(self, letter, position, fontsize, angle=0, family='Arial'):
+    def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None):
 
+        container = self.default_container(container)
         g = self.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
         
         x = position[0]
@@ -336,15 +337,16 @@ class StandardDrawing:
         cx = x + w/2
         cy = y - w/2
         g.add(self.text(letter, insert=(x, y), transform=f'rotate({angle}, {cx}, {cy})')) # settings are valid for all text added to 'g'
-        self.add(g)
+        container.add(g)
         
         return (x + w, y)
 
-    def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', stroke=None, container=None):
+    def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', container=None):
 
-        container = self.dwg if container is None else container
-        stroke = self.default_stroke(stroke)
-        g = self.dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
+        container = self.default_container(container)
+        # doesn't seem to show up on a black background...
+        stroke = "white" if self.pen_type.is_black else "black"
+        g = self.dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none") # stroke-width:1;
         
         # unadjusted y is at bottom left (high y, low x)
 
@@ -358,7 +360,7 @@ class StandardDrawing:
         #y_rotc = spiral_centre[1] - radius * c - w/2 * s
         g.add(self.dwg.text(letter, insert=(x_letter, y_letter), transform=f'rotate({angle}, {spiral_centre[0]}, {spiral_centre[1]})', stroke=stroke)) # settings are valid for all text added to 'g'
         
-        self.dwg.add(g)
+        container.add(g)
         
         return (w, h)
     
@@ -507,7 +509,7 @@ class StandardDrawing:
             stroke_rgb[cmy_index] = 0
             self.image_spiral_single(layer, file, centre, scale, stroke=svgwrite.rgb(stroke_rgb[0], stroke_rgb[1], stroke_rgb[2], '%'), colour=True, cmy_index=cmy_index)
 
-    def plot_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, container=None, stroke=None, fontsize=6):
+    def plot_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, container=None, fontsize=6):
 
         points = []
         points.append(centre)
@@ -554,7 +556,7 @@ class StandardDrawing:
                 # family = 'HersheyScript1smooth' # good "handwriting" font
                 # family = 'Stymie Hairline' # a bit cutsey, but ok
                 r_use = r + radial_adjust
-                (w, h) = self.add_spiral_letter(letter, fontsize, centre, r_use, degrees, family=family, container=container, stroke=stroke)
+                (w, h) = self.add_spiral_letter(letter, fontsize, centre, r_use, degrees, family=family, container=container)
                 
                 # FUDGE FACTOR TO SPREAD THINGS OUT A LITTLE, GIVEN ROTATION
                 fudge_factor = 1.2
