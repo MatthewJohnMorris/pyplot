@@ -403,9 +403,9 @@ def plot_surface(drawing):
     # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
     top_left = (30, 30)
     x_size = 140
-    y_size = 140
+    y_size = 240
     seed = 200
-    z_function = lambda k: z_func(k, seed) * 50
+    z_function = lambda k: z_func(k, seed) * 100
     d.add_surface(top_left, x_size, y_size, z_function)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you

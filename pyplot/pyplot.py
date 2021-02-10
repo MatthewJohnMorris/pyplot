@@ -308,6 +308,7 @@ class StandardDrawing:
     def make_surface(self, top_left, x_size, y_size, z_function):
     
         # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
+        projection_angle = math.pi * 3 /8
         min_adj_y_for_x = {}
         all_points = []
         for y in range(0, y_size + 1, 2)[::-1]:
@@ -315,8 +316,7 @@ class StandardDrawing:
             for x in range(0, x_size + 1):
                 norm_coord = (x / x_size, y / y_size)
                 z = z_function(norm_coord)
-                a = math.pi * 3 /8
-                y_adj = math.cos(a) * y + math.sin(a) * z
+                y_adj = math.cos(projection_angle) * y + math.sin(projection_angle) * z
                 min_adj_y = min_adj_y_for_x.get(x, 1000)
                 if y_adj < min_adj_y:
                     min_adj_y_for_x[x] = y_adj
