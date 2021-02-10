@@ -327,7 +327,7 @@ def test_shape_filler(d):
         ]
         '''
 
-    centre = (50,200)
+    centre = (50,50)
     star = []    
     n = 5
     for i in range(0, 2 * n):
@@ -346,7 +346,7 @@ def test_shape_filler(d):
     angle = 0.05*math.pi+(105/360)*2*math.pi
     # angle=0
     sf = ShapeFiller(points)
-    for path in sf.get_paths(d.pen_type.pen_width / 5, angle=angle):
+    for path in sf.get_paths(10*d.pen_type.pen_width / 5, angle=angle):
     # for path in sf.get_paths(3):
         d.add_polyline(path)
 
@@ -374,6 +374,8 @@ def plot_surface(drawing):
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+
+test_shape_filler(d)
 
 '''
 test_shape_filler(d)

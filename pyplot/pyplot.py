@@ -334,10 +334,10 @@ class StandardDrawing:
 
     @staticmethod
     def text_bound(text, fontsize=14, family='Arial'):
-        try:
-            import cairo
-        except Exception:
-            return len(text) * fontsize
+
+        # Don't import cairo unless we need it (for text placement that needs to size letters)
+        import cairo
+        
         surface = cairo.SVGSurface('undefined.svg', 1280, 200)
         cr = cairo.Context(surface)
         cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
