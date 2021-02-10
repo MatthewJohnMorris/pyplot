@@ -692,6 +692,21 @@ class CircleBlock:
         return path
 
 class ShapeFiller:
+    
+    class PathState:
+
+        def __init__(self):
+            self.path = []
+            self.c_prev = None
+            self.connected = False
+        
+    class EdgeHit:
+
+        def __init__(self, x, ix_shape, ix_s, ix_e):
+            self.x = x
+            self.ix_shape = ix_shape
+            self.ix_s = ix_s
+            self.ix_e = ix_e
 
     def __init__(self, shapes):
         self.unrotated_shapes = shapes
@@ -731,7 +746,7 @@ class ShapeFiller:
         # it's a list of polylines
         all_paths = []
  
-        path_states = [{'path': [], 'c_prev': None, 'connected': False} for i in range(0, num_paths)]
+        path_states = [ShapeFiller.PathState() for i in range(0, num_paths)]
         
         # Take one scan line at a time, trying to connect up as many regions to the prevous scan line
         # as possible at each step.
@@ -746,7 +761,7 @@ class ShapeFiller:
 
             # To start with, no paths have been connected
             for ix_path in range(0, num_paths):
-                path_states[ix_path]['connected'] = False
+                path_states[ix_path].connected = False
 
             # For each path in this scan line, try to hook up with the previous scan line
             for ix_path in range(0, num_paths):
@@ -766,14 +781,14 @@ class ShapeFiller:
                 for ix_prev_path in range(0, num_paths):
                     prev_path_state = path_states[ix_prev_path]
                     # This path is already connected so is not available for further connections at this scan line
-                    if prev_path_state['connected']:
+                    if prev_path_state.connected:
                         continue
                     # This path didn't have anything in the previous scan line so we can't connect to it
-                    if prev_path_state['c_prev'] == None:
+                    if prev_path_state.c_prev == None:
                         continue
                     # Try to connect to the previous scan line - can we reach either of our two crossing points by
                     # going around the shape that the previous line ended on, without y decreasing?
-                    c_prev = prev_path_state['c_prev']
+                    c_prev = prev_path_state.c_prev
                     connection = ""
                     if ShapeFiller.is_on_continuation_of(shapes, c_s, c_prev):
                         # We can reach c_s by continuing around the shape from c_prev
@@ -791,15 +806,15 @@ class ShapeFiller:
                         # mark as connected - this means another section won't be able to hook up
                         # I *think* that it's not possible to get mutiple hookups but am not 100% sure of this
                         # if it is impossible, perhaps we should instead throw an exception on multiple connections
-                        path_state['connected'] = True
+                        path_state.connected = True
                         # add points in correct order - connected point first so we zigzag nicely
                         p_start = c_s if connection == "s" else c_e
                         p_end = c_e if connection == "s" else c_s
-                        path_points = path_state['path']
-                        path_points.append((p_start['x'], y_for_scan))
-                        path_points.append((p_end['x'], y_for_scan))
+                        path_points = path_state.path
+                        path_points.append((p_start.x, y_for_scan))
+                        path_points.append((p_end.x, y_for_scan))
                         # keep track of which pointt we ended with for this scan line and section
-                        path_state['c_prev'] = p_end
+                        path_state.c_prev = p_end
                         # we've found a connection so no need to look at other sections for previous scan line
                         break
 
@@ -813,33 +828,33 @@ class ShapeFiller:
 
                 # Skip if connected
                 path_state = path_states[ix_path]
-                if path_state['connected']:
+                if path_state.connected:
                     continue
 
                 # Flush any existing set
-                if len(path_state['path']) > 0:
+                if len(path_state.path) > 0:
                     # print(f'path[{ix_path}]: flushing path {path_state["path"]}')
-                    all_paths.append([x for x in path_state['path']])
-                    path_state['path'] = []
+                    all_paths.append([x for x in path_state.path])
+                    path_state.path = []
 
                 # If there's nothing for path #ix_path on this scan line, then mark that fact and continue
                 if len(crossings[1]) < 2 * (ix_path + 1):
-                    path_state['c_prev'] = None
+                    path_state.c_prev = None
                     continue
                     
                 # Otherwise add points
                 # print(f'path[{ix_path}]: starting new path')
                 c_s = crossings[1][2 * ix_path]
                 c_e = crossings[1][2 * ix_path + 1]
-                path_state['path'].append((c_s['x'], y_for_scan))
-                path_state['path'].append((c_e['x'], y_for_scan))
-                path_state['c_prev'] = c_e
+                path_state.path.append((c_s.x, y_for_scan))
+                path_state.path.append((c_e.x, y_for_scan))
+                path_state.c_prev = c_e
 
         # Flush all remaining sets (ongoing connected sections)
         for ix_path in range(0, num_paths):
             path_state = path_states[ix_path]
-            if len(path_state['path']) > 0:
-                all_paths.append(path_state['path'])
+            if len(path_state.path) > 0:
+                all_paths.append(path_state.path)
 
         # append closed loop for each shape = tidies things up at the boundaries
         for shape in shapes:
@@ -865,18 +880,18 @@ class ShapeFiller:
         # We traverse the shape starting at c_prev in non-decreating y-direction. If we hit c then there's a match
         
         # Must be the same shape!
-        if c['shape'] != c_prev['shape']:
+        if c.ix_shape != c_prev.ix_shape:
             return False
           
         # What we are trying to find
-        curr_edge = [c['ix_s'], c['ix_e']]
-        ix_shape = c_prev['shape']
+        curr_edge = [c.ix_s, c.ix_e]
+        ix_shape = c_prev.ix_shape
         shape = shapes[ix_shape]
         # print(f"Searching for {curr_edge}: {shape[curr_edge[0]]}->{shape[curr_edge[1]]}")
 
         # Where we're starting from
-        prev_ix1 = c_prev['ix_s']
-        prev_ix2 = c_prev['ix_e']
+        prev_ix1 = c_prev.ix_s
+        prev_ix2 = c_prev.ix_e
         # print(f"Previous is {[prev_ix1, prev_ix2]}: {shape[prev_ix1]}->{shape[prev_ix2]}")
         if prev_ix1 in curr_edge and prev_ix2 in curr_edge:
             # print("Search: on same edge")
@@ -947,10 +962,10 @@ class ShapeFiller:
                     # We are wholly along the y-line - we ignore segments like this
                     hits = hits
                 elif y_e == y:
-                    # We are starting at the y-line - we always include a crossing in this case
-                    hits.append({ 'x': p_e[0], 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
+                    # We are ENDING at the y-line - we always include a crossing in this case
+                    hits.append(ShapeFiller.EdgeHit(p_e[0], ix_shape, ix_s, ix_e))
                 elif y_s == y:
-                    # We are ENDING at the y-line - here we need to be careful.
+                    # We are STARTING at the y-line - here we need to be careful.
                     # 
                     # We may be crossing the y-line, or rebounding at it (a "corner"). If we are crossing then we 
                     # don't want to add a crossing record here as there will already be one for the case of the
@@ -969,26 +984,18 @@ class ShapeFiller:
                     sign_prev = -1 if y_prev < y else +1
                     sign_next = -1 if y_e < y else +1
                     if sign_prev == sign_next:
-                        hits.append({ 'x': p_s[0], 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
+                        hits.append(ShapeFiller.EdgeHit(p_s[0], ix_shape, ix_s, ix_e))
                 elif (y_s < y and y_e > y) or (y_s > y and y_e < y):
                     # We are crossing the y-line - these segments always get added as a crossing point
                     x_s = p_s[0]
                     x_e = p_e[0]
                     x = x_s + (x_e - x_s) * (y - y_s) / (y_e - y_s)
-                    hits.append({ 'x': x, 'shape': ix_shape, 'ix_s': ix_s, 'ix_e': ix_e  })
+                    hits.append(ShapeFiller.EdgeHit(x, ix_shape, ix_s, ix_e))
                         
         # sort by x-value - this helps when we are using a naive strategy for plotting
         # doubt if it makes any real difference for the more intelligent connection strategy we are now using by dfault.
-        hits = sorted(hits, key=lambda hit: hit['x'])
+        hits = sorted(hits, key=lambda hit: hit.x)
         
         return hits
-    
-class EdgeHit:
-
-    def __init__(self, x, ix_shape, ix_s, ix_e):
-        self.x = x
-        self.ix_shape
-        self.ix_s = ix_s
-        self.ix_e = ix_e
 
 

@@ -343,7 +343,7 @@ def test_shape_filler(d):
     points.append(d.make_circle(centre, 18, int(18*2*math.pi*2)))
     points.append(d.make_circle(centre, 20, int(20*2*math.pi*2)))
 
-    angle = 0.05*math.pi+(105/360)*2*math.pi
+    angle = 0.45*math.pi+(105/360)*2*math.pi
     # angle=0
     sf = ShapeFiller(points)
     for path in sf.get_paths(10*d.pen_type.pen_width / 5, angle=angle):
