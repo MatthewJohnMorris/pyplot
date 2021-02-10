@@ -554,11 +554,19 @@ class StandardDrawing:
         y = c * dy + s * dx
         return (centre[0] + x, centre[1] + y)
 
-    def add_rotated_polyline(self, points, centre, n, phase_add=0, stroke=None, container=None):
+    def make_rotated_polyline(self, points, centre, n, phase_add=0):
     
+        all_points = []
         for ih in range(0, n):
             a = 2 * math.pi * (ih + phase_add) / n
             rot_points = [StandardDrawing.rotate_about(x, centre, a) for x in points]
+            all_points.append(rot_points)
+        return all_points
+      
+    def add_rotated_polyline(self, points, centre, n, phase_add=0, stroke=None, container=None):
+
+        a = self.make_rotated_polyline(points, centre, n, phase_add)
+        for rot_points in a:
             self.add_polyline(rot_points, stroke=stroke, container=container)
       
     @staticmethod

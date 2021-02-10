@@ -528,7 +528,7 @@ def test_shape_filler(d):
         ]
         '''
 
-    centre = (100,200)
+    centre = (50,200)
     star = []    
     n = 5
     for i in range(0, 2 * n):
@@ -550,6 +550,16 @@ def test_shape_filler(d):
     for path in sf.get_paths(d.pen_type.pen_width / 5, angle=angle):
     # for path in sf.get_paths(3):
         d.add_polyline(path)
+
+def complex_fill(d):
+
+    points = []
+    centre = (150,100)
+    sq = d.make_rect(centre, 20, 20)
+    points = d.make_rotated_polyline(sq, centre, 13)
+    sf = ShapeFiller(points)
+    for path in sf.get_paths(3*d.pen_type.pen_width / 5, angle=math.pi/2):
+        d.add_polyline(path)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added so you can get some idea of what
 # things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -557,8 +567,10 @@ def test_shape_filler(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-# d.image_spiral_single(d.dwg, 'burroughs.jpg', (50, 50), 30, x_scale = 0.8)
-d.add_circle((100, 100), 10, n=4)
+# d.image_spiral_single(d.dwg, 'burroughs.jpg', (150, 150), 30, x_scale = 0.8)
+# d.add_circle((100, 100), 10, n=4)
+
+complex_fill(d)
 
 '''
 test_shape_filler(d)
