@@ -209,11 +209,9 @@ def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None
     s = "all work and no play makes Jack a dull boy" if s is None else s
     (x, y) = (20, ys)
     for c in s:
-        (x, y) = draw_letter(drawing.dwg, c, (x, y), fontsize, family=family)
-            
-    g = drawing.dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
-    g.add(drawing.dwg.text(s, insert=(20, ys+20)))
-    drawing.dwg.add(g)
+        (x, y) = drawing.draw_letter(c, (x, y), fontsize, family=family)
+           
+    drawing.draw_text(s, (20, ys+20), fontsize, family=family)
 
 def r_z_func(norm_coord, seed):
 
@@ -428,8 +426,8 @@ def complex_fill(d):
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
-# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
 # d.image_spiral_single(d.dwg, 'burroughs.jpg', (150, 150), 30, x_scale = 0.8)
 # d.add_circle((100, 100), 10, n=4)
@@ -442,6 +440,8 @@ d = StandardDrawing(pen_type = PenType.PigmaMicron05())
     # return (x + width * 0.94, y) # Stymie Hairline
 
 d.plot_spiral_text((100.75, 100.75), 60)
+draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
+# valentine(d)
 
 '''
 test_shape_filler(d)

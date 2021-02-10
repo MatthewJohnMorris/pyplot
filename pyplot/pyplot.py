@@ -124,10 +124,11 @@ class StandardDrawing:
         self.strokeWhite = svgwrite.rgb(255, 255, 255, '%')
         self.inkscape = Inkscape(self.dwg)
         self.pen_type = PenType.PigmaMicron05() if pen_type is None else pen_type
-        self.default_layer = self.add_layer("0-default")
+        # Add this before any other layers
         if self.pen_type.is_black:
             layer = self.add_layer("x-background")
             layer.add(self.dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(0,0,0)'))
+        self.default_layer = self.add_layer("0-default")
 
     def default_container(self, container):
         return self.default_layer if container is None else container
@@ -325,45 +326,32 @@ class StandardDrawing:
         w = w1 - w2
         return (w, h3)
 
-    def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None):
+    def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
 
+        stroke = self.default_stroke(stroke)
         container = self.default_container(container)
-        g = self.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
+        style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        g = self.dwg.g(style=style)
         
         x = position[0]
         y = position[1]
-        f = self.text(letter, insert=(x, y)) # settings are valid for all text added to 'g'
         (w, h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
         cx = x + w/2
         cy = y - w/2
-        g.add(self.text(letter, insert=(x, y), transform=f'rotate({angle}, {cx}, {cy})')) # settings are valid for all text added to 'g'
+        g.add(self.dwg.text(letter, insert=(x, y), transform=f'rotate({angle}, {cx}, {cy})')) # settings are valid for all text added to 'g'
         container.add(g)
         
         return (x + w, y)
 
-    def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', container=None):
+    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None):
 
+        stroke = self.default_stroke(stroke)
         container = self.default_container(container)
-        # doesn't seem to show up on a black background...
-        stroke = "white" if self.pen_type.is_black else "black"
-        g = self.dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none") # stroke-width:1;
-        
-        # unadjusted y is at bottom left (high y, low x)
-
-        (w,h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
-        
-        s = math.sin(angle * math.pi / 180)
-        c = math.cos(angle * math.pi / 180)
-        x_letter = spiral_centre[0] # + radius * s # - w/2 * c
-        y_letter = spiral_centre[1] - radius # - radius * c # + w/2 * s
-        #x_rotc = spiral_centre[0] + radius * s + w/2 * c
-        #y_rotc = spiral_centre[1] - radius * c - w/2 * s
-        g.add(self.dwg.text(letter, insert=(x_letter, y_letter), transform=f'rotate({angle}, {spiral_centre[0]}, {spiral_centre[1]})', stroke=stroke)) # settings are valid for all text added to 'g'
-        
+        style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        g = self.dwg.g(style=style)
+        g.add(self.dwg.text(text, insert=position))
         container.add(g)
         
-        return (w, h)
-    
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
         points = []
@@ -508,6 +496,30 @@ class StandardDrawing:
             stroke_rgb = [255, 255, 255]
             stroke_rgb[cmy_index] = 0
             self.image_spiral_single(layer, file, centre, scale, stroke=svgwrite.rgb(stroke_rgb[0], stroke_rgb[1], stroke_rgb[2], '%'), colour=True, cmy_index=cmy_index)
+
+    def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', container=None, stroke=None):
+
+        stroke = self.default_stroke(stroke)
+        container = self.default_container(container)
+        style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        print(style)
+        g = self.dwg.g(style=style)
+        
+        # unadjusted y is at bottom left (high y, low x)
+
+        (w,h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
+        
+        s = math.sin(angle * math.pi / 180)
+        c = math.cos(angle * math.pi / 180)
+        x_letter = spiral_centre[0] # + radius * s # - w/2 * c
+        y_letter = spiral_centre[1] - radius # - radius * c # + w/2 * s
+        #x_rotc = spiral_centre[0] + radius * s + w/2 * c
+        #y_rotc = spiral_centre[1] - radius * c - w/2 * s
+        g.add(self.dwg.text(letter, insert=(x_letter, y_letter), transform=f'rotate({angle}, {spiral_centre[0]}, {spiral_centre[1]})', stroke=stroke)) # settings are valid for all text added to 'g'
+        
+        container.add(g)
+        
+        return (w, h)
 
     def plot_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, container=None, fontsize=6):
 
