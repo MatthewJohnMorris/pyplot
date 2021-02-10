@@ -124,12 +124,13 @@ class StandardDrawing:
         self.strokeWhite = svgwrite.rgb(255, 255, 255, '%')
         self.inkscape = Inkscape(self.dwg)
         self.pen_type = PenType.PigmaMicron05() if pen_type is None else pen_type
+        self.default_layer = self.add_layer("0-default")
         if self.pen_type.is_black:
             layer = self.add_layer("x-background")
             layer.add(self.dwg.rect(insert=(0, 0), size=('100%', '100%'), rx=None, ry=None, fill='rgb(0,0,0)'))
 
     def default_container(self, container):
-        return self.dwg if container is None else container
+        return self.default_layer if container is None else container
     
     def default_stroke(self, stroke):
         if not stroke is None:
@@ -316,6 +317,29 @@ class StandardDrawing:
         xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
         return (width, height)
 
+    @staticmethod
+    def text_bound_letter(letter, fontsize, family):
+        (w1, h1) = StandardDrawing.text_bound(f"X{letter}X", fontsize, family)
+        (w2, h2) = StandardDrawing.text_bound(f"XX", fontsize, family)
+        (w3, h3) = StandardDrawing.text_bound(letter, fontsize, family)
+        w = w1 - w2
+        return (w, h3)
+
+    def draw_letter(self, letter, position, fontsize, angle=0, family='Arial'):
+
+        g = self.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
+        
+        x = position[0]
+        y = position[1]
+        f = self.text(letter, insert=(x, y)) # settings are valid for all text added to 'g'
+        (w, h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
+        cx = x + w/2
+        cy = y - w/2
+        g.add(self.text(letter, insert=(x, y), transform=f'rotate({angle}, {cx}, {cy})')) # settings are valid for all text added to 'g'
+        self.add(g)
+        
+        return (x + w, y)
+
     def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', stroke=None, container=None):
 
         container = self.dwg if container is None else container
@@ -324,12 +348,7 @@ class StandardDrawing:
         
         # unadjusted y is at bottom left (high y, low x)
 
-        space_letter = letter if letter != " " else "ll"
-        (w1, h1) = StandardDrawing.text_bound(f"X{space_letter}X", fontsize, family)
-        (w2, h2) = StandardDrawing.text_bound(f"XX", fontsize, family)
-        (w3, h3) = StandardDrawing.text_bound(letter, fontsize, family)
-        w = w1 - w2
-        h = h3
+        (w,h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
         
         s = math.sin(angle * math.pi / 180)
         c = math.cos(angle * math.pi / 180)

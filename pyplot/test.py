@@ -195,31 +195,7 @@ def random_rects(drawing):
         stroke = strokes[i_layer]
         drawing.add_rect(i_tl, i_ext[0], i_ext[1], stroke=stroke, container=layer)
 
-def draw_letter(dwg, letter, position, fontsize, angle=0, family='Arial'):
-
-    g = dwg.g(style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:black;fill:none") # stroke-width:1;
-    
-    x = position[0]
-    y = position[1]
-    f = dwg.text(letter, insert=(x, y)) # settings are valid for all text added to 'g'
-    (w, h) = StandardDrawing.text_bound(letter, fontsize)
-    cx = x + w/2
-    cy = y - w/2
-    g.add(dwg.text(letter, insert=(x, y), transform=f'rotate({angle}, {cx}, {cy})')) # settings are valid for all text added to 'g'
-    dwg.add(g)
-
-    (width1, foo) = StandardDrawing.text_bound("x", fontsize, family)
-    (width2, foo) = StandardDrawing.text_bound(f"x{letter}x", fontsize, family)
-    width = width2 - 2 * width1
-    
-    # these choices reproduce the result of plotting a string - but why the need for a weight?
-    # return (x + width * 0.81, y) # CNC Vector
-    # return (x + width * 0.852, y) # CutlingsGeometric
-    # return (x + width * 0.852, y) # CutlingsGeometricRound
-    # return (x + width * 1.03, y) # HersheyScript1smooth
-    return (x + width * 0.94, y) # Stymie Hairline
-    
-def draw_text_by_letter(drawing, family='Arial', s=None):
+def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None):
        
     fontsize = 10
     
@@ -286,120 +262,6 @@ def burroughs_medal(d):
     # print("medal")
     d.image_spiral_single(d.add_layer('2'), 'burroughs.jpg', (100, 160), 25)
     text_in_circle(d)
-   
-# Fills for arbitrary polygons.
-
-# Start with convex. You have a bunch of vertexes: v0, ..., vn
-# So you have edges [v0, v1], ..., [vn, v0]
-# WLOG rasterise on the y axis.
-# Start with min(v0.y, ..., vn.y)
-# figure out crossings - there should be one exactly
-# First point is there
-# Then increment y to (say) y + width/2 - keep that constant
-# Now check intersections. There should be at most 2 lines
-# So you have a min-x and max-x_max
-# Rinse and repeat until you're at the top_left
-
-def make_solid_poly2(d, points, pen_width):
-
-    # Get lowest-y point
-    points = []
-    min_y_point = points[0]
-    for point in points[1:]:
-        if point[1] < min_y_point[1]:
-            min_y_point = point
-
-    points.append(point)
-    
-    y = min_y_point[1]
-    
-    while(true):
-        crossings = calc_crossings(y, points)
-        if len(crossings) == 0:
-            break
-        if len(crossings) > 2:
-            raise Exception(f"oh god, no! wrong number of crossings: {len(crossings)}")
-        points.append(crossings)
-        
-        y += d.pen_type.pen_width / 2
-
-def calc_crossings(point, points):
-    return None
-
-# Next stop is stars etc
-# Keep track of which veritices you're between
-# When you change veritices, if you're decreasing y then law off for now
-# The furthest current x-c
-   
-# Experimental. Can we get an even fill for large polygons?
-# Ideally we would go for some sort of hatching/rasterization and make this
-# fully generic. There is an issue with larger lines since the acceleration
-# of GRBL results in gapping for ink. 
-# One way out of this might be to have different speed limits for pen-up 
-# pen-down and get fourxidraw.py to send the appropriate GRBL codes.   
-def make_solid_poly(points, pen_width, inner_ratio=0):
-    
-    (cx, cy) = (0, 0)
-    np = len(points)
-    for point in points:
-        cx += point[0]/np
-        cy += point[1]/np
-    # print(f"Centre={(cx, cy)}")
-    max_dist = 0
-    for point in points:
-        dx = point[0] - cx
-        dy = point[1] - cy
-        dist = math.sqrt(dx*dx + dy*dy)
-        max_dist = max(max_dist, dist)
-    # print(f"max_dist={max_dist}")
-    divs = int(max_dist * (1-inner_ratio) / (pen_width / 2)) + 1
-    # divs = int(divs / 10)
-    
-    # we want to spiral OUTWARDS for a smooth fill
-    solid_points = []
-    # first go around the inside            
-    if inner_ratio == 0:
-        solid_points.append((cx, cy))
-    else:
-        for ip in range(0, np):
-            sx = cx + (points[ip][0] - cx) * inner_ratio
-            sy = cy + (points[ip][1] - cy) * inner_ratio
-            solid_points.append((sx, sy))
-    # now spiral out: 0 => 1, inner_ratio => divs
-    for i in range(0, divs):
-        mult_start = 1 + (inner_ratio - 1) * i / divs
-        mult_end = 1 + (inner_ratio - 1) * (i+1) / divs
-        for ip in range(0, np):
-            mult = mult_start + (mult_end - mult_start) * ip / np
-            mult = 1 - mult
-            sx = cx + (points[ip][0] - cx) * mult
-            sy = cy + (points[ip][1] - cy) * mult
-            solid_points.append((sx, sy))
-    # finally go around the outside
-    for point in points:
-        solid_points.append(point)
-    solid_points.append(points[0])
-    
-    # print(f"total points: {len(solid_points)}")
-    
-    return solid_points
-
-def test_solid_poly(drawing):
-    points = [
-        (40, 40), (42, 40), (44, 38), (46, 40),
-        (48, 40), (48, 42), (50, 44), (48, 46),
-        (48, 48), (46, 48), (44, 50), (42, 48),
-        (40, 48), (40, 46), (38, 44), (40, 42)]
-    for r in range(0, 8):
-        for c in range(0, 8):
-            points2 = [(p[0] + 12*r, p[1] + 12*c + 40) for p in points]
-            solid_points2 = make_solid_poly(points2, drawing.pen_type.pen_width, inner_ratio = 0.8)
-            drawing.add_polyline(solid_points2)
-
-def test_triangle(drawing):
-    points = [(40, 80), (65, 85), (50, 95)]
-    solid_points2 = make_solid_poly(points, drawing.pen_type.pen_width)
-    drawing.add_polyline(solid_points2)
 
 def test_dots(d):
 
@@ -554,23 +416,30 @@ def test_shape_filler(d):
 def complex_fill(d):
 
     points = []
-    centre = (150,100)
+    centre = (150,50)
     sq = d.make_rect(centre, 20, 20)
     points = d.make_rotated_polyline(sq, centre, 13)
     sf = ShapeFiller(points)
-    for path in sf.get_paths(3*d.pen_type.pen_width / 5, angle=math.pi/2):
+    for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
         d.add_polyline(path)
+
+
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added so you can get some idea of what
 # things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or write your plots into named layers and print them via the "Layers" tab.
-d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
 # d.image_spiral_single(d.dwg, 'burroughs.jpg', (150, 150), 30, x_scale = 0.8)
 # d.add_circle((100, 100), 10, n=4)
 
-complex_fill(d)
+# complex_fill(d)
+    # return (x + width * 0.81, y) # CNC Vector
+    # return (x + width * 0.852, y) # CutlingsGeometric
+    # return (x + width * 0.852, y) # CutlingsGeometricRound
+    # return (x + width * 1.03, y) # HersheyScript1smooth
+    # return (x + width * 0.94, y) # Stymie Hairline
 
 '''
 test_shape_filler(d)
@@ -584,7 +453,7 @@ test_solid_poly(d)
 test_triangle(d)
 text_smear(d)
 multi_burroughs(d)
-draw_text_by_letter(d)
+draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 random_rects(d)
 plot_perlin_spirals(d)
 d.add_spiral((60, 60), 30)
