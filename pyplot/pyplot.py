@@ -637,7 +637,7 @@ class StandardDrawing:
         mid_x = (min_x + max_x) / 2
         return [(mid_x + (p[0] - mid_x) * factor, p[1]) for p in points]
       
-    def fill_in_paths(self, path_gen_func):
+    def fill_in_paths_old(self, path_gen_func):
 
         pen_width = self.pen_type.pen_width
         
@@ -666,6 +666,22 @@ class StandardDrawing:
                 path_t = path_t[::-1]
             path.extend(path_t)
         return path
+      
+    def fill_in_paths(self, path_gen_func, width_mult=0.4):
+
+        pen_width = self.pen_type.pen_width
+        
+        path0 = path_gen_func(0.0)
+        path1 = path_gen_func(1.0)
+        path0.extend(path1[::-1])
+        
+        angle = 0
+        
+        all_paths = []
+        sf = ShapeFiller([path0])
+        for path in sf.get_paths(self.pen_type.pen_width * width_mult, angle=angle):
+            all_paths.extend(path)
+        return all_paths
 
 class CircleBlock:    
 

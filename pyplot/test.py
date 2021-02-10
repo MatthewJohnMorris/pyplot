@@ -18,8 +18,9 @@ from pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
 from perlin import PerlinNoise
   
 def draw_riley(drawing):    
-    
+
     nslice = 40    
+    
     for i in range(0, nslice):    
         b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
         path = drawing.fill_in_paths(b.path_gen_f)
@@ -360,6 +361,16 @@ def complex_fill(d):
     for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
         d.add_polyline(path)
 
+def fill_test(d):
+
+    points = []
+    for i in range(1, 11):
+        tl = (80,20+20*i)
+        sq = d.make_rect(tl, 18, 18)
+        sf = ShapeFiller([sq])
+        for path in sf.get_paths(i*d.pen_type.pen_width / 10):
+            d.add_polyline(path)
+
 def plot_surface(drawing):
 
     # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
@@ -375,9 +386,11 @@ def plot_surface(drawing):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-test_shape_filler(d)
+draw_riley(d)
 
 '''
+draw_riley(d)
+fill_test(d)
 test_shape_filler(d)
 valentine(d)
 burroughs_medal(d)
@@ -395,7 +408,6 @@ plot_perlin_spirals(d)
 d.add_spiral((60, 60), 30)
 d.add_spiral((61.6666, 61.666), 30)
 d.plot_spiral_text((100.75, 100.75), 60)
-draw_riley(d)
 draw_unknown_pleasures(d)
 d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
 d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
