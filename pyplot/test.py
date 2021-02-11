@@ -151,24 +151,6 @@ def random_rects(drawing):
         stroke = strokes[i_layer]
         drawing.add_rect(i_tl, i_ext[0], i_ext[1], stroke=stroke, container=layer)
 
-def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None):
-       
-    fontsize = 10
-    
-    # family = 'CNC Vector' # good machine font
-    # family = 'CutlingsGeometric' # spaces too big!
-    # family = 'CutlingsGeometricRound' # spaces too big!
-    # family = 'HersheyScript1smooth' # good "handwriting" font
-    # family = 'Stymie Hairline' # a bit cutsey, but ok
-    
-    ys = 80
-    s = "all work and no play makes Jack a dull boy" if s is None else s
-    (x, y) = (20, ys)
-    for c in s:
-        (x, y) = drawing.draw_letter(c, (x, y), fontsize, family=family)
-           
-    drawing.draw_text(s, (20, ys+20), fontsize, family=family)
-
 def multi_burroughs(drawing):
     layer1 = drawing.add_layer('1')
     drawing.image_spiral_single(layer1, 'burroughs.jpg', (100, 60), 30, svgwrite.rgb(255, 0, 0, '%'))
@@ -379,14 +361,45 @@ def plot_surface(drawing):
     y_size = 240
     p = PerlinNoise(scale=100)
     d.add_surface(top_left, x_size, y_size, p.calc2d)
+
+def test_text_sze():
+    family='HersheyScript1smooth'
+    fontsize=8
+    d.draw_text(f"{family}: {d.pen_type.name}", (20, 20), fontsize=fontsize, family=family)
+    for fontsize in range(4, 13):
+        d.draw_text(f"{fontsize}pt: abcdefg", (20, 20 + 20 * (fontsize-3)), fontsize=fontsize, family=family)
+
         
+def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None):
+       
+    fontsize = 10
+    
+    # family = 'CNC Vector' # good machine font
+    # family = 'CutlingsGeometric' # spaces too big!
+    # family = 'CutlingsGeometricRound' # spaces too big!
+    # family = 'HersheyScript1smooth' # good "handwriting" font
+    # family = 'Stymie Hairline' # a bit cutsey, but ok
+    
+    ys = 80
+    s = "all work and no play makes Jack a dull boy" if s is None else s
+    (x, y) = (20, ys)
+    for c in s:
+        (x, y) = drawing.draw_letter(c, (x, y), fontsize, family=family)
+           
+    drawing.draw_text(s, (20, ys+20), fontsize, family=family)
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_riley(d)
+draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
+
+family='CNC Vector' # 'HersheyScript1smooth'
+position = (20, 20)
+ext = d.draw_text(f"Andrew Wakefield", position, fontsize="15pt", family=family)
+d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
 
 '''
 draw_riley(d)

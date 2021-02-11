@@ -139,6 +139,14 @@ class StandardDrawing:
         if self.pen_type.is_black:
             return self.strokeWhite
         return self.strokeBlack
+
+    def default_fontsize(self, fontsize):
+        if fontsize is None:
+            return "8pt"
+        fontsize = str(fontsize)
+        if fontsize.isnumeric():
+            return f"{fontsize}pt"
+        return fontsize
         
     def add_polyline(self, points, stroke=None, container=None):
         container = self.default_container(container)
@@ -338,26 +346,36 @@ class StandardDrawing:
         # Don't import cairo unless we need it (for text placement that needs to size letters)
         import cairo
         
-        surface = cairo.SVGSurface('undefined.svg', 1280, 200)
+        surface = cairo.SVGSurface('undefined.svg', 210, 290)
         cr = cairo.Context(surface)
         cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-        cr.set_font_size(fontsize)
-        xbearing, ybearing, width, height, xadvance, yadvance = cr.text_extents(text)
-        return (width, height)
+        fontsize_in_pt = int(str(fontsize).replace("pt", ""))
+        
+        # For some reason, going from theoretical rataio of 96/72 (1.33333) to 1.3563 seems to improve the match
+        # between cairo's plotting and what actually gets drawn?
+        ratio = 96 / 72 # (pixels / points)
+        ratio += 0.023
+        
+        fontsize_in_px = fontsize_in_pt * ratio
+        cr.set_font_size(fontsize_in_px)
+        return cr.text_extents(text)
 
     @staticmethod
     def text_bound_letter(letter, fontsize, family):
-        (w1, h1) = StandardDrawing.text_bound(f"X{letter}X", fontsize, family)
-        (w2, h2) = StandardDrawing.text_bound(f"XX", fontsize, family)
-        (w3, h3) = StandardDrawing.text_bound(letter, fontsize, family)
-        w = w1 - w2
-        return (w, h3)
+    
+        ext1 = StandardDrawing.text_bound(f"X{letter}X", fontsize, family)
+        ext2 = StandardDrawing.text_bound(f"XX", fontsize, family)
+        ext3 = StandardDrawing.text_bound(letter, fontsize, family)
+        w = ext1.width - ext2.width
+        return (w, ext3.height)
 
     def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
+        fontsize = self.default_fontsize(fontsize)
         style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        
         g = self.dwg.g(style=style)
         
         x = position[0]
@@ -374,10 +392,14 @@ class StandardDrawing:
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
+        fontsize = self.default_fontsize(fontsize)
         style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        
         g = self.dwg.g(style=style)
         g.add(self.dwg.text(text, insert=position))
         container.add(g)
+        
+        return StandardDrawing.text_bound(text, fontsize, family)
         
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
