@@ -381,13 +381,14 @@ class StandardDrawing:
         w = ext1.width - ext2.width
         return (w, ext3.height)
 
-    def draw_text_with_style(self, container, text, position, style, transform):
-    
+    def draw_text_with_style(self, stroke, container, text, position, style, transform):
+        
+        # print(style)
         g = self.dwg.g(style=style)
         if transform == '':
-            g.add(self.dwg.text(text, insert=position))
+            g.add(self.dwg.text(text, insert=position, stroke=stroke))
         else:
-            g.add(self.dwg.text(text, insert=position, transform=transform))
+            g.add(self.dwg.text(text, insert=position, stroke=stroke, transform=transform))
         container.add(g)
 
     def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
@@ -397,8 +398,6 @@ class StandardDrawing:
         fontsize = self.default_fontsize(fontsize)
         style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
         
-        g = self.dwg.g(style=style)
-        
         x = position[0]
         y = position[1]
         (w, h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
@@ -406,7 +405,7 @@ class StandardDrawing:
         cy = y - w/2
         
         transform = f'rotate({angle}, {cx}, {cy})'
-        self.draw_text_with_style(container, letter, position, style, transform)
+        self.draw_text_with_style(stroke, container, letter, position, style, transform)
         
         return (x + w, y)
 
@@ -417,7 +416,7 @@ class StandardDrawing:
         fontsize = self.default_fontsize(fontsize)
         style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
         
-        self.draw_text_with_style(container, text, position, style, '')
+        self.draw_text_with_style(stroke, container, text, position, style, '')
         
         return StandardDrawing.text_bound(text, fontsize, family)
         
@@ -572,7 +571,6 @@ class StandardDrawing:
         container = self.default_container(container)
         style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
         # print(style)
-        g = self.dwg.g(style=style)
         
         # unadjusted y is at bottom left (high y, low x)
 
@@ -582,11 +580,9 @@ class StandardDrawing:
         c = math.cos(angle * math.pi / 180)
         x_letter = spiral_centre[0] # + radius * s # - w/2 * c
         y_letter = spiral_centre[1] - radius # - radius * c # + w/2 * s
-        #x_rotc = spiral_centre[0] + radius * s + w/2 * c
-        #y_rotc = spiral_centre[1] - radius * c - w/2 * s
-        g.add(self.dwg.text(letter, insert=(x_letter, y_letter), transform=f'rotate({angle}, {spiral_centre[0]}, {spiral_centre[1]})', stroke=stroke)) # settings are valid for all text added to 'g'
-        
-        container.add(g)
+
+        transform=f'rotate({angle}, {spiral_centre[0]}, {spiral_centre[1]})'
+        self.draw_text_with_style(stroke, container, letter, (x_letter, y_letter), style, transform)
         
         return (w, h)
 
