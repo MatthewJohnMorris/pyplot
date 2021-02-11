@@ -394,12 +394,27 @@ def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
+# draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
-family='CNC Vector' # 'HersheyScript1smooth'
-position = (20, 20)
-ext = d.draw_text(f"Andrew Wakefield", position, fontsize="15pt", family=family)
+family='CutlingsGeometricRound'
+family='HersheyScript1smooth'
+family='CNC Vector'
+position = (20, 40)
+fontsize = 9 # 22 / 3.5
+ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
 d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+
+position = (20, 60)
+fontsize = 9.5 # 22 / 3.5
+ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
+d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+
+position = (20, 80)
+fontsize = 10 # 22 / 3.5
+ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
+d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+
+# d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), 25.4, 25.4)
 
 '''
 draw_riley(d)

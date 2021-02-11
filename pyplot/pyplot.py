@@ -140,11 +140,19 @@ class StandardDrawing:
             return self.strokeWhite
         return self.strokeBlack
 
+    @staticmethod
+    def isfloat(value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
+
     def default_fontsize(self, fontsize):
         if fontsize is None:
             return "8pt"
         fontsize = str(fontsize)
-        if fontsize.isnumeric():
+        if StandardDrawing.isfloat(fontsize):
             return f"{fontsize}pt"
         return fontsize
         
@@ -346,15 +354,19 @@ class StandardDrawing:
         # Don't import cairo unless we need it (for text placement that needs to size letters)
         import cairo
         
-        surface = cairo.SVGSurface('undefined.svg', 210, 290)
+        surface = cairo.SVGSurface('undefined.svg', 210*72/2.54, 290*72/2.54)
+        surface.set_document_unit(cairo.SVGUnit.PT)
         cr = cairo.Context(surface)
         cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-        fontsize_in_pt = int(str(fontsize).replace("pt", ""))
+        fontsize_in_pt = float(str(fontsize).replace("pt", ""))
         
         # For some reason, going from theoretical rataio of 96/72 (1.33333) to 1.3563 seems to improve the match
         # between cairo's plotting and what actually gets drawn?
         ratio = 96 / 72 # (pixels / points)
         ratio += 0.023
+        
+        # Also, having a fontsize of about 22 yields an inch height, or even more! Might need custom rescalings
+        # But for now need to be aware that a fonts are 3 to 4 times bigger than you'd expect.
         
         fontsize_in_px = fontsize_in_pt * ratio
         cr.set_font_size(fontsize_in_px)
