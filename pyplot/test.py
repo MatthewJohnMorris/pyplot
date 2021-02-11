@@ -388,6 +388,28 @@ def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None
            
     drawing.draw_text(s, (20, ys+20), fontsize, family=family)
 
+def test_boxed_text(d):
+
+    family='CutlingsGeometricRound'
+    family='HersheyScript1smooth'
+    family='CNC Vector'
+    family='CutlingsGeometricRound'
+    position = (20, 40)
+    fontsize = 12 # 22 / 3.5
+    ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
+    d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+
+    position = (20, 60)
+    fontsize = 18 # 22 / 3.5
+    ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
+    d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+
+    position = (20, 80)
+    fontsize = 24 # 22 / 3.5
+    ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
+    d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -396,29 +418,17 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
-
-family='CutlingsGeometricRound'
-family='HersheyScript1smooth'
-family='CNC Vector'
-family='CutlingsGeometricRound'
-position = (20, 40)
-fontsize = 12 # 22 / 3.5
-ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
-d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
-
-position = (20, 60)
-fontsize = 18 # 22 / 3.5
-ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
-d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
-
-position = (20, 80)
-fontsize = 24 # 22 / 3.5
-ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
-d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+for j in range(0, 10):
+    x = 20 + 10 * j
+    y = 120
+    for i in range(0, 10):
+        x += d.pen_type.pen_width * 0.2
+        d.add_polyline([(x, y), (x, y + 5 * (j+1))])
 
 # d.plot_spiral_text((100.75, 100.75), 60)
 
 '''
+test_boxed_text(d)
 draw_riley(d)
 fill_test(d)
 test_shape_filler(d)
