@@ -370,6 +370,11 @@ class StandardDrawing:
         
         fontsize_in_px = fontsize_in_pt * ratio
         cr.set_font_size(fontsize_in_px)
+        
+        # cr.text_path(text)   
+        # path = cr.copy_path()
+        # print(path)
+        
         return cr.text_extents(text)
 
     @staticmethod
