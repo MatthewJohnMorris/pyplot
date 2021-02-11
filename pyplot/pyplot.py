@@ -114,12 +114,20 @@ class PenType:
         
     @staticmethod
     def StaedtlerPigment05():
-        return PenType('StaedtlerPigment05', False, 0.5, '0.36px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        return PenType('StaedtlerPigment05', False, 0.5, '0.35px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
 
 class StandardDrawing:
 
     def __init__(self, file='test.svg', pen_type=None):
+    
+        # Using viewBox="0 0 210 297" means we are plotting in mm so 25.4 units to the inch
+        # Native SVG units are in PX - 96 to the inch
+        # So the adjustment is 25.4/96 between the two
+        # We need to use this when we are specifying measurements in other units - currently the only place we are doing this is text, where 
+        # we are working in points - we multiply by the scale factor to plot this at the right size for our viewbox.
         self.dwg = svgwrite.Drawing(file, size=('210mm', '297mm'), viewBox="0 0 210 297") # height='210mm', width='297mm') # , viewBox="0 0 210 297")
+        self.scale = 25.4/96
+        
         self.strokeBlack = svgwrite.rgb(0, 0, 0, '%')
         self.strokeWhite = svgwrite.rgb(255, 255, 255, '%')
         self.inkscape = Inkscape(self.dwg)
@@ -150,10 +158,7 @@ class StandardDrawing:
 
     def default_fontsize(self, fontsize):
         if fontsize is None:
-            return "8pt"
-        fontsize = str(fontsize)
-        if StandardDrawing.isfloat(fontsize):
-            return f"{fontsize}pt"
+            return "8"
         return fontsize
         
     def add_polyline(self, points, stroke=None, container=None):
@@ -348,8 +353,7 @@ class StandardDrawing:
         for points in all_points:
             self.add_polyline(points, stroke=stroke, container=container)
 
-    @staticmethod
-    def text_bound(text, fontsize=14, family='Arial'):
+    def text_bound(self, text, fontsize=14, family='Arial'):
 
         # Don't import cairo unless we need it (for text placement that needs to size letters)
         import cairo
@@ -358,18 +362,9 @@ class StandardDrawing:
         surface.set_document_unit(cairo.SVGUnit.PT)
         cr = cairo.Context(surface)
         cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-        fontsize_in_pt = float(str(fontsize).replace("pt", ""))
         
-        # For some reason, going from theoretical rataio of 96/72 (1.33333) to 1.3563 seems to improve the match
-        # between cairo's plotting and what actually gets drawn?
-        ratio = 96 / 72 # (pixels / points)
-        ratio += 0.023
-        
-        # Also, having a fontsize of about 22 yields an inch height, or even more! Might need custom rescalings
-        # But for now need to be aware that a fonts are 3 to 4 times bigger than you'd expect.
-        
-        fontsize_in_px = fontsize_in_pt * ratio
-        cr.set_font_size(fontsize_in_px)
+        # Adjust the font size we actually use based on our overall scaling factor
+        cr.set_font_size(fontsize * self.scale)
         
         # cr.text_path(text)   
         # path = cr.copy_path()
@@ -377,12 +372,11 @@ class StandardDrawing:
         
         return cr.text_extents(text)
 
-    @staticmethod
-    def text_bound_letter(letter, fontsize, family):
+    def text_bound_letter(self, letter, fontsize, family):
     
-        ext1 = StandardDrawing.text_bound(f"X{letter}X", fontsize, family)
-        ext2 = StandardDrawing.text_bound(f"XX", fontsize, family)
-        ext3 = StandardDrawing.text_bound(letter, fontsize, family)
+        ext1 = self.text_bound(f"X{letter}X", fontsize, family)
+        ext2 = self.text_bound(f"XX", fontsize, family)
+        ext3 = self.text_bound(letter, fontsize, family)
         w = ext1.width - ext2.width
         return (w, ext3.height)
 
@@ -390,22 +384,29 @@ class StandardDrawing:
         
         # print(style)
         g = self.dwg.g(style=style)
+        # print(style)
         if transform == '':
             g.add(self.dwg.text(text, insert=position, stroke=stroke))
         else:
             g.add(self.dwg.text(text, insert=position, stroke=stroke, transform=transform))
         container.add(g)
 
+    def get_style(self, fontsize, family, stroke):
+    
+        # Adjust the font size we actually use based on our overall scaling factor
+        scaled_fontsize = fontsize * self.scale
+        return f"font-size:{scaled_fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+
     def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
         fontsize = self.default_fontsize(fontsize)
-        style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        style=self.get_style(fontsize, family, stroke)
         
         x = position[0]
         y = position[1]
-        (w, h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
+        (w, h) = self.text_bound_letter(letter, fontsize, family)
         cx = x + w/2
         cy = y - w/2
         
@@ -419,11 +420,11 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
         fontsize = self.default_fontsize(fontsize)
-        style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        style=self.get_style(fontsize, family, stroke)
         
         self.draw_text_with_style(stroke, container, text, position, style, '')
         
-        return StandardDrawing.text_bound(text, fontsize, family)
+        return self.text_bound(text, fontsize, family)
         
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
@@ -574,7 +575,7 @@ class StandardDrawing:
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
-        style=f"font-size:{fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
+        style=self.get_style(fontsize, family, stroke)
         # print(style)
         
         # unadjusted y is at bottom left (high y, low x)
