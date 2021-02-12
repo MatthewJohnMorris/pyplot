@@ -393,22 +393,83 @@ def test_boxed_text(d):
     family='CutlingsGeometricRound'
     family='HersheyScript1smooth'
     family='CNC Vector'
-    family='CutlingsGeometricRound'
+    
+    family='HersheyScript1smooth'
     position = (20, 40)
-    fontsize = 12 # 22 / 3.5
-    ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
-    d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+    for i in range(0, 10):
+        fontsize = 8 + i
+        ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
+        d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+        d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
+        position = (position[0], position[1] + ext.height + 10)
 
-    position = (20, 60)
-    fontsize = 18 # 22 / 3.5
-    ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
-    d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+    family='CNC Vector'
+    position = (120, 40)
+    for i in range(0, 10):
+        fontsize = 8 + i
+        ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
+        d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+        d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
+        position = (position[0], position[1] + ext.height + 10)
 
-    position = (20, 80)
-    fontsize = 24 # 22 / 3.5
-    ext = d.draw_text(f"Andrew Wakefield", position, fontsize=fontsize, family=family)
-    d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
-
+def speed_limit_test(d):
+    mult = 0.4
+    layer = d.add_layer("1")
+    for j in range(0, 5):
+        x = 20 + 10 * j
+        y = 20
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("2")
+    for j in range(0, 5):
+        x = 120 + 10 * j
+        y = 20
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("3")
+    for j in range(0, 5):
+        x = 20 + 10 * j
+        y = 70
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("4")
+    for j in range(0, 5):
+        x = 120 + 10 * j
+        y = 70
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("5")
+    for j in range(0, 5):
+        x = 20 + 10 * j
+        y = 120
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("6")
+    for j in range(0, 5):
+        x = 120 + 10 * j
+        y = 120
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("7")
+    for j in range(0, 5):
+        x = 20 + 10 * j
+        y = 170
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    layer = d.add_layer("8")
+    for j in range(0, 5):
+        x = 120 + 10 * j
+        y = 170
+        for i in range(0, 10):
+            x += d.pen_type.pen_width * mult
+            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -418,16 +479,11 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
-for j in range(0, 10):
-    x = 20 + 10 * j
-    y = 120
-    for i in range(0, 10):
-        x += d.pen_type.pen_width * 0.2
-        d.add_polyline([(x, y), (x, y + 5 * (j+1))])
 
-# d.plot_spiral_text((100.75, 100.75), 60)
+test_boxed_text(d)
 
 '''
+speed_limit_test(d)
 test_boxed_text(d)
 draw_riley(d)
 fill_test(d)
