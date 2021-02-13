@@ -27,7 +27,7 @@ def test_rotate_sense():
 
 def test_circle_sense():
 
-    # we have increaing y is down, increasing x is right
+    # we have increasing y is down, increasing x is right
     # we want rotation to be +ve = clockwise
     d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
     c = d.make_circle((0,0), 1, n=4)
