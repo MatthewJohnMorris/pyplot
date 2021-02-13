@@ -102,6 +102,9 @@ class PenType:
         self.rgb_converter = rgb_converter
 
     @staticmethod
+    # Fills
+    # * Moonlight: 0.2*width (0.12mm), and max GRBL speed of 1000
+    # * Metallic: 0.4*width (0.24mm), and max GRBL speed of 2000
     def GellyRollOnBlack():
         # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
         # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle

@@ -4,6 +4,8 @@
 # * pycairo (for text)
 # * svgwrite
 
+import cv2
+
 import csv
 
 import svgwrite
@@ -397,7 +399,7 @@ def test_boxed_text(d):
     family='HersheyScript1smooth'
     position = (20, 40)
     for i in range(0, 10):
-        fontsize = 8 + i
+        fontsize = 12 + i
         ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
         d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
         d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
@@ -406,7 +408,7 @@ def test_boxed_text(d):
     family='CNC Vector'
     position = (120, 40)
     for i in range(0, 10):
-        fontsize = 8 + i
+        fontsize = 12 + i
         ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
         d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
         d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
@@ -480,7 +482,30 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
 
-test_boxed_text(d)
+def image_sketch(d):
+
+    image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
+    (h,w,c) = image.shape
+    
+    print(h,w,c)
+    
+    x_extent = 100
+    scale = x_extent / w
+    r = x_extent / 20
+    
+    intensity = lambda x, y: image[int(y), int(x)][0] / 255
+    
+    x = r
+    while x < w - r:
+        y = r
+        while y < h - r:
+            k = intensity(x, y)
+            r1 = r * scale * k
+            d.add_dot((x * scale, y * scale), r * scale * intensity(x, y))
+            y = y + 2*r
+        x = x + 2*r
+
+image_sketch(d)
 
 '''
 speed_limit_test(d)
