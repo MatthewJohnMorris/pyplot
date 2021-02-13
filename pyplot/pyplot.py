@@ -382,54 +382,9 @@ class StandardDrawing:
         ext3 = self.text_bound(letter, fontsize, family)
         w = ext1.width - ext2.width
         return (w, ext3.height)
-
-    def draw_text_with_style(self, stroke, container, text, position, style, transform):
+        return (w, ext3.height)
         
-        # print(style)
-        g = self.dwg.g(style=style)
-        # print(style)
-        if transform == '':
-            g.add(self.dwg.text(text, insert=position, stroke=stroke))
-        else:
-            g.add(self.dwg.text(text, insert=position, stroke=stroke, transform=transform))
-        container.add(g)
-
-    def get_style(self, fontsize, family, stroke):
-    
-        # Adjust the font size we actually use based on our overall scaling factor
-        scaled_fontsize = fontsize * self.scale
-        return f"font-size:{scaled_fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
-
-    def draw_letter_old(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
-
-        stroke = self.default_stroke(stroke)
-        container = self.default_container(container)
-        fontsize = self.default_fontsize(fontsize)
-        style=self.get_style(fontsize, family, stroke)
-        
-        x = position[0]
-        y = position[1]
-        (w, h) = self.text_bound_letter(letter, fontsize, family)
-        cx = x + w/2
-        cy = y - w/2
-        
-        transform = f'rotate({angle}, {cx}, {cy})'
-        self.draw_text_with_style(stroke, container, letter, position, style, transform)
-        
-        return (x + w, y)
-
-    def draw_text_old(self, text, position, fontsize, family='Arial', container=None, stroke=None):
-
-        stroke = self.default_stroke(stroke)
-        container = self.default_container(container)
-        fontsize = self.default_fontsize(fontsize)
-        style=self.get_style(fontsize, family, stroke)
-        
-        self.draw_text_with_style(stroke, container, text, position, style, '')
-        
-        return self.text_bound(text, fontsize, family)
-        
-    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None):
+    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
@@ -447,7 +402,8 @@ class StandardDrawing:
         cr.set_font_size(fontsize * self.scale)
         cr.text_path(text)   
         path = cr.copy_path()
-        
+
+        # Assemble a svgwrite path from our Cario path
         x0 = position[0]
         y0 = position[1]
         
@@ -478,7 +434,10 @@ class StandardDrawing:
                 curr_command_list = []
                 
         for command_list in all_command_lists:
-            container.add(self.dwg.path(command_list, stroke=stroke, fill='none'))
+            if transform is None:
+                container.add(self.dwg.path(command_list, stroke=stroke, fill='none'))
+            else:
+                container.add(self.dwg.path(command_list, stroke=stroke, fill='none', transform=transform))
 
         return self.text_bound(text, fontsize, family)
         
@@ -631,8 +590,6 @@ class StandardDrawing:
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
-        style=self.get_style(fontsize, family, stroke)
-        # print(style)
         
         # unadjusted y is at bottom left (high y, low x)
 
@@ -644,7 +601,8 @@ class StandardDrawing:
         y_letter = spiral_centre[1] - radius # - radius * c # + w/2 * s
 
         transform=f'rotate({angle}, {spiral_centre[0]}, {spiral_centre[1]})'
-        self.draw_text_with_style(stroke, container, letter, (x_letter, y_letter), style, transform)
+        
+        self.draw_text(letter, (x_letter, y_letter), fontsize, family=family, container=container, stroke=stroke, transform=transform)
         
         return (w, h)
 

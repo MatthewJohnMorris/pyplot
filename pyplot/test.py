@@ -374,7 +374,7 @@ def test_text_sze():
         
 def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None):
        
-    fontsize = 10
+    fontsize = 20
     
     # family = 'CNC Vector' # good machine font
     # family = 'CutlingsGeometric' # spaces too big!
@@ -386,8 +386,10 @@ def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None
     s = "all work and no play makes Jack a dull boy" if s is None else s
     (x, y) = (20, ys)
     for c in s:
-        (x, y) = drawing.draw_letter(c, (x, y), fontsize, family=family)
-           
+        drawing.draw_text(c, (x, y), fontsize, family=family)
+        (w, h) = drawing.text_bound_letter(c, fontsize, family=family)
+        (x, y) = (x + w, y)
+
     drawing.draw_text(s, (20, ys+20), fontsize, family=family)
 
 def test_boxed_text(d):
@@ -400,11 +402,12 @@ def test_boxed_text(d):
     position = (20, 40)
     for i in range(0, 10):
         fontsize = 12 + i
-        ext = d.draw_text_old(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
+        ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
         d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
         d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
         position = (position[0], position[1] + ext.height + 10)
 
+    family='HersheyScript1smooth'
     position = (120, 40)
     for i in range(0, 10):
         fontsize = 12 + i
@@ -510,19 +513,10 @@ def image_sketch(d):
             y = y + 2*r
             i += 1
         x = x + 2*r
-
-def test_quick_text(d):
-
-    family='CutlingsGeometricRound'
-    family='HersheyScript1smooth'
-    family='CNC Vector'
-    family='HersheyScript1smooth'
-    position = (120, 40)
-    ext = d.draw_text("X", position, fontsize=20, family=family)
     
 # test_boxed_text(d)
-# test_quick_text(d)
-d.plot_spiral_text((100.75, 100.75), 60, fontsize=20)
+# d.plot_spiral_text((100.75, 100.75), 60, fontsize=20)
+draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
 '''
 image_sketch(d)
