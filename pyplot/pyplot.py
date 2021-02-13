@@ -384,6 +384,9 @@ class StandardDrawing:
         return (w, ext3.height)
         return (w, ext3.height)
         
+    # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
+    # * No longer need to use Object->Path to print things out in Inkscape
+    # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
     def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
 
         stroke = self.default_stroke(stroke)
@@ -404,6 +407,7 @@ class StandardDrawing:
         path = cr.copy_path()
 
         # Assemble a svgwrite path from our Cario path
+        # TODO: render bezier splines as polynomials, with resolution guided by pen_type.pen_width
         x0 = position[0]
         y0 = position[1]
         
@@ -433,6 +437,7 @@ class StandardDrawing:
                 all_command_lists.append(curr_command_list)
                 curr_command_list = []
                 
+        # Add into the container
         for command_list in all_command_lists:
             if transform is None:
                 container.add(self.dwg.path(command_list, stroke=stroke, fill='none'))
