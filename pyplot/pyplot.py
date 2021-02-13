@@ -364,7 +364,7 @@ class StandardDrawing:
         surface = cairo.SVGSurface('undefined.svg', 210*72/2.54, 290*72/2.54)
         surface.set_document_unit(cairo.SVGUnit.PT)
         cr = cairo.Context(surface)
-        cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+        cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         
         # Adjust the font size we actually use based on our overall scaling factor
         cr.set_font_size(fontsize * self.scale)
@@ -400,7 +400,7 @@ class StandardDrawing:
         scaled_fontsize = fontsize * self.scale
         return f"font-size:{scaled_fontsize};font-family:{family};font-weight:normal;font-style:normal;stroke:{stroke};fill:none"
 
-    def draw_letter(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
+    def draw_letter_old(self, letter, position, fontsize, angle=0, family='Arial', container=None, stroke=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
@@ -418,7 +418,7 @@ class StandardDrawing:
         
         return (x + w, y)
 
-    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None):
+    def draw_text_old(self, text, position, fontsize, family='Arial', container=None, stroke=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
@@ -427,6 +427,59 @@ class StandardDrawing:
         
         self.draw_text_with_style(stroke, container, text, position, style, '')
         
+        return self.text_bound(text, fontsize, family)
+        
+    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None):
+
+        stroke = self.default_stroke(stroke)
+        container = self.default_container(container)
+        fontsize = self.default_fontsize(fontsize)
+
+        # Don't import cairo unless we need it (for text placement that needs to size letters)
+        import cairo
+        
+        surface = cairo.SVGSurface('undefined.svg', 210*72/2.54, 290*72/2.54)
+        surface.set_document_unit(cairo.SVGUnit.PT)
+        cr = cairo.Context(surface)
+        cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        
+        # Adjust the font size we actually use based on our overall scaling factor
+        cr.set_font_size(fontsize * self.scale)
+        cr.text_path(text)   
+        path = cr.copy_path()
+        
+        x0 = position[0]
+        y0 = position[1]
+        
+        svgpath = svgwrite.path.Path()
+        all_command_lists = []
+        curr_command_list = []
+        for type, points in path:
+            if type == cairo.PATH_MOVE_TO:
+                if len(curr_command_list) > 0:
+                    raise Exception(f"Found PATH_MOVE_TO but not at start of path")
+                x, y = points
+                curr_command_list.append(f"M{x0+x},{y0+y}")
+
+            elif type == cairo.PATH_LINE_TO:
+                if len(curr_command_list) == 0:
+                    raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
+                x, y = points
+                curr_command_list.append(f"L{x0+x},{y0+y}")
+
+            elif type == cairo.PATH_CURVE_TO:
+                if len(curr_command_list) == 0:
+                    raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
+                x1, y1, x2, y2, x3, y3 = points
+                curr_command_list.append(f"C{x0+x1},{y0+y1},{x0+x2},{y0+y2},{x0+x3},{y0+y3}")
+
+            elif type == cairo.PATH_CLOSE_PATH:
+                all_command_lists.append(curr_command_list)
+                curr_command_list = []
+                
+        for command_list in all_command_lists:
+            container.add(self.dwg.path(command_list, stroke=stroke, fill='none'))
+
         return self.text_bound(text, fontsize, family)
         
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
@@ -583,7 +636,7 @@ class StandardDrawing:
         
         # unadjusted y is at bottom left (high y, low x)
 
-        (w,h) = StandardDrawing.text_bound_letter(letter, fontsize, family)
+        (w,h) = self.text_bound_letter(letter, fontsize, family)
         
         s = math.sin(angle * math.pi / 180)
         c = math.cos(angle * math.pi / 180)
@@ -602,7 +655,7 @@ class StandardDrawing:
         r = 0.5 # initial radius
         a = 0 # starting angle
         c_size = self.pen_type.pen_width # constant distance travelled: something like the nib width is probably best
-        r_per_circle = fontsize
+        r_per_circle = fontsize * self.scale
         
         i = 0
         # Let the spiral get going before we start plotting

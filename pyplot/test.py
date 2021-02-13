@@ -396,16 +396,15 @@ def test_boxed_text(d):
     family='HersheyScript1smooth'
     family='CNC Vector'
     
-    family='HersheyScript1smooth'
+    family='CNC Vector'
     position = (20, 40)
     for i in range(0, 10):
         fontsize = 12 + i
-        ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
+        ext = d.draw_text_old(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
         d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
         d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
         position = (position[0], position[1] + ext.height + 10)
 
-    family='CNC Vector'
     position = (120, 40)
     for i in range(0, 10):
         fontsize = 12 + i
@@ -476,13 +475,16 @@ def speed_limit_test(d):
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
-d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
 
 def image_sketch(d):
+
+    layer1 = d.add_layer("1")
+    layer2 = d.add_layer("1")
 
     image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
     (h,w,c) = image.shape
@@ -495,19 +497,35 @@ def image_sketch(d):
     
     intensity = lambda x, y: image[int(y), int(x)][0] / 255
     
+    i = 0
+    
     x = r
     while x < w - r:
         y = r
         while y < h - r:
             k = intensity(x, y)
             r1 = r * scale * k
-            d.add_dot((x * scale, y * scale), r * scale * intensity(x, y))
+            layer = layer1 if (i % 2 == 0) else layer2
+            d.add_dot((x * scale, y * scale), r * scale * intensity(x, y), container=layer)
             y = y + 2*r
+            i += 1
         x = x + 2*r
 
-image_sketch(d)
+def test_quick_text(d):
+
+    family='CutlingsGeometricRound'
+    family='HersheyScript1smooth'
+    family='CNC Vector'
+    family='HersheyScript1smooth'
+    position = (120, 40)
+    ext = d.draw_text("X", position, fontsize=20, family=family)
+    
+# test_boxed_text(d)
+# test_quick_text(d)
+d.plot_spiral_text((100.75, 100.75), 60, fontsize=20)
 
 '''
+image_sketch(d)
 speed_limit_test(d)
 test_boxed_text(d)
 draw_riley(d)
