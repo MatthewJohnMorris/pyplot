@@ -436,6 +436,9 @@ class StandardDrawing:
             elif type == cairo.PATH_CLOSE_PATH:
                 all_command_lists.append(curr_command_list)
                 curr_command_list = []
+
+        for command_list in all_command_lists:
+            print(command_list)
                 
         # Add into the container
         for command_list in all_command_lists:
