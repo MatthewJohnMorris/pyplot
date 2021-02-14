@@ -43,14 +43,15 @@ def test_circle_sense():
     
 def get_text_scale_factor(text, fontsize, family):
 
-    (w, h) = StandardDrawing.text_bound(text, fontsize, family)
+    d = StandardDrawing()
+    ext = d.text_bound(text, fontsize, family)
     
     tot_cw = 0
     for c in text:
-        (cw, ch) = StandardDrawing.text_bound_letter(c, fontsize, family)
-        tot_cw += cw
+        (w, _) = d.text_bound_letter(c, fontsize, family)
+        tot_cw += w
         
-    return w/tot_cw
+    return ext.width/tot_cw
     
 def test_text_bound_letter_matches_text_bound():
 
