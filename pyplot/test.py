@@ -515,7 +515,7 @@ def image_sketch(d):
             i += 1
         x = x + 2*r
     
-# test_boxed_text(d)
+test_boxed_text(d)
 # d.plot_spiral_text((100.75, 100.75), 60, fontsize=20)
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 letter_paths = d.make_text("TEST", (20, 30), 96, family="Arial")

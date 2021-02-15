@@ -29,6 +29,8 @@ def bezier_max_dist(bez):
     (x3, y3) = bez[3]
     (x03, y03) = (x3 - x0, y3 - y0)
     d03 = math.sqrt(x03*x03 + y03*y03)
+    if d03 == 0:
+        return 0
     d1 = abs(x03*(y0 - y1) - y03*(x0 - x1)) / d03
     d2 = abs(x03*(y0 - y2) - y03*(x0 - x2)) / d03
     return max(d1, d2)
@@ -59,7 +61,7 @@ def bezier_subdivide( start, spline_array, flat ):
     while True:
         while True:
             if i >= len( spline_array ):
-                print(f"final array length={len(spline_array)}")
+                # print(f"final array length={len(spline_array)}")
                 return spline_array
 
             p0 = spline_array[i - 1][1]
