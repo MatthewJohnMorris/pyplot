@@ -476,14 +476,6 @@ def speed_limit_test(d):
             x += d.pen_type.pen_width * mult
             d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
 
-# Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
-# can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
-# before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
-# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-
-# draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-
 
 def image_sketch(d):
 
@@ -514,28 +506,30 @@ def image_sketch(d):
             y = y + 2*r
             i += 1
         x = x + 2*r
-    
-test_boxed_text(d)
-# d.plot_spiral_text((100.75, 100.75), 60, fontsize=20)
+
+def test_text_and_shape(d):
+
+    letter_paths = d.make_text("TEST", (20, 80), 96, family="Arial")
+    circle = d.make_circle((50, 70), 15)
+    letter_paths.append(circle)
+    sf = ShapeFiller(letter_paths)
+    for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
+        d.add_polyline(path)
+
+# Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
+# can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
+# before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
+# d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-letter_paths = d.make_text("TEST", (20, 30), 96, family="Arial")
-circle = d.make_circle((50, 20), 15)
-letter_paths.append(circle)
-sf = ShapeFiller(letter_paths)
-for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
-    d.add_polyline(path)
 
+d.draw_text("abcdefghijklmnopqrstuvwxyz", (20, 20), fontsize=12, family="Arial")
+
+d.plot_spiral_text((100, 100), 60, fontsize=12)
 
 '''
-start = (100, 100)
-spline_array = [[(125,250), (150,100), (150,100)],[(175,250), (200,100), (200,100)]]
-spline_array = bezier_subdivide(start, spline_array, 1e-4)
-line = [start]
-for sa in spline_array:
-    line.append(sa[2])
-d.add_polyline(line)
-'''
-'''
+test_text_and_shape(d)
 image_sketch(d)
 speed_limit_test(d)
 test_boxed_text(d)
