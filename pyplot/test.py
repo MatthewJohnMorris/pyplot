@@ -518,7 +518,15 @@ def image_sketch(d):
 # test_boxed_text(d)
 # d.plot_spiral_text((100.75, 100.75), 60, fontsize=20)
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-# d.draw_text("O", (100, 100), 12, family="Arial")
+letter_paths = d.make_text("TEST", (20, 30), 96, family="Arial")
+circle = d.make_circle((50, 20), 15)
+letter_paths.append(circle)
+sf = ShapeFiller(letter_paths)
+for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
+    d.add_polyline(path)
+
+
+'''
 start = (100, 100)
 spline_array = [[(125,250), (150,100), (150,100)],[(175,250), (200,100), (200,100)]]
 spline_array = bezier_subdivide(start, spline_array, 1e-4)
@@ -526,6 +534,7 @@ line = [start]
 for sa in spline_array:
     line.append(sa[2])
 d.add_polyline(line)
+'''
 '''
 image_sketch(d)
 speed_limit_test(d)

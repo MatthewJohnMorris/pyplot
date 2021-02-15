@@ -16,6 +16,8 @@ seed(10)
 
 import math
 
+from bezier import *
+
 class BWConverters:
 
     @staticmethod
@@ -387,10 +389,8 @@ class StandardDrawing:
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
     # * No longer need to use Object->Path to print things out in Inkscape
     # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
-    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
+    def make_text(self, text, position, fontsize, family='Arial'):
 
-        stroke = self.default_stroke(stroke)
-        container = self.default_container(container)
         fontsize = self.default_fontsize(fontsize)
 
         # Don't import cairo unless we need it (for text placement that needs to size letters)
@@ -412,40 +412,66 @@ class StandardDrawing:
         y0 = position[1]
         
         svgpath = svgwrite.path.Path()
-        all_command_lists = []
-        curr_command_list = []
+        all_polylines = []
+        curr_polyline = []
+        prev_position = None
+        pending_splines = []
         for type, points in path:
+            if type != cairo.PATH_CURVE_TO:
+                if len(pending_splines) > 0:
+                    # convert any pending splines to small enough subsections that we can plot them as stright lines
+                    a = bezier_subdivide(prev_position, pending_splines, self.pen_type.pen_width / 5)
+                    for small_spline in a:
+                        x, y = small_spline[2]
+                        prev_position = (x,y)
+                        curr_polyline.append((x0+x,y0+y))
+                    pending_splines = []
+                    
             if type == cairo.PATH_MOVE_TO:
-                if len(curr_command_list) > 0:
+                if len(curr_polyline) > 0:
                     raise Exception(f"Found PATH_MOVE_TO but not at start of path")
                 x, y = points
-                curr_command_list.append(f"M{x0+x},{y0+y}")
+                prev_position = (x,y)
+                curr_polyline.append((x0+x,y0+y))
 
             elif type == cairo.PATH_LINE_TO:
-                if len(curr_command_list) == 0:
+                if len(curr_polyline) == 0:
                     raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
                 x, y = points
-                curr_command_list.append(f"L{x0+x},{y0+y}")
+                prev_position = (x,y)
+                curr_polyline.append((x0+x,y0+y))
 
             elif type == cairo.PATH_CURVE_TO:
-                if len(curr_command_list) == 0:
+                if len(curr_polyline) == 0:
                     raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
                 x1, y1, x2, y2, x3, y3 = points
-                curr_command_list.append(f"C{x0+x1},{y0+y1},{x0+x2},{y0+y2},{x0+x3},{y0+y3}")
+                pending_splines.append([(x1,y1), (x2,y2), (x3,y3)])
 
             elif type == cairo.PATH_CLOSE_PATH:
-                all_command_lists.append(curr_command_list)
-                curr_command_list = []
+                all_polylines.append(curr_polyline)
+                curr_polyline = []
+                prev_position = None
+                pending_splines = []
+    
+        return all_polylines
+         
+    # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
+    # * No longer need to use Object->Path to print things out in Inkscape
+    # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
+    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
 
-        for command_list in all_command_lists:
-            print(command_list)
+        stroke = self.default_stroke(stroke)
+        container = self.default_container(container)
+        fontsize = self.default_fontsize(fontsize)
+
+        all_polylines = self.make_text(text, position, fontsize, family)
                 
         # Add into the container
-        for command_list in all_command_lists:
+        for polyline in all_polylines:
             if transform is None:
-                container.add(self.dwg.path(command_list, stroke=stroke, fill='none'))
+                container.add(self.dwg.polygon(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
             else:
-                container.add(self.dwg.path(command_list, stroke=stroke, fill='none', transform=transform))
+                container.add(self.dwg.polygon(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none', transform=transform))
 
         return self.text_bound(text, fontsize, family)
         
