@@ -389,9 +389,10 @@ class StandardDrawing:
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
     # * No longer need to use Object->Path to print things out in Inkscape
     # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
-    def make_text(self, text, position, fontsize, family='Arial'):
+    def make_text(self, text, position, fontsize, family='Arial', transform=None):
 
         fontsize = self.default_fontsize(fontsize)
+        transform = (lambda x: x) if transform is None else transform
 
         # Don't import cairo unless we need it (for text placement that needs to size letters)
         import cairo
@@ -430,14 +431,14 @@ class StandardDrawing:
             if type == cairo.PATH_MOVE_TO:
                 if len(curr_polyline) > 0:
                     raise Exception(f"Found PATH_MOVE_TO but not at start of path")
-                x, y = points
+                x, y = transform(points)
                 prev_position = (x,y)
                 curr_polyline.append((x0+x,y0+y))
 
             elif type == cairo.PATH_LINE_TO:
                 if len(curr_polyline) == 0:
                     raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
-                x, y = points
+                x, y = transform(points)
                 prev_position = (x,y)
                 curr_polyline.append((x0+x,y0+y))
 
@@ -445,7 +446,7 @@ class StandardDrawing:
                 if len(curr_polyline) == 0:
                     raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
                 x1, y1, x2, y2, x3, y3 = points
-                pending_splines.append([(x1,y1), (x2,y2), (x3,y3)])
+                pending_splines.append([transform((x1,y1)), transform((x2,y2)), transform((x3,y3))])
 
             elif type == cairo.PATH_CLOSE_PATH:
                 all_polylines.append(curr_polyline)
@@ -458,13 +459,13 @@ class StandardDrawing:
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
     # * No longer need to use Object->Path to print things out in Inkscape
     # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
-    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None):
+    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
         fontsize = self.default_fontsize(fontsize)
-
-        all_polylines = self.make_text(text, position, fontsize, family)
+        
+        all_polylines = self.make_text(text, position, fontsize, family, transform)
                 
         # Add into the container
         for polyline in all_polylines:
@@ -481,19 +482,15 @@ class StandardDrawing:
 
         (w,h) = self.text_bound_letter(letter, fontsize, family)
         
-        s = math.sin(angle)
-        c = math.cos(angle)
-        x_letter = spiral_centre[0] # + radius * s # - w/2 * c
-        y_letter = spiral_centre[1] - radius # - radius * c # + w/2 * s
+        letter_position = (spiral_centre[0], spiral_centre[1] - radius)
         
-        all_polylines = self.make_text(letter, (x_letter, y_letter), fontsize, family=family)
-        transformed_polylines = []
+        # transform is applied to letter BEFORE we translate by letter_position
+        # e.g. it's relative to (0,0)
+        transform = lambda x: StandardDrawing.rotate_about(x, (0, radius), angle)
+        
+        all_polylines = self.make_text(letter, letter_position, fontsize, family=family, transform=transform)
         for polyline in all_polylines:
-            transformed_polyline = [StandardDrawing.rotate_about(x, spiral_centre, angle) for x in polyline]
-            transformed_polylines.append(transformed_polyline)
-            
-        for transformed_polyline in transformed_polylines:
-            container.add(self.dwg.polygon(transformed_polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
+            container.add(self.dwg.polygon(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         
         return (w, h)
 

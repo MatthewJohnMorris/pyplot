@@ -42,8 +42,9 @@ def bezier_subdivide( start, spline_array, flat ):
     (the "smoothness" defined by [flat]).
     """
 
-    # we want to add in an initial spline that is already small enough to not
-    # require further modification
+    # When we start splitting splines, the start spline of the split doesn't have its control points affected, just
+    # its endpoints. So we we want to add in an initial spline that is already small enough to not require further
+    # division, and which is also already pointing in the right direction.
     initial = spline_array[0]
     copy = [initial[0], initial[1], initial[2]]
     while True:
