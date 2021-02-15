@@ -524,9 +524,14 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
-d.draw_text("abcdefghijklmnopqrstuvwxyz", (20, 20), fontsize=12, family="Arial")
+# d.draw_text("abcdefghijklmnopqrstuvwxyz", (20, 20), fontsize=24, family="Arial")
 
-d.plot_spiral_text((100, 100), 60, fontsize=12)
+polylines = d.make_spiral_text((100, 100), 60, fontsize=36, family='Arial')
+for i in range(10, 80, 10):
+    polylines.append(d.make_circle((100, 100), i))
+sf = ShapeFiller(polylines)
+for path in sf.get_paths(8*d.pen_type.pen_width / 5, angle=math.pi/5):
+    d.add_polyline(path)
 
 '''
 test_text_and_shape(d)
@@ -551,7 +556,7 @@ random_rects(d)
 plot_perlin_spirals(d)
 d.add_spiral((60, 60), 30)
 d.add_spiral((61.6666, 61.666), 30)
-d.plot_spiral_text((100.75, 100.75), 60)
+d.add_spiral_text((100.75, 100.75), 60)
 draw_unknown_pleasures(d)
 d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
 d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)

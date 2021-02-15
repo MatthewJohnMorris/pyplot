@@ -473,10 +473,7 @@ class StandardDrawing:
 
         return self.text_bound(text, fontsize, family)
 
-    def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', container=None, stroke=None):
-
-        stroke = self.default_stroke(stroke)
-        container = self.default_container(container)
+    def make_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial'):
         
         # unadjusted y is at bottom left (high y, low x)
 
@@ -489,12 +486,22 @@ class StandardDrawing:
         transform = lambda x: StandardDrawing.rotate_about(x, (0, radius), angle)
         
         all_polylines = self.make_text(letter, letter_position, fontsize, family=family, transform=transform)
+        
+        return ((w, h), all_polylines)
+
+    def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', container=None, stroke=None):
+
+        stroke = self.default_stroke(stroke)
+        container = self.default_container(container)
+
+        ((w, h), all_polylines) = self.make_spiral_letter(letter, fontsize, spiral_centre, radius, angle=angle, family=family)
+        
         for polyline in all_polylines:
             container.add(self.dwg.polygon(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         
         return (w, h)
 
-    def plot_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, container=None, fontsize=6, family='CNC Vector'):
+    def make_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, fontsize=6, family='CNC Vector'):
 
         points = []
         points.append(centre)
@@ -510,6 +517,8 @@ class StandardDrawing:
         # Burroughs quote
         if text is None:
             text = "In the City Market is the Meet Café. Followers of obsolete, unthinkable trades doodling in Etruscan, addicts of drugs not yet synthesized, pushers of souped-up harmine, junk reduced to pure habit offering precarious vegetable serenity, liquids to induce Latah, Tithonian longevity serums, black marketeers of World War III, excusers of telepathic sensitivity, osteopaths of the spirit, investigators of infractions denounced by bland paranoid chess players, servers of fragmentary warrants taken down in hebephrenic shorthand charging unspeakable mutilations of the spirit, bureaucrats of spectral departments, officials of unconstituted police states, a Lesbian dwarf who has perfected operation Bang-utot, the lung erection that strangles a sleeping enemy, sellers of orgone tanks and relaxing machines, brokers of exquisite dreams and memories..."
+
+        all_polylines = []
 
         # draw until we've hit the desired size
         j = 0
@@ -538,7 +547,9 @@ class StandardDrawing:
                 # family = 'HersheyScript1smooth' # good "handwriting" font
                 # family = 'Stymie Hairline' # a bit cutsey, but ok
                 r_use = r + radial_adjust
-                (w, h) = self.add_spiral_letter(letter, fontsize, centre, r_use, a + math.pi/2, family=family, container=container)
+                ((w, h), polylines) = self.make_spiral_letter(letter, fontsize, centre, r_use, a + math.pi/2, family=family)
+                for polyline in polylines:
+                    all_polylines.append(polyline)
                 
                 # FUDGE FACTOR TO SPREAD THINGS OUT A LITTLE, GIVEN ROTATION
                 fudge_factor = 1.2
@@ -548,8 +559,19 @@ class StandardDrawing:
                 
                 j += 1
                 if j == len(text) and not repeat:
-                    return
+                    return all_polylines
+                    
+        return all_polylines
         
+    def add_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, fontsize=6, family='CNC Vector', container=None, stroke=None):
+
+        stroke = self.default_stroke(stroke)
+        container = self.default_container(container)
+
+        polylines = self.make_spiral_text(centre, scale, radial_adjust, repeat, text, fontsize, family)
+        for polyline in polylines:
+            container.add(self.dwg.polygon(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
+ 
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
         points = []
@@ -576,7 +598,7 @@ class StandardDrawing:
             points.append((x, y))
             
         return points
- 
+
     def add_spiral(self, centre, scale, r_per_circle=None, r_initial=None, container=None, stroke=None, direction=1):
 
         points = self.make_spiral(centre, scale, r_per_circle, r_initial, direction)
