@@ -368,9 +368,9 @@ def plot_surface(drawing):
 def test_text_sze():
     family='HersheyScript1smooth'
     fontsize=8
-    d.draw_text(f"{family}: {d.pen_type.name}", (20, 20), fontsize=fontsize, family=family)
+    d.add_text(f"{family}: {d.pen_type.name}", (20, 20), fontsize=fontsize, family=family)
     for fontsize in range(4, 13):
-        d.draw_text(f"{fontsize}pt: abcdefg", (20, 20 + 20 * (fontsize-3)), fontsize=fontsize, family=family)
+        d.add_text(f"{fontsize}pt: abcdefg", (20, 20 + 20 * (fontsize-3)), fontsize=fontsize, family=family)
 
         
 def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None):
@@ -387,11 +387,11 @@ def draw_text_by_letter_and_whole_for_comparison(drawing, family='Arial', s=None
     s = "all work and no play makes Jack a dull boy" if s is None else s
     (x, y) = (20, ys)
     for c in s:
-        drawing.draw_text(c, (x, y), fontsize, family=family)
+        drawing.add_text(c, (x, y), fontsize, family=family)
         (w, h) = drawing.text_bound_letter(c, fontsize, family=family)
         (x, y) = (x + w, y)
 
-    drawing.draw_text(s, (20, ys+20), fontsize, family=family)
+    drawing.add_text(s, (20, ys+20), fontsize, family=family)
 
 def test_boxed_text(d):
 
@@ -403,7 +403,7 @@ def test_boxed_text(d):
     position = (20, 40)
     for i in range(0, 10):
         fontsize = 12 + i
-        ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
+        ext = d.add_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
         d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
         d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
         position = (position[0], position[1] + ext.height + 10)
@@ -412,7 +412,7 @@ def test_boxed_text(d):
     position = (120, 40)
     for i in range(0, 10):
         fontsize = 12 + i
-        ext = d.draw_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
+        ext = d.add_text(f"WAKEFIELD: {fontsize}pt", position, fontsize=fontsize, family=family)
         d.add_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
         d.add_rect((position[0] - 2.2, position[1] + ext.y_bearing - 2.2), ext.width + 4.4, ext.height + 4.4)
         position = (position[0], position[1] + ext.height + 10)
@@ -524,7 +524,7 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 
 # draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
-# d.draw_text("abcdefghijklmnopqrstuvwxyz", (20, 20), fontsize=24, family="Arial")
+# d.add_text("abcdefghijklmnopqrstuvwxyz", (20, 20), fontsize=24, family="Arial")
 
 polylines = d.make_spiral_text((100, 100), 60, fontsize=36, family='Arial')
 for i in range(10, 80, 10):

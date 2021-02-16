@@ -459,7 +459,7 @@ class StandardDrawing:
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
     # * No longer need to use Object->Path to print things out in Inkscape
     # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
-    def draw_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
+    def add_text(self, text, position, fontsize, family='Arial', container=None, stroke=None, transform=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
