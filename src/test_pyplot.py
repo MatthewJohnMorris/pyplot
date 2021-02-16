@@ -1,7 +1,7 @@
 import math
 import pytest
 
-from pyplot.pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
+from pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
 
 def test_rotate_sense():
 

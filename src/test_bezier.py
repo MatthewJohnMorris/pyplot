@@ -1,6 +1,6 @@
 import pytest
 
-from pyplot.bezier import *
+from bezier import *
 
 def test_split_at_t_0():
 
@@ -64,7 +64,5 @@ def test_max_dist():
 def test_subdivide():
 
     start = (0, 0)
-    spline_array = [((0,0), (1,0), (1,1))]
+    spline_array = [[(0,0), (1,0), (1,1)]]
     spline_array = bezier_subdivide(start, spline_array, 1e-4)
-    print(spline_array)
-    assert(False)
