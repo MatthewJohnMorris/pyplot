@@ -476,6 +476,23 @@ def speed_limit_test(d):
             x += d.pen_type.pen_width * mult
             d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
 
+def get_image_intensity(image, x, y):
+
+    (xsize_image,ysize_image,c) = image.shape
+    x_int = int(x+0.5)
+    y_int = int(y+0.5)
+    if x_int < 0 or x_int >= xsize_image or y_int < 0 or y_int >= ysize_image:
+        return 0
+    return image[x_int, y_int][0] / 255
+
+def set_image_intensity(image, x, y, value):
+
+    (xsize_image,ysize_image,c) = image.shape
+    x_int = int(x+0.5)
+    y_int = int(y+0.5)
+    if x_int < 0 or x_int >= xsize_image or y_int < 0 or y_int >= ysize_image:
+        return
+    image[x_int, y_int][0] = value
 
 def image_sketch(d):
 
@@ -483,29 +500,82 @@ def image_sketch(d):
     layer2 = d.add_layer("1")
 
     image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
-    (h,w,c) = image.shape
+    (xsize_image,ysize_image,c) = image.shape
     
-    print(h,w,c)
+    print(image.shape)
     
     x_extent = 100
-    scale = x_extent / w
+    scale = x_extent / ysize_image
     r = x_extent / 20
+    offset = (20, 20)
     
-    intensity = lambda x, y: image[int(y), int(x)][0] / 255
+    intensity = lambda x, y: get_image_intensity(image, x, y)
+
+    # get highest intensity point
+    points = []
+    for y_image in range(0, ysize_image):
+        for x_image in range(0, xsize_image):
+            points.append((x_image, y_image))
+    points = sorted(points, key=lambda point: intensity(point[0], point[1]))
+    pt = points[-1]
     
-    i = 0
-    
-    x = r
-    while x < w - r:
-        y = r
-        while y < h - r:
-            k = intensity(x, y)
-            r1 = r * scale * k
-            layer = layer1 if (i % 2 == 0) else layer2
-            d.add_dot((x * scale, y * scale), r * scale * intensity(x, y), container=layer)
-            y = y + 2*r
-            i += 1
-        x = x + 2*r
+    polylines = []
+    polyline = [(pt[1]*scale, pt[0]*scale)]
+    n = 37
+    angles = [i * 2 * math.pi / n for i in range(0, n)]
+    trigs = [(math.cos(a), math.sin(a)) for a in angles]
+    for i in range(0, 10000):
+        if i % 100 == 0:
+            print(i)
+        # r = 5 + int(random()*5)
+        r = 5 + int(random()*5)
+        max_intensity = -1
+        max_trig = None
+        max_min_intensity = -1
+        for trig in trigs:
+            total_intensity = 0
+            min_intensity = 1
+            for x in range(1, r):
+                k = intensity(pt[0]+x*trig[0], pt[1]+x*trig[1])
+                total_intensity += k
+                min_intensity = min(k, min_intensity)
+            avg_intensity = total_intensity / r
+            if avg_intensity > max_intensity:
+                max_intensity = avg_intensity
+                max_trig = trig
+            #if min_intensity > max_min_intensity:
+            #    max_min_intensity = min_intensity
+            #    max_trig = trig
+        if max_intensity < 0.01:
+            print(".", end='', flush=True)
+            polylines.append(polyline)
+            points = []
+            for y_image in range(0, ysize_image):
+                for x_image in range(0, xsize_image):
+                    points.append((x_image, y_image))
+            points = sorted(points, key=lambda point: intensity(point[0], point[1]))
+            pt = points[-1]
+            polyline = [(pt[1]*scale, pt[0]*scale)]
+            if intensity(pt[0], pt[1]) < 0.01:
+                print(f"break at {pt} with intensity {intensity(pt[0], pt[1])}")
+                break
+            continue
+                
+        # zero out in the image
+        # set_image_intensity(image, pt[0], pt[1], 0)
+        for j in range(1, r):
+            pt_j = (pt[0]+j*max_trig[0], pt[1]+j*max_trig[1])
+            k = intensity(pt_j[0], pt_j[1])
+            new_k = max(0, k - 0.1)
+            set_image_intensity(image, pt_j[0], pt_j[1], new_k)
+                
+        line_end = (pt[0]+r*max_trig[0], pt[1]+x*max_trig[1])
+        pt = line_end
+        polyline.append((pt[1]*scale, pt[0]*scale))
+        
+    polylines.append(polyline)
+    for polyline in polylines:
+        d.add_polyline([(p[0]+offset[0], p[1]+offset[1]) for p in polyline])
 
 def test_text_and_shape(d):
 
@@ -522,16 +592,7 @@ def test_text_and_shape(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-# draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-
-# d.add_text("abcdefghijklmnopqrstuvwxyz", (20, 20), fontsize=24, family="Arial")
-
-polylines = d.make_spiral_text((100, 100), 60, fontsize=36, family='Arial')
-for i in range(10, 80, 10):
-    polylines.append(d.make_circle((100, 100), i))
-sf = ShapeFiller(polylines)
-for path in sf.get_paths(8*d.pen_type.pen_width / 5, angle=math.pi/5):
-    d.add_polyline(path)
+image_sketch(d)
 
 '''
 test_text_and_shape(d)
