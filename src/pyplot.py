@@ -841,8 +841,21 @@ class ShapeFiller:
         def __str__(self):
             return f"x={self.x}, ix_shape={self.ix_shape}, ix_s={self.ix_s}, ix_e={self.ix_e}"
 
+    class Limits:
+    
+        def __init__(self, min_x, min_y, max_x, max_y):
+            self.min_x = min_x
+            self.min_y = min_y
+            self.max_x = max_x
+            self.max_y = max_y
+
     def __init__(self, shapes):
         self.unrotated_shapes = shapes
+        shape_limits = [ShapeFiller.Limits(min([pt[0] for pt in shape]), min(pt[1] for pt in shape), max([pt[0] for pt in shape]), max(pt[1] for pt in shape)) for shape in shapes]
+        self.min_x = min(limit.min_x for limit in shape_limits)
+        self.min_y = min(limit.min_y for limit in shape_limits)
+        self.max_x = max(limit.max_x for limit in shape_limits)
+        self.max_y = max(limit.max_y for limit in shape_limits)
 
     # "Clever" plotting of crossings
     # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
@@ -1004,9 +1017,14 @@ class ShapeFiller:
         
     def is_inside(self, pt):
 
-        # Are we on a constant-y edge? get_crossings() ignores these so check up front
         x = pt[0]
         y = pt[1]
+
+        # Gross bounds check
+        if x <= self.min_x or y <= self.min_y or x >= self.max_x or y >= self.max_y:
+            return False
+        
+        # Are we on a constant-y edge? get_crossings() ignores these so check up front
         for shape in self.unrotated_shapes:
             n_points = len(shape)
             for ix_s in range(0, n_points):
@@ -1024,7 +1042,8 @@ class ShapeFiller:
         # Otherwise we exclude anything actually *on* an edge - otherwise we 
         # are "inside" if we are inside an odd number of shapes. We are inside 
         # a given shape if we have an odd number of crossings as we increase x
-        crossings = (ShapeFiller.get_crossings(self.unrotated_shapes, pt[1]))
+        crossings = ShapeFiller.get_crossings(self.unrotated_shapes, y)
+            
         counts = {}
         hits = {}
         for crossing in crossings:
