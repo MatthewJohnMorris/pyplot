@@ -505,75 +505,101 @@ def image_sketch(d):
     print(image.shape)
     
     x_extent = 100
+    # mm per pixel
     scale = x_extent / ysize_image
     r = x_extent / 20
     offset = (20, 20)
     
     intensity = lambda x, y: get_image_intensity(image, x, y)
-
-    # get highest intensity point
-    points = []
-    for y_image in range(0, ysize_image):
-        for x_image in range(0, xsize_image):
-            points.append((x_image, y_image))
-    points = sorted(points, key=lambda point: intensity(point[0], point[1]))
-    pt = points[-1]
     
     polylines = []
-    polyline = [(pt[1]*scale, pt[0]*scale)]
     n = 37
     angles = [i * 2 * math.pi / n for i in range(0, n)]
     trigs = [(math.cos(a), math.sin(a)) for a in angles]
-    for i in range(0, 10000):
+    polyline = []
+    pt = None
+    expavg_ntries = 0
+    for i in range(0, 30000):
         if i % 100 == 0:
-            print(i)
-        # r = 5 + int(random()*5)
+            print(f"points={i} expavg_ntries={expavg_ntries:.2f}")
+
+        ntries = 0
+        while pt is None:
+            ntries += 1
+            x = random() * xsize_image
+            y = random() * ysize_image
+            pt1 = (x, y)
+            k = intensity(pt1[0], pt1[1])
+            if k >= 0.35:
+                pt = pt1
+            else:
+                if 0.9 * expavg_ntries + 0.1 * ntries > 100:
+                    break
+                
+        if pt is None:
+            print("Breaking")
+            break
+        expavg_ntries = 0.9 * expavg_ntries + 0.1 * ntries
+        
         r = 5 + int(random()*5)
-        max_intensity = -1
+        # r = 3 + int(random()*20) # this is too long - skips over black areas
+        r = 10
+
+        threshold = 0.10
+        
+        best_max_avg_intensity = -1
         max_trig = None
-        max_min_intensity = -1
+        max_best_j = 0
         for trig in trigs:
             total_intensity = 0
+            max_avg_intensity = -1
             min_intensity = 1
-            for x in range(1, r):
-                k = intensity(pt[0]+x*trig[0], pt[1]+x*trig[1])
+            best_j = 0
+            for j in range(1, r):
+                k = intensity(pt[0]+j*trig[0], pt[1]+j*trig[1])
+                if k < threshold:
+                    break
                 total_intensity += k
-                min_intensity = min(k, min_intensity)
+                j_avg_intensity = total_intensity / j
+                if j_avg_intensity > max_avg_intensity:
+                    best_j = j
+                    max_avg_intensity = j_avg_intensity
+                
             avg_intensity = total_intensity / r
-            if avg_intensity > max_intensity:
-                max_intensity = avg_intensity
+            if max_avg_intensity > best_max_avg_intensity:
+                best_max_avg_intensity = max_avg_intensity
                 max_trig = trig
-            #if min_intensity > max_min_intensity:
-            #    max_min_intensity = min_intensity
-            #    max_trig = trig
-        if max_intensity < 0.01:
-            print(".", end='', flush=True)
-            polylines.append(polyline)
-            points = []
-            for y_image in range(0, ysize_image):
-                for x_image in range(0, xsize_image):
-                    points.append((x_image, y_image))
-            points = sorted(points, key=lambda point: intensity(point[0], point[1]))
-            pt = points[-1]
-            polyline = [(pt[1]*scale, pt[0]*scale)]
-            if intensity(pt[0], pt[1]) < 0.01:
-                print(f"break at {pt} with intensity {intensity(pt[0], pt[1])}")
-                break
-            continue
+                max_best_j = best_j
                 
         # zero out in the image
         # set_image_intensity(image, pt[0], pt[1], 0)
-        for j in range(1, r):
-            pt_j = (pt[0]+j*max_trig[0], pt[1]+j*max_trig[1])
-            k = intensity(pt_j[0], pt_j[1])
-            new_k = max(0, k - 0.1)
-            set_image_intensity(image, pt_j[0], pt_j[1], new_k)
-                
-        line_end = (pt[0]+r*max_trig[0], pt[1]+x*max_trig[1])
-        pt = line_end
-        polyline.append((pt[1]*scale, pt[0]*scale))
+        if best_max_avg_intensity > threshold:
+            if len(polyline) == 0:
+                polyline = [(pt[1]*scale, pt[0]*scale)]
+
+            for j in range(0, max_best_j):
+                pt_j = (pt[0]+j*max_trig[0], pt[1]+j*max_trig[1])
+                f0 = pt_j[0] - int(pt_j[0])
+                f1 = pt_j[1] - int(pt_j[1])
+                up0 = xsize_image - 1 if pt_j[0] == xsize_image else pt_j[0] + 1
+                up1 = ysize_image - 1 if pt_j[1] == ysize_image else pt_j[1] + 1
+                drop = 1
+                set_image_intensity(image, pt_j[0], pt_j[1], max(0, intensity(pt_j[0], pt_j[1]) - drop * (1-f0) * (1-f1)))
+                set_image_intensity(image, up0, pt_j[1], max(0, intensity(up0, pt_j[1]) - drop * f0 * (1-f1)))
+                set_image_intensity(image, up0, up1, max(0, intensity(up0, up1) - drop * f0 * f1))
+                set_image_intensity(image, pt_j[0], up1, max(0, intensity(pt_j[0], up1) - drop * (1-f0) * f1))
+
+            line_end = (pt[0]+max_best_j*max_trig[0], pt[1]+max_best_j*max_trig[1])
+            polyline.append((line_end[1]*scale, line_end[0]*scale))
+            pt = line_end
+        else:
+            if len(polyline) > 0:
+                polylines.append(polyline)
+                polyline = []
+            pt = None
         
-    polylines.append(polyline)
+    print(len(polylines))
+        
     for polyline in polylines:
         d.add_polyline([(p[0]+offset[0], p[1]+offset[1]) for p in polyline])
 
@@ -586,13 +612,59 @@ def test_text_and_shape(d):
     for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
         d.add_polyline(path)
 
+def draw_unknown_pleasures_clip(drawing):
+
+    min_y = {}
+    data = []
+    # File from https://github.com/igorol/unknown_pleasures_plot/blob/master/pulsar.csv
+    with open('pulsar.csv') as csvfile:
+        reader = csv.reader(csvfile)
+        reader = csv.reader(csvfile)
+        for row in reader:
+            data.append(row)
+    data = data[::-1]
+    nrows = len(data)
+    nitems = len(data[0])
+    # print(f'We have {nrows} rows, each of which has {nitems} data items')
+    y_min = 20
+    y_max = 200
+    x_min = 20
+    x_max = 150
+    y_scale = 0.28
+    min_ys = {}
+    
+    polylines = []
+    for i in range(0, nrows):
+        y_base = y_max + (y_min - y_max) * i / (nrows - 1)
+        rowdata = data[i]
+        path = []
+        for j in range(0, nitems):
+            x = x_min + (x_max - x_min) * j / (nitems - 1)
+            min_y = min_ys.get(x, 10000.0)
+            y = y_base - float(rowdata[j]) * y_scale
+            if y < min_y:
+                min_ys[x] = y
+            else:
+                y = min_y
+            path.append((x, y))
+        polylines.append(path)
+            
+    shapes = [d.make_circle((100, 100), 50), d.make_circle((80, 110), 20)]
+    sf = ShapeFiller(shapes)
+    clipped_polylines = sf.clip(polylines)
+         
+    for polyline in clipped_polylines:
+        drawing.add_polyline(polyline)
+
+
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-image_sketch(d)
+draw_unknown_pleasures_clip(d)
 
 '''
 test_text_and_shape(d)

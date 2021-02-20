@@ -65,3 +65,57 @@ def test_text_bound_letter_matches_text_bound():
                 s = get_text_scale_factor(text, fontsize, family)
                 assert(abs(s - 1.0) < 0.015)
     
+def test_inside_square():
+
+    shape = [(1, 1), (1, 3), (3, 3), (3, 1)]
+    shapes = [shape]
+    sf = ShapeFiller(shapes)
+
+    assert(not sf.is_inside((2, 3)))
+
+    # inside is inside
+    assert(sf.is_inside((2, 2)))
+    
+    # perimeter is outside
+    assert(not sf.is_inside((1, 1)))
+    assert(not sf.is_inside((1, 2)))
+    assert(not sf.is_inside((1, 3)))
+    assert(not sf.is_inside((2, 3)))
+    assert(not sf.is_inside((3, 3)))
+    assert(not sf.is_inside((3, 2)))
+    assert(not sf.is_inside((3, 1)))
+    assert(not sf.is_inside((2, 1)))
+    
+    # outside stuff is outside
+    assert(not sf.is_inside((0, 0)))
+    assert(not sf.is_inside((0, 2)))
+    assert(not sf.is_inside((0, 4)))
+    assert(not sf.is_inside((2, 4)))
+    assert(not sf.is_inside((4, 4)))
+    assert(not sf.is_inside((4, 2)))
+    assert(not sf.is_inside((4, 0)))
+    assert(not sf.is_inside((2, 0)))
+
+def test_inside_diamond():
+
+    shape = [(2, 1), (3, 2), (2, 4), (1, 2)]
+    shapes = [shape]
+    sf = ShapeFiller(shapes)
+
+    # inside is inside
+    assert(sf.is_inside((2, 2)))
+    
+    # perimeter is outside
+    assert(not sf.is_inside((2, 1)))
+    assert(not sf.is_inside((3, 2)))
+    assert(not sf.is_inside((2, 4)))
+    assert(not sf.is_inside((1, 2)))
+    
+    # outside stuff is outside
+    assert(not sf.is_inside((0, 0)))
+    assert(not sf.is_inside((0, 4)))
+    assert(not sf.is_inside((4, 4)))
+    assert(not sf.is_inside((4, 0)))
+
+
+

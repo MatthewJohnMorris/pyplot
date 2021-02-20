@@ -837,6 +837,9 @@ class ShapeFiller:
             self.ix_shape = ix_shape
             self.ix_s = ix_s
             self.ix_e = ix_e
+            
+        def __str__(self):
+            return f"x={self.x}, ix_shape={self.ix_shape}, ix_s={self.ix_s}, ix_e={self.ix_e}"
 
     def __init__(self, shapes):
         self.unrotated_shapes = shapes
@@ -998,6 +1001,62 @@ class ShapeFiller:
             returned_paths.append([StandardDrawing.rotate_about(x, (0,0), -angle) for x in rotated_path])
             
         return returned_paths
+        
+    def is_inside(self, pt):
+
+        # Are we on a constant-y edge? get_crossings() ignores these so check up front
+        x = pt[0]
+        y = pt[1]
+        for shape in self.unrotated_shapes:
+            n_points = len(shape)
+            for ix_s in range(0, n_points):
+                ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
+                if shape[ix_s][1] == y and shape[ix_e][1] == y:
+                    xs = shape[ix_s][0]
+                    xe = shape[ix_e][0]
+                    if xs == x or xe == x:
+                        return False
+                    if xs > x and x > xe:
+                        return False
+                    if xs < x and x < xe:
+                        return False
+        
+        # Otherwise we exclude anything actually *on* an edge - otherwise we 
+        # are "inside" if we are inside an odd number of shapes. We are inside 
+        # a given shape if we have an odd number of crossings as we increase x
+        crossings = (ShapeFiller.get_crossings(self.unrotated_shapes, pt[1]))
+        counts = {}
+        hits = {}
+        for crossing in crossings:
+            if crossing.x == x:
+                hits[crossing.ix_shape] = True
+            elif crossing.x > x:
+                if not crossing.ix_shape in counts:
+                    counts[crossing.ix_shape] = 1
+                else:
+                    counts[crossing.ix_shape] += 1
+        inside_count = 0
+        for ix_shape in counts:
+            if ix_shape not in hits:
+                if counts[ix_shape] % 2 == 1:
+                    inside_count += 1;
+        return inside_count % 2 == 1
+        
+    def clip(self, polylines):
+        clipped_polylines = []
+        for polyline in polylines:
+            path = []
+            for pt in polyline:
+                if self.is_inside(pt):
+                    if len(path) > 0:
+                        clipped_polylines.append(path)
+                        path = []
+                else:
+                    path.append(pt)
+            if len(path) > 0:
+                clipped_polylines.append(path)
+                path = []
+        return clipped_polylines
         
     @staticmethod
     def is_on_continuation_of(shapes, c, c_prev):
