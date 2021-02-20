@@ -1015,7 +1015,7 @@ class ShapeFiller:
             
         return returned_paths
         
-    def is_inside(self, pt):
+    def is_inside(self, pt, any=False):
 
         x = pt[0]
         y = pt[1]
@@ -1054,6 +1054,14 @@ class ShapeFiller:
                     counts[crossing.ix_shape] = 1
                 else:
                     counts[crossing.ix_shape] += 1
+                    
+        if any:
+            for ix_shape in counts:
+                if ix_shape not in hits:
+                    if counts[ix_shape] % 2 == 1:
+                        return True
+            return False
+        
         inside_count = 0
         for ix_shape in counts:
             if ix_shape not in hits:
@@ -1061,12 +1069,12 @@ class ShapeFiller:
                     inside_count += 1;
         return inside_count % 2 == 1
         
-    def clip(self, polylines):
+    def clip(self, polylines, any=False):
         clipped_polylines = []
         for polyline in polylines:
             path = []
             for pt in polyline:
-                if self.is_inside(pt):
+                if self.is_inside(pt, any):
                     if len(path) > 0:
                         clipped_polylines.append(path)
                         path = []

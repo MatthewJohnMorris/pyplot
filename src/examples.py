@@ -649,9 +649,11 @@ def draw_unknown_pleasures_clip(drawing):
             path.append((x, y))
         polylines.append(path)
             
-    shapes = [d.make_circle((100, 100), 50, 50), d.make_circle((96, 104), 40, 50), d.make_circle((80, 110), 20, 50)]
+    #base_count = int(d.default_circle_path_count(10) / 30)
+    #shapes = [d.make_circle((100, 100), 50, 5 * base_count), d.make_circle((96, 104), 40, 4 * base_count), d.make_circle((80, 110), 20, 2 * base_count)]
+    shapes = [d.make_circle((100, 100), 50), d.make_circle((96, 104), 40), d.make_circle((80, 110), 20)]
     sf = ShapeFiller(shapes)
-    clipped_polylines = sf.clip(polylines)
+    clipped_polylines = sf.clip(polylines, any=True)
          
     for polyline in clipped_polylines:
         drawing.add_polyline(polyline)
