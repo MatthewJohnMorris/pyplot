@@ -612,50 +612,82 @@ def test_text_and_shape(d):
     for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
         d.add_polyline(path)
 
-def draw_unknown_pleasures_clip(drawing):
+def draw_false_prophets(drawing):
 
-    min_y = {}
-    data = []
-    # File from https://github.com/igorol/unknown_pleasures_plot/blob/master/pulsar.csv
-    with open('pulsar.csv') as csvfile:
-        reader = csv.reader(csvfile)
-        reader = csv.reader(csvfile)
-        for row in reader:
-            data.append(row)
-    data = data[::-1]
-    nrows = len(data)
-    nitems = len(data[0])
-    # print(f'We have {nrows} rows, each of which has {nitems} data items')
-    y_min = 20
-    y_max = 200
-    x_min = 20
-    x_max = 150
-    y_scale = 0.28
-    min_ys = {}
-    
-    polylines = []
-    for i in range(0, nrows):
-        y_base = y_max + (y_min - y_max) * i / (nrows - 1)
-        rowdata = data[i]
-        path = []
-        for j in range(0, nitems):
-            x = x_min + (x_max - x_min) * j / (nitems - 1)
-            min_y = min_ys.get(x, 10000.0)
-            y = y_base - float(rowdata[j]) * y_scale
-            if y < min_y:
-                min_ys[x] = y
-            else:
-                y = min_y
-            path.append((x, y))
-        polylines.append(path)
-            
-    #base_count = int(d.default_circle_path_count(10) / 30)
-    #shapes = [d.make_circle((100, 100), 50, 5 * base_count), d.make_circle((96, 104), 40, 4 * base_count), d.make_circle((80, 110), 20, 2 * base_count)]
-    shapes = [d.make_circle((100, 100), r) for r in range(10, 50, 2)]
+    # A4
+    top_left = (0, 0)
+    x_size = 210
+    y_size = 297
+    projection_angle=math.pi*0.2
+    p = PerlinNoise(scale=400, octaves=2)
+    polylines = d.make_surface(top_left, x_size, int(y_size / math.cos(projection_angle)), p.calc2d, projection_angle=projection_angle)
+
+    # clip to margin around edge of paper
+    topleft = (20, 20)
+    shapes = [d.make_rect(topleft, x_size - 2 * topleft[0], y_size - 2 * topleft[1])]
     sf = ShapeFiller(shapes)
-    clipped_polylines = sf.clip(polylines, any=False)
+    polylines = sf.clip(polylines, inverse=True)
+    
+    # medallion
+    medallion_centre = (int(x_size/2), int(y_size/2))
+    shapes = [d.make_circle(medallion_centre, 29, x_scale = 0.7), d.make_circle(medallion_centre, 27, x_scale = 0.7)]
+    sf = ShapeFiller(shapes)
+    polylines = sf.clip(polylines, union=True)
+    new_lines = sf.get_paths(d.pen_type.pen_width / 5)
+    for line in new_lines:
+        polylines.append(line)
+    
+    image_path = d.make_image_spiral_single('burroughs.jpg', medallion_centre, 25, x_scale = 0.7)
+    polylines.append(image_path)
+
+    family='CNC Vector'
+    # family = 'HersheyScript1smooth'
+    family = 'Arial'
+    header_pos = (int(x_size/2), 40)
+    fontsize = 36
+    text = "False Prophets Of The New Millenium"
+    ext = d.text_bound(text, fontsize, family)
+    position = (header_pos[0] - ext.width/2, header_pos[1])
+    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    rect_width = 0.5
+    rect1 = d.make_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+    rect2 = d.make_rect((position[0] - (2+rect_width), position[1] + ext.y_bearing - (2+rect_width)), ext.width + (4+2*rect_width), ext.height + (4+2*rect_width))
+    sf = ShapeFiller([rect1, rect2])
+    polylines = sf.clip(polylines, union=True)
+    rect_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in rect_paths:
+        polylines.append(p)
+    sf = ShapeFiller(text_paths)
+    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in filled_text_paths:
+        polylines.append(p)
+    
+    for text_path in text_paths:
+        polylines.append(text_path)
+
+    # legend
+
+    family='CNC Vector'
+    # family = 'HersheyScript1smooth'
+    fontsize = 24
+    text = "WAKEFIELD"
+    ext = d.text_bound(text, fontsize, family)
+    
+    position = (medallion_centre[0] - ext.width/2, medallion_centre[1]+30+4+ext.height)
+    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    
+    rect_width = 0.5
+    rect1 = d.make_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
+    rect2 = d.make_rect((position[0] - (2+rect_width), position[1] + ext.y_bearing - (2+rect_width)), ext.width + (4+2*rect_width), ext.height + (4+2*rect_width))
+    sf = ShapeFiller([rect1, rect2])
+    polylines = sf.clip(polylines, union=True)
+    rect_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in rect_paths:
+        polylines.append(p)
+    for text_path in text_paths:
+        polylines.append(text_path)
          
-    for polyline in clipped_polylines:
+    for polyline in polylines:
         drawing.add_polyline(polyline)
 
 
@@ -666,7 +698,7 @@ def draw_unknown_pleasures_clip(drawing):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_unknown_pleasures_clip(d)
+draw_false_prophets(d)
 
 '''
 test_text_and_shape(d)

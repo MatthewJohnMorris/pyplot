@@ -211,22 +211,23 @@ class StandardDrawing:
         container = self.default_container(container)
         container.add(self.dwg.line(line_start, line_end, stroke=stroke, stroke_width=self.pen_type.stroke_width)) 
         
-    def get_circle_point(self, middle, radius, theta):
+    def get_circle_point(self, middle, radius, theta, x_scale=None):
+        x_radius = radius if x_scale is None else radius * x_scale
         s = math.sin(theta)
         c = math.cos(theta)
-        return (middle[0] + radius * s, middle[1] - radius * c)
+        return (middle[0] + x_radius * s, middle[1] - radius * c)
 
     # Default circle granularity: divide into parts no bigger than the width of the pen
     def default_circle_path_count(self, r):
         return int(2 * math.pi * r / self.pen_type.pen_width) + 1
 
-    def make_circle(self, middle, r, n=None, stroke=None):
+    def make_circle(self, middle, r, n=None, stroke=None, x_scale=None):
         n = self.default_circle_path_count(r) if n is None else n
         stroke = self.default_stroke(stroke)
         points = []
         for i in range(0, n):    
             angle = 2 * math.pi * i / n
-            p = self.get_circle_point(middle, r, angle)
+            p = self.get_circle_point(middle, r, angle, x_scale)
             points.append( p )
         return points
 
@@ -331,10 +332,10 @@ class StandardDrawing:
         points = self.make_square(topleft, size, start_size)
         self.add_polyline(points, stroke=stroke, container=container)
         
-    def make_surface(self, top_left, x_size, y_size, z_function):
+    def make_surface(self, top_left, x_size, y_size, z_function, projection_angle=None):
     
         # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
-        projection_angle = math.pi * 3 /8
+        projection_angle = math.pi * 3 /8 if projection_angle is None else projection_angle
         min_adj_y_for_x = {}
         all_points = []
         for y in range(0, y_size + 1, 5)[::-1]:
@@ -615,7 +616,7 @@ class StandardDrawing:
         points.append(p2)
         points.append(new_point)
 
-    def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
+    def make_image_spiral_single(self, file, centre, scale, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
 
         if colour:
             intensity_converter = lambda r, g, b: self.pen_type.rgb_converter(r, g, b)[cmy_index]
@@ -697,14 +698,13 @@ class StandardDrawing:
             new = (x, y)
             StandardDrawing.add_wiggle(points, new, shade)
 
-        # print(f'# points = {len(points)}')
-        # print(r)
-        # print(image.shape)
-    
-        self.add_polyline(points, stroke, container=container)
+        return points
 
-        # cv2.imshow("OpenCV Image Reading", image)
-        # cv2.waitKey(0) #is req  
+    def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
+
+        points = self.make_image_spiral_single(file, centre, scale, r_factor_func, colour, cmy_index, x_scale)
+    
+        self.add_polyline(points, stroke=stroke, container=container)
 
     def image_spiral_cmyk(self, file, centre, scale):
 
@@ -1069,22 +1069,109 @@ class ShapeFiller:
                     inside_count += 1;
         return inside_count % 2 == 1
         
-    def clip(self, polylines, any=False):
+    def clip(self, polylines, union=False, inverse=False):
+        split_polylines = self.split_polylines(polylines)
+        
         clipped_polylines = []
-        for polyline in polylines:
+        for polyline in split_polylines:
             path = []
-            for pt in polyline:
-                if self.is_inside(pt, any):
+            s = polyline[0]
+            for e in polyline[1:]:
+                m = ((s[0]+e[0])/2, (s[1]+e[1])/2)
+                include = not self.is_inside(m, union)
+                if inverse:
+                    include = not include
+                    
+                if include:
+                    if len(path) == 0:
+                        path.append(s)
+                    path.append(e)
+                else:
                     if len(path) > 0:
                         clipped_polylines.append(path)
                         path = []
-                else:
-                    path.append(pt)
+                s = e
             if len(path) > 0:
                 clipped_polylines.append(path)
                 path = []
         return clipped_polylines
         
+    def split_polylines(self, polylines):
+        return [self.split_polyline(p) for p in polylines]
+            
+    def split_polyline(self, polyline):
+        s = polyline[0]
+        path = [s]
+        for e in polyline[1:]:
+            path.extend(self.split_edge_endpoints(s, e))
+            s = e
+        if len(polyline) != len(path):
+            print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
+        return path
+        
+    def split_edge_endpoints(self, s, e):
+        split_edges = [(s, e)]
+        i = 0
+        while i < len(split_edges):
+            for shape in self.unrotated_shapes:
+                n_points = len(shape)
+                for ix_s in range(0, n_points):
+                    ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
+                    shape_s = shape[ix_s]
+                    shape_e = shape[ix_e]
+                    edge = split_edges[i]
+                    intersect = ShapeFiller.line_intersection(edge, (shape_s, shape_e))
+                    if not intersect is None:
+                        k = intersect[0]
+                        #print(f"i={i}: edge={edge}, intersect with ({shape_s},{shape_e}), intersect={intersect}")
+                        if abs(k) > 1e-6 and abs(k-1) > 1e-6:
+                            pt_x = edge[0][0] + k * (edge[1][0] - edge[0][0])
+                            pt_y = edge[0][1] + k * (edge[1][1] - edge[0][1])
+                            pt = (pt_x, pt_y)
+                            #print("Before",split_edges)
+                            #print("i,s,pt,e",i,s,pt,e)
+                            e = split_edges[i][1]
+                            split_edges[i] = (split_edges[i][0], pt)
+                            split_edges[i+1:i+1] = [(pt, e)]
+                            #print("After",split_edges)
+                            # print(f"splitting edges: -> {len(split_edges)}")
+                            # print(f"splitting edges: -> {split_edges}")
+            i += 1
+        return [edge[1] for edge in split_edges]
+        
+    @staticmethod
+    def line_intersection(line1, line2):
+        s1 = line1[0]
+        e1 = line1[1]
+        s2 = line2[0]
+        e2 = line2[1]
+        x0 = s1[0]
+        y0 = s1[1]
+        x1 = e1[0]
+        y1 = e1[1]
+        a0 = s2[0]
+        b0 = s2[1]
+        a1 = e2[0]
+        b1 = e2[1]
+
+        def is_between(x0, x, x1):
+            return x0 <= x and x <= x1
+
+        partial = False;
+        denom = (b0 - b1) * (x0 - x1) - (y0 - y1) * (a0 - a1);
+        if denom == 0:
+            return None
+        xy = (a0 * (y1 - b1) + a1 * (b0 - y1) + x1 * (b1 - b0)) / denom;
+        partial = is_between(0, xy, 1);
+        if (partial):
+            # no point calculating this unless xy is between 0 & 1
+            ab = (y1 * (x0 - a1) + b1 * (x1 - x0) + y0 * (a1 - x1)) / denom; 
+        if partial and is_between(0, ab, 1):
+            ab = 1-ab;
+            xy = 1-xy;
+            return (xy, ab)
+        return None
+   
     @staticmethod
     def is_on_continuation_of(shapes, c, c_prev):
         # "Can we reach c by continuing around the shape c_prev is on, without decreaing our y-value?"

@@ -98,7 +98,7 @@ def test_inside_square():
 
 def test_inside_diamond():
 
-    shape = [(2, 1), (3, 2), (2, 4), (1, 2)]
+    shape = [(2, 1), (3, 2), (2, 3), (1, 2)]
     shapes = [shape]
     sf = ShapeFiller(shapes)
 
@@ -117,5 +117,31 @@ def test_inside_diamond():
     assert(not sf.is_inside((4, 4)))
     assert(not sf.is_inside((4, 0)))
 
+def test_split_edges_square():
 
+    shape = [(1, 1), (1, 3), (3, 3), (3, 1)]
+    shapes = [shape]
+    sf = ShapeFiller(shapes)
 
+    assert(sf.split_edge_endpoints((0,1), (4,1)) == [(1,1), (3,1), (4,1)])
+    assert(sf.split_edge_endpoints((0,2), (4,2)) == [(1,2), (3,2), (4,2)])
+    assert(sf.split_edge_endpoints((0,3), (4,3)) == [(1,3), (3,3), (4,3)])
+
+    assert(sf.split_edge_endpoints((0,0), (4,0)) == [(4,0)])
+    assert(sf.split_edge_endpoints((0,4), (4,4)) == [(4,4)])
+
+def test_split_edges_diamond():
+
+    shape = [(8, 4), (12, 12), (8, 20), (4, 12)]
+    shapes = [shape]
+    sf = ShapeFiller(shapes)
+
+    assert(sf.split_edge_endpoints((0,0),  (16,0))  == [(16,0)])
+    assert(sf.split_edge_endpoints((0,4),  (16,4))  == [(8,4),  (16,4)])
+    assert(sf.split_edge_endpoints((0,6),  (16,6))  == [(7,6),  (9,6),   (16,6)])
+    assert(sf.split_edge_endpoints((0,8),  (16,8))  == [(6,8),  (10,8),  (16,8)])
+    assert(sf.split_edge_endpoints((0,12), (16,12)) == [(4,12), (12,12), (16,12)])
+    assert(sf.split_edge_endpoints((0,16), (16,16)) == [(6,16), (10,16), (16,16)])
+    assert(sf.split_edge_endpoints((0,18), (16,18)) == [(7,18), (9,18),  (16,18)])
+    assert(sf.split_edge_endpoints((0,20), (16,20)) == [(8,20), (16,20)])
+    assert(sf.split_edge_endpoints((0,24), (16,24)) == [(16,24)])
