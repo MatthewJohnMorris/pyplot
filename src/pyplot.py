@@ -851,11 +851,11 @@ class ShapeFiller:
 
     def __init__(self, shapes):
         self.unrotated_shapes = shapes
-        shape_limits = [ShapeFiller.Limits(min([pt[0] for pt in shape]), min(pt[1] for pt in shape), max([pt[0] for pt in shape]), max(pt[1] for pt in shape)) for shape in shapes]
-        self.min_x = min(limit.min_x for limit in shape_limits)
-        self.min_y = min(limit.min_y for limit in shape_limits)
-        self.max_x = max(limit.max_x for limit in shape_limits)
-        self.max_y = max(limit.max_y for limit in shape_limits)
+        self.shape_limits = [ShapeFiller.Limits(min([pt[0] for pt in shape]), min(pt[1] for pt in shape), max([pt[0] for pt in shape]), max(pt[1] for pt in shape)) for shape in shapes]
+        self.min_x = min(limit.min_x for limit in self.shape_limits)
+        self.min_y = min(limit.min_y for limit in self.shape_limits)
+        self.max_x = max(limit.max_x for limit in self.shape_limits)
+        self.max_y = max(limit.max_y for limit in self.shape_limits)
 
     # "Clever" plotting of crossings
     # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
@@ -1105,24 +1105,39 @@ class ShapeFiller:
         for e in polyline[1:]:
             path.extend(self.split_edge_endpoints(s, e))
             s = e
-        if len(polyline) != len(path):
-            print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
+        # if len(polyline) != len(path):
+        #     print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
         return path
         
     def split_edge_endpoints(self, s, e):
         split_edges = [(s, e)]
         i = 0
         while i < len(split_edges):
-            for shape in self.unrotated_shapes:
+            for ix_shape in range(0, len(self.unrotated_shapes)):
+                shape = self.unrotated_shapes[ix_shape]
+                
+                # Minimise full intersection checks: whole shape bounding box
+                edge = split_edges[i]
+                edge_s = edge[0]
+                edge_e = edge[1]
+                shape_limits = self.shape_limits[ix_shape]
+                if max(edge_s[0], edge_e[0]) < shape_limits.min_x:
+                    continue
+                if min(edge_s[0], edge_e[0]) > shape_limits.max_x:
+                    continue
+                if max(edge_s[1], edge_e[1]) < shape_limits.min_y:
+                    continue
+                if min(edge_s[1], edge_e[1]) > shape_limits.max_y:
+                    continue
+                
+                # Try each shape edge in turn
                 n_points = len(shape)
                 for ix_s in range(0, n_points):
                     ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
                     shape_s = shape[ix_s]
                     shape_e = shape[ix_e]
-                    edge = split_edges[i]
-                    edge_s = edge[0]
-                    edge_e = edge[1]
-                    # Minimise full intersection checks
+                    
+                    # Minimise full intersection checks: shape edge bounding box
                     if max(edge_s[0], edge_e[0]) < min(shape_s[0], shape_e[0]):
                         continue
                     if min(edge_s[0], edge_e[0]) > max(shape_s[0], shape_e[0]):
@@ -1131,29 +1146,35 @@ class ShapeFiller:
                         continue
                     if min(edge_s[1], edge_e[1]) > max(shape_s[1], shape_e[1]):
                         continue
+                        
+                    # We are inside shape edge bounding box: do a full intersection check
                     intersect = ShapeFiller.line_intersection(edge, (shape_s, shape_e))
                     if not intersect is None:
                         k = intersect[0]
-                        # Don't count it as an intersction if we are very nearly at an endpoint
+                        # Don't count it as an interssction if we are very nearly at an endpoint
                         # You just end up with floating point errors giving us repeatedly dividing an edge by tiny amounts
                         if abs(k) > 1e-6 and abs(k-1) > 1e-6:
+                            # Get the intersection point and split the edge at it
                             pt_x = edge[0][0] + k * (edge[1][0] - edge[0][0])
                             pt_y = edge[0][1] + k * (edge[1][1] - edge[0][1])
                             pt = (pt_x, pt_y)
                             e = split_edges[i][1]
                             split_edges[i] = (split_edges[i][0], pt)
                             split_edges[i+1:i+1] = [(pt, e)]
+                            # Update edge info
+                            edge = split_edges[i]
+                            edge_s = edge[0]
+                            edge_e = edge[1]
+                            
+            # This edge has done intersection checks for all shapes: go to the next (if any)
             i += 1
+            
+        # Return endpoints
         return [edge[1] for edge in split_edges]
-        
-    n_inter = 0
     
     @staticmethod
+    # Taken from https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
     def line_intersection(line1, line2):
-    
-        ShapeFiller.n_inter += 1
-        if ShapeFiller.n_inter % 1000000 == 0:
-            print(f"intersection calcs: {ShapeFiller.n_inter}")
     
         s1 = line1[0]
         e1 = line1[1]
