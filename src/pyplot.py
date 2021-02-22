@@ -171,6 +171,13 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         
+    def add_polylines(self, polylines, stroke=None, container=None):
+        polylines = StandardDrawing.sort_polylines(polylines)
+        container = self.default_container(container)
+        stroke = self.default_stroke(stroke)
+        for polyline in polylines:
+            container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
+        
     def add_layer(self, label):
         layer = self.inkscape.layer(label=label)
         self.dwg.add(layer)
@@ -796,6 +803,43 @@ class StandardDrawing:
         for path in sf.get_paths(self.pen_type.pen_width * width_mult, angle=angle):
             all_paths.extend(path)
         return all_paths
+
+    @staticmethod
+    def sort_polylines(polylines):
+    
+        def dist(p1, p2):
+            dx = p2[0] - p1[0]
+            dy = p2[1] - p1[1]
+            return math.sqrt(dx*dx + dy*dy)
+    
+        i_start = 0
+        unsorted = [x for x in polylines]
+        sorted = [unsorted[i_start]]
+        del unsorted[i_start:i_start+1]
+        while len(unsorted) > 0:
+            e = sorted[-1][-1]
+            print(e)
+            is_fwd = True
+            min_dist = 1000000
+            min_ix = 0
+            for i in range(0, len(unsorted)):
+                p = unsorted[i]
+                dist_s = dist(p[0], e)
+                dist_e = dist(p[-1], e)
+                if dist_e < min_dist:
+                    min_ix = i
+                    is_fwd = False
+                    min_dist = dist_e
+                if dist_s < min_dist:
+                    min_ix = i
+                    is_fwd = True
+                    min_dist = dist_s
+                    
+            best = unsorted[min_ix]
+            sorted.append(best if is_fwd else best[::-1])
+            del unsorted[min_ix:min_ix+1]
+    
+        return sorted
 
 class CircleBlock:    
 

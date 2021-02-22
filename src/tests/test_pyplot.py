@@ -145,3 +145,30 @@ def test_split_edges_diamond():
     assert(sf.split_edge_endpoints((0,18), (16,18)) == [(7,18), (9,18),  (16,18)])
     assert(sf.split_edge_endpoints((0,20), (16,20)) == [(8,20), (16,20)])
     assert(sf.split_edge_endpoints((0,24), (16,24)) == [(16,24)])
+
+def test_sort_polylines_zigzag():
+
+    # Expect same order
+    line1 = [(0, 0), (10, 0)]
+    line2 = [(10, 1), (0, 1)]
+    line3 = [(0, 2), (10, 2)]
+    sorted = StandardDrawing.sort_polylines([line1, line2, line3])
+    assert(sorted[0] == line1)
+    assert(sorted[1] == line2)
+    assert(sorted[2] == line3)
+
+def test_sort_polylines_order():
+
+    # Expect reordering as well as line3 reversed
+    line1 = [(0, 0), (10, 0)]
+    line2 = [(0, 2), (10, 2)]
+    line3 = [(0, 1), (10, 1)]
+    sorted = StandardDrawing.sort_polylines([line1, line2, line3])
+    assert(sorted[0] == line1)
+    assert(sorted[1] == line3[::-1])
+    assert(sorted[2] == line2)
+
+
+
+
+

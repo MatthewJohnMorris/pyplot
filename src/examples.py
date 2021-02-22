@@ -686,9 +686,21 @@ def draw_false_prophets(drawing):
         polylines.append(p)
     for text_path in text_paths:
         polylines.append(text_path)
-         
-    for polyline in polylines:
-        drawing.add_polyline(polyline)
+
+    polylines2 = []
+    family = 'Arial'
+    header_pos = (int(x_size/2), 40)
+    fontsize = 36
+    text = "False Prophets Of The New Millenium"
+    ext = d.text_bound(text, fontsize, family)
+    position = (header_pos[0] - ext.width/2, header_pos[1])
+    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    sf = ShapeFiller(text_paths)
+    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in filled_text_paths:
+        polylines2.append(p)
+
+    drawing.add_polylines(polylines2)
 
 
 
