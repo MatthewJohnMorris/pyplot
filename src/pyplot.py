@@ -1120,27 +1120,41 @@ class ShapeFiller:
                     shape_s = shape[ix_s]
                     shape_e = shape[ix_e]
                     edge = split_edges[i]
+                    edge_s = edge[0]
+                    edge_e = edge[1]
+                    # Minimise full intersection checks
+                    if max(edge_s[0], edge_e[0]) < min(shape_s[0], shape_e[0]):
+                        continue
+                    if min(edge_s[0], edge_e[0]) > max(shape_s[0], shape_e[0]):
+                        continue
+                    if max(edge_s[1], edge_e[1]) < min(shape_s[1], shape_e[1]):
+                        continue
+                    if min(edge_s[1], edge_e[1]) > max(shape_s[1], shape_e[1]):
+                        continue
                     intersect = ShapeFiller.line_intersection(edge, (shape_s, shape_e))
                     if not intersect is None:
                         k = intersect[0]
-                        #print(f"i={i}: edge={edge}, intersect with ({shape_s},{shape_e}), intersect={intersect}")
+                        # Don't count it as an intersction if we are very nearly at an endpoint
+                        # You just end up with floating point errors giving us repeatedly dividing an edge by tiny amounts
                         if abs(k) > 1e-6 and abs(k-1) > 1e-6:
                             pt_x = edge[0][0] + k * (edge[1][0] - edge[0][0])
                             pt_y = edge[0][1] + k * (edge[1][1] - edge[0][1])
                             pt = (pt_x, pt_y)
-                            #print("Before",split_edges)
-                            #print("i,s,pt,e",i,s,pt,e)
                             e = split_edges[i][1]
                             split_edges[i] = (split_edges[i][0], pt)
                             split_edges[i+1:i+1] = [(pt, e)]
-                            #print("After",split_edges)
-                            # print(f"splitting edges: -> {len(split_edges)}")
-                            # print(f"splitting edges: -> {split_edges}")
             i += 1
         return [edge[1] for edge in split_edges]
         
+    n_inter = 0
+    
     @staticmethod
     def line_intersection(line1, line2):
+    
+        ShapeFiller.n_inter += 1
+        if ShapeFiller.n_inter % 1000000 == 0:
+            print(f"intersection calcs: {ShapeFiller.n_inter}")
+    
         s1 = line1[0]
         e1 = line1[1]
         s2 = line2[0]
