@@ -313,32 +313,7 @@ class StandardDrawing:
         
         points = self.make_dot(centre, radius, r_start, xy_func)
         self.add_polyline(points, stroke=stroke, container=container)
-            
-    def make_square(self, topleft, size, start_size=None):
-    
-        pen_width = self.pen_type.pen_width
-        points = []
-        
-        curr_size = pen_width / 4 if start_size is None else start_size
-        
-        centre = (topleft[0] + size/2, topleft[1] + size/2)
-        while curr_size < size:
-            points.append((centre[0] - curr_size/2, centre[1] - curr_size/2))
-            points.append((centre[0] - curr_size/2, centre[1] + curr_size/2))
-            points.append((centre[0] + curr_size/2, centre[1] + curr_size/2))
-            points.append((centre[0] + curr_size/2, centre[1] - curr_size/2))
-            curr_size += pen_width / 2
-        points.append((centre[0] - size/2, centre[1] - size/2))
-        points.append((centre[0] - size/2, centre[1] + size/2))
-        points.append((centre[0] + size/2, centre[1] + size/2))
-        points.append((centre[0] + size/2, centre[1] - size/2))
-        return points
-
-    def add_square(self, topleft, size, start_size=None, stroke=None, container=None):
-    
-        points = self.make_square(topleft, size, start_size)
-        self.add_polyline(points, stroke=stroke, container=container)
-        
+                    
     def make_surface(self, top_left, x_size, y_size, z_function, projection_angle=None):
     
         # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
@@ -818,7 +793,7 @@ class StandardDrawing:
         del unsorted[i_start:i_start+1]
         while len(unsorted) > 0:
             e = sorted[-1][-1]
-            print(e)
+            # print(e)
             is_fwd = True
             min_dist = 1000000
             min_ix = 0

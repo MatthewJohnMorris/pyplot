@@ -643,9 +643,10 @@ def draw_false_prophets(drawing):
     family='CNC Vector'
     # family = 'HersheyScript1smooth'
     family = 'Arial'
+    family = 'Caslon Antique'
     header_pos = (int(x_size/2), 40)
     fontsize = 36
-    text = "False Prophets Of The New Millenium"
+    text = "False Prophets Of The New Millenium."
     ext = d.text_bound(text, fontsize, family)
     position = (header_pos[0] - ext.width/2, header_pos[1])
     text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
@@ -669,12 +670,15 @@ def draw_false_prophets(drawing):
 
     family='CNC Vector'
     # family = 'HersheyScript1smooth'
+    family = 'Caslon Antique'
     fontsize = 24
     text = "WAKEFIELD"
     ext = d.text_bound(text, fontsize, family)
     
     position = (medallion_centre[0] - ext.width/2, medallion_centre[1]+30+4+ext.height)
     text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    sf = ShapeFiller(text_paths)
+    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
     
     rect_width = 0.5
     rect1 = d.make_rect((position[0] - 2, position[1] + ext.y_bearing - 2), ext.width + 4, ext.height + 4)
@@ -684,14 +688,28 @@ def draw_false_prophets(drawing):
     rect_paths = sf.get_paths(d.pen_type.pen_width / 5)
     for p in rect_paths:
         polylines.append(p)
-    for text_path in text_paths:
+    for text_path in filled_text_paths:
         polylines.append(text_path)
 
     polylines2 = []
-    family = 'Arial'
-    header_pos = (int(x_size/2), 40)
-    fontsize = 36
-    text = "False Prophets Of The New Millenium"
+    family = 'Aquifer'
+    family = 'Caslon Antique'
+    fontsize = 48
+
+    row_ext = d.text_bound("Op", fontsize, family)
+    
+    header_pos = (int(x_size/2), 80)
+    text = "False Prophets Of"
+    ext = d.text_bound(text, fontsize, family)
+    position = (header_pos[0] - ext.width/2, header_pos[1])
+    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    sf = ShapeFiller(text_paths)
+    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in filled_text_paths:
+        polylines2.append(p)
+        
+    header_pos = (header_pos[0], header_pos[1] + row_ext.height + 2)
+    text = "The New Millenium"
     ext = d.text_bound(text, fontsize, family)
     position = (header_pos[0] - ext.width/2, header_pos[1])
     text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
@@ -700,9 +718,100 @@ def draw_false_prophets(drawing):
     for p in filled_text_paths:
         polylines2.append(p)
 
-    drawing.add_polylines(polylines2)
+    drawing.add_polylines(polylines)
 
 
+def draw_shape_clips(d):
+
+    all_polylines = []
+    shapes = []
+    for i in range(0, 100):
+        x = 20 + random() * 25
+        y = 170 + random() * 25
+        size = 2.5 + 10 * random()
+        shape = d.make_square(x, y, size)
+        a = random()*math.pi*2
+        shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
+        polyline = [x for x in shape]
+        polyline.append(polyline[0])
+        if i == 0:
+            all_polylines.append(polyline)
+        else:
+            # print(f"shapes={shapes}")
+            sf = ShapeFiller(shapes)
+            polylines = sf.clip([polyline], union=True)
+            all_polylines.extend(polylines)
+        shapes.append(shape)
+    d.add_polylines(all_polylines)
+
+def draw_smileys(d):
+    all_polylines = []
+    header_pos = (50, 50)
+    family = 'WingDings'
+    fontsize = 192
+    text = "J"
+    ext = d.text_bound(text, fontsize, family)
+    position = (header_pos[0] - ext.width/2, header_pos[1])
+    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    sf = ShapeFiller(text_paths)
+    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in filled_text_paths:
+        all_polylines.append(p)
+    d.add_polylines(all_polylines)
+
+def draw_word_square(d):
+
+    all_polylines = []
+    
+    # S A T O R
+    # A R E P O
+    # T E N E T
+    # O P E R A
+    # R O T A S 
+    position = (50, 50)
+    fontsize = 24
+    # family = "Arial"
+    family = 'Caslon Antique'
+    square = ["SATOR","AREPO","TENET","OPERA","ROTAS"]
+    n = len(square)
+    max_width = 0
+    max_height = 0
+    for letter in square[0]:
+        ext = d.text_bound(letter, fontsize, family)
+        max_width = max(max_width, ext.width)
+        max_height = max(max_height, ext.height)
+    max_text_side = max(max_width, max_height)
+    square_size = max_text_side + 2
+    use_position = (position[0], position[1] + square_size)
+    for r in range(0, len(square)):
+        for c in range(0, len(square[r])):
+            letter = square[r][c]
+            ext = d.text_bound(letter, fontsize, family)
+            pos = (use_position[0] + c * square_size, use_position[1] + r * square_size)
+            diff = (square_size - ext.width, square_size - ext.height)
+            pos = (pos[0] + diff[0]/2, pos[1] + diff[1]/2)
+            text_paths = d.make_text(letter, pos, fontsize=fontsize, family=family)
+            sf = ShapeFiller(text_paths)
+            filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+            for p in filled_text_paths:
+                all_polylines.append(p)
+    shape1 = d.make_square(use_position[0]-1, use_position[1] + ext.y_bearing-1, len(square)*square_size + 2)
+    shape2 = d.make_square(use_position[0]-2, use_position[1] + ext.y_bearing-2, len(square)*square_size + 4)
+    sf = ShapeFiller([shape1, shape2])
+    paths = sf.get_paths(d.pen_type.pen_width / 5)
+    all_polylines.extend(paths)
+    
+    centre = (use_position[0] + n * square_size/2, use_position[1] + n * square_size/2)
+    
+    a = math.pi / 7
+    rot_polylines = []
+    for path in all_polylines:
+        rot_path = [StandardDrawing.rotate_about(x, centre, a) for x in path]
+        rot_polylines.append(rot_path)
+    
+    d.add_polylines(rot_polylines)
+            
+    
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -710,7 +819,10 @@ def draw_false_prophets(drawing):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_false_prophets(d)
+# draw_false_prophets(d)
+# draw_shape_clips(d)
+# draw_smileys(d)
+draw_word_square(d)
 
 '''
 test_text_and_shape(d)
