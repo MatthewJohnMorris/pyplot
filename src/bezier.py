@@ -56,7 +56,7 @@ def bezier_subdivide( start, spline_array, flat ):
     (the "smoothness" defined by [flat]).
     
     Rewritten from scratch as no idea what the axidraw stuff thought it was doing - it sort of
-    worked but started showing distorion on very long splines. Maybe that's me being unable tobytes
+    worked but started showing distorion on very long splines. Maybe that's me being unable to
     transcribe, but seemed best to get it right from the ground up.
     """
 
