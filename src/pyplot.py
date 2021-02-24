@@ -400,11 +400,13 @@ class StandardDrawing:
         curr_polyline = []
         prev_position = None
         pending_splines = []
+        #for type, points in path:
+        #    print(type,points)
         for type, points in path:
             if type != cairo.PATH_CURVE_TO:
                 if len(pending_splines) > 0:
                     # convert any pending splines to small enough subsections that we can plot them as stright lines
-                    a = bezier_subdivide(prev_position, pending_splines, self.pen_type.pen_width / 5)
+                    a = bezier_subdivide2(prev_position, pending_splines, self.pen_type.pen_width / 5)
                     for small_spline in a:
                         x, y = small_spline[2]
                         prev_position = (x,y)

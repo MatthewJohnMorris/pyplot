@@ -744,21 +744,6 @@ def draw_shape_clips(d):
         shapes.append(shape)
     d.add_polylines(all_polylines)
 
-def draw_smileys(d):
-    all_polylines = []
-    header_pos = (50, 50)
-    family = 'WingDings'
-    fontsize = 192
-    text = "J"
-    ext = d.text_bound(text, fontsize, family)
-    position = (header_pos[0] - ext.width/2, header_pos[1])
-    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
-    sf = ShapeFiller(text_paths)
-    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
-    for p in filled_text_paths:
-        all_polylines.append(p)
-    d.add_polylines(all_polylines)
-
 def draw_word_square(d):
 
     all_polylines = []
@@ -801,7 +786,7 @@ def draw_word_square(d):
             for p in filled_text_paths:
                 all_polylines.append(p)
             shape = d.make_square(pos[0], pos[1] + ext.y_bearing-1, len(square)*square_size + 2)
-            print(ext)
+            # print(ext)
     width = fontsize / 24
     shape1 = d.make_square(use_position[0]-width + ext.x_bearing, use_position[1]-width + ext.y_bearing, len(square)*square_size + 2*width)
     shape2 = d.make_square(use_position[0]-2*width + ext.x_bearing, use_position[1]-2*width + ext.y_bearing, len(square)*square_size + 4*width)
@@ -819,6 +804,21 @@ def draw_word_square(d):
     
     d.add_polylines(rot_polylines)
             
+
+def draw_smileys(d):
+    all_polylines = []
+    header_pos = (50, 50)
+    family = 'WingDings'
+    fontsize = 192
+    text = "J"
+    ext = d.text_bound(text, fontsize, family)
+    position = (header_pos[0] - ext.width/2, header_pos[1])
+    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
+    sf = ShapeFiller(text_paths)
+    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+    for p in text_paths:
+        all_polylines.append(p)
+    d.add_polylines(all_polylines)
     
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
@@ -827,9 +827,9 @@ def draw_word_square(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-# draw_false_prophets(d)
+draw_false_prophets(d)
 # draw_shape_clips(d)
-# draw_smileys(d)
+draw_smileys(d)
 draw_word_square(d)
 
 '''
