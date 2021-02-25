@@ -772,7 +772,7 @@ def draw_tree(d):
         branch_polylines = [[pos]]
         a_centre = (a_disp / 2) * 2 * (random() - 0.5)
         add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth)
-
+        # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
         d.add_polylines(branch_polylines)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
