@@ -781,6 +781,56 @@ class StandardDrawing:
             all_paths.extend(path)
         return all_paths
 
+    def make_word_square(self, position, fontsize, family, square, angle=None):
+
+        all_polylines = []
+        
+        n = len(square)
+        max_width = 0
+        max_height = 0
+        for letter in square[0]:
+            ext = self.text_bound(letter, fontsize, family)
+            max_width = max(max_width, ext.width)
+            max_height = max(max_height, ext.height)
+        max_text_side = max(max_width, max_height)
+        square_size = max_text_side + 2
+        use_position = (position[0], position[1] + square_size)
+        for r in range(0, len(square)):
+            for c in range(0, len(square[r])):
+                letter = square[r][c]
+                ext = self.text_bound(letter, fontsize, family)
+                pos = (use_position[0] + (c+0.5) * square_size, use_position[1] + (r+0.5) * square_size)
+                start_x = ext.x_bearing
+                end_x = start_x + ext.width
+                mid_x = (start_x + end_x) / 2
+                start_y = ext.y_bearing
+                end_y = start_y + ext.height
+                mid_y = (start_y + end_y) / 2
+                pos = (pos[0] - ext.width/2, pos[1] - ext.height/2)
+                text_paths = self.make_text(letter, pos, fontsize=fontsize, family=family)
+                sf = ShapeFiller(text_paths)
+                filled_text_paths = sf.get_paths(self.pen_type.pen_width / 5)
+                for p in filled_text_paths:
+                    all_polylines.append(p)
+                shape = self.make_square(pos[0], pos[1] + ext.y_bearing-1, len(square)*square_size + 2)
+                # print(ext)
+        width = fontsize / 24 * 2
+        shape1 = self.make_square(use_position[0]-width/4 + ext.x_bearing, use_position[1]-width/4 + ext.y_bearing, len(square)*square_size + width/2)
+        shape2 = self.make_square(use_position[0]-width/2 + ext.x_bearing, use_position[1]-width/2 + ext.y_bearing, len(square)*square_size + width)
+        sf = ShapeFiller([shape1, shape2])
+        paths = sf.get_paths(self.pen_type.pen_width / 5 * 2)
+        all_polylines.extend(paths)
+        
+        centre = (use_position[0] + n * square_size/2, use_position[1] + n * square_size/2)
+        
+        angle = 0 if angle is None else angle
+        rot_polylines = []
+        for path in all_polylines:
+            rot_path = [StandardDrawing.rotate_about(x, centre, angle) for x in path]
+            rot_polylines.append(rot_path)
+        
+        return rot_polylines
+        
     @staticmethod
     def sort_polylines(polylines):
     
