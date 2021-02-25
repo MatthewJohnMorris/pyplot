@@ -748,30 +748,72 @@ def draw_word_square(d):
 
     d.add_polylines(d.make_word_square((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"]))
 
-def add_branch(all_lines, ix, pos, line, a_disp, a_centre, depth_remaining):
+def rand_1():
+
+    return 2 * (random() - 0.5)
+
+def gen_curved_line(start, end):
+
+    dx = end[0] - start[0]
+    dy = end[1] - start[1]
+    d = math.sqrt(dx*dx+dy*dy)
+    d1 = d / 5
+    d2 = d / 8
+    #d1 = 0
+    #d2 =0
+    
+    t1 = 1/3
+    t1_pos = (start[0] + t1 * dx, start[1] + t1 * dy)
+    control1 = (t1_pos[0] + d1 * rand_1(), t1_pos[1] + d1 * rand_1())
+    t2 = 2/3
+    t2_pos = (start[0] + t2 * dx, start[1] + t2 * dy)
+    control2 = (t2_pos[0] + d2 * rand_1(), t2_pos[1] + d2 * rand_1())
+    return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
+
+def add_branch(all_lines, ix, pos, line, a_disp, a_centre, depth_remaining, curve):
+
     new_pos = (pos[0]+line[0], pos[1]+line[1])
-    all_lines[ix].append(new_pos)
+    if curve:
+        curved_line = gen_curved_line(pos, new_pos)
+        # print(curved_line)
+        all_lines[ix].extend(curved_line)
+    else:
+        all_lines[ix].append(new_pos)
+    
     if depth_remaining > 0:
         new_line = (line[0] * 2/3, line[1] * 2/3)
         # random perturbation of the direction of growth
         a_centre += (a_disp / 2) * 2 * (random() - 0.5)
         # do the higher-index branch first so our indexing doesn't get messed up!
         all_lines[ix+1:ix+1] = [[new_pos]]
-        add_branch(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp + a_centre), a_disp, a_centre, depth_remaining - 1)
+        add_branch(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp + a_centre), a_disp, a_centre, depth_remaining - 1, curve)
         # now go further along the ix-branch
-        add_branch(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp + a_centre), a_disp, a_centre, depth_remaining - 1)
+        add_branch(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp + a_centre), a_disp, a_centre, depth_remaining - 1, curve)
 
 def draw_tree(d):
     all_polylines = []
-    pos = (100, 100)
+    
+    pos = (100, 80)
     line = (0, 20)
     max_depth = 7
     a_disp = math.pi / 6
     num_branches = 19
     for i in range(0, num_branches):
         branch_polylines = [[pos]]
-        a_centre = (a_disp / 2) * 2 * (random() - 0.5)
-        add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth)
+        a_centre = (a_disp / 4) * 2 * (random() - 0.5)
+        add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth, True)
+        # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
+        d.add_polylines(branch_polylines)
+    
+    pos = (100, 200)
+    line = (0, 20)
+    max_depth = 7
+    a_disp = math.pi / 6
+    num_branches = 19
+    for i in range(0, num_branches):
+        branch_polylines = [[pos]]
+        a_centre = (a_disp / 4) * 2 * (random() - 0.5)
+        add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth, False)
         # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
         d.add_polylines(branch_polylines)
         
