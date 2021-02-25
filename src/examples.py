@@ -748,22 +748,33 @@ def draw_word_square(d):
 
     d.add_polylines(d.make_word_square((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"]))
 
-def draw_smileys(d):
-    all_polylines = []
-    header_pos = (50, 50)
-    family = 'WingDings'
-    fontsize = 192
-    text = "J"
-    ext = d.text_bound(text, fontsize, family)
-    position = (header_pos[0] - ext.width/2, header_pos[1])
-    text_paths = d.make_text(text, position, fontsize=fontsize, family=family)
-    sf = ShapeFiller(text_paths)
-    filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
-    for p in text_paths:
-        all_polylines.append(p)
-    d.add_polylines(all_polylines)
-    
+def add_branch(all_lines, ix, pos, line, a_disp, a_centre, depth_remaining):
+    new_pos = (pos[0]+line[0], pos[1]+line[1])
+    all_lines[ix].append(new_pos)
+    if depth_remaining > 0:
+        new_line = (line[0] * 2/3, line[1] * 2/3)
+        # random perturbation of the direction of growth
+        a_centre += (a_disp / 2) * 2 * (random() - 0.5)
+        # do the higher-index branch first so our indexing doesn't get messed up!
+        all_lines[ix+1:ix+1] = [[new_pos]]
+        add_branch(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp + a_centre), a_disp, a_centre, depth_remaining - 1)
+        # now go further along the ix-branch
+        add_branch(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp + a_centre), a_disp, a_centre, depth_remaining - 1)
 
+def draw_tree(d):
+    all_polylines = []
+    pos = (100, 100)
+    line = (0, 20)
+    max_depth = 7
+    a_disp = math.pi / 6
+    num_branches = 19
+    for i in range(0, num_branches):
+        branch_polylines = [[pos]]
+        a_centre = (a_disp / 2) * 2 * (random() - 0.5)
+        add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth)
+
+        d.add_polylines(branch_polylines)
+        
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -772,8 +783,8 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 
 # draw_false_prophets(d)
 # draw_shape_clips(d)
-# draw_smileys(d)
-draw_word_square(d)
+# draw_word_square(d)
+draw_tree(d)
 
 '''
 test_text_and_shape(d)
