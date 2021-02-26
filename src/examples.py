@@ -770,18 +770,43 @@ def gen_curved_line(start, end):
     control2 = (t2_pos[0] + d2 * rand_1(), t2_pos[1] + d2 * rand_1())
     return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
 
+def add_thickness(to_extend, to_add, fract):
+
+    old_end = to_extend[-1]
+    new_end = to_add[-1]
+    diff = (new_end[0] - old_end[0], new_end[1] - old_end[1])
+    diff_r = (diff[1], -diff[0])
+    dist_diff_r = math.sqrt(diff_r[0]*diff_r[0] + diff_r[1]*diff_r[1])
+    norm_diff_r = (diff_r[0] / dist_diff_r, diff_r[1] / dist_diff_r)
+    pen_diff_r = (norm_diff_r[0] * 0.6*fract, norm_diff_r[1] * 0.6*fract)
+    to_extend.append((old_end[0] + pen_diff_r[0], old_end[1] + pen_diff_r[1]))
+    thing1 = [(x[0] + pen_diff_r[0], x[1] + pen_diff_r[1]) for x in to_add]
+    to_extend.extend(thing1)
+    to_extend.extend(thing1[::-1])
+    to_extend.append((old_end[0] - pen_diff_r[0], old_end[1] - pen_diff_r[1]))
+    thing2 = [(x[0] - pen_diff_r[0], x[1] - pen_diff_r[1]) for x in to_add]
+    to_extend.extend(thing2)
+    to_extend.extend(thing2[::-1])
+    to_extend.append(old_end)
+    to_extend.extend([x for x in to_add])
+
 def add_branch(all_lines, ix, pos, line, a_disp, a_centre, depth_remaining, curve):
+
+    fract = depth_remaining/10
 
     new_pos = (pos[0]+line[0], pos[1]+line[1])
     if curve:
         curved_line = gen_curved_line(pos, new_pos)
         # print(curved_line)
-        all_lines[ix].extend(curved_line)
+        # all_lines[ix].extend(curved_line)
+        add_thickness(all_lines[ix], curved_line, fract)
     else:
-        all_lines[ix].append(new_pos)
+        # all_lines[ix].append(new_pos)
+        add_thickness(all_lines[ix], [new_pos], fract)
     
+    cut = 2/3
     if depth_remaining > 0:
-        new_line = (line[0] * 2/3, line[1] * 2/3)
+        new_line = (line[0] * cut, line[1] * cut)
         # random perturbation of the direction of growth
         a_centre += (a_disp / 2) * 2 * (random() - 0.5)
         # do the higher-index branch first so our indexing doesn't get messed up!
@@ -793,29 +818,22 @@ def add_branch(all_lines, ix, pos, line, a_disp, a_centre, depth_remaining, curv
 def draw_tree(d):
     all_polylines = []
     
-    pos = (100, 80)
-    line = (0, 20)
-    max_depth = 7
+    pos = (100, 100)
+    line = (0, 30)
+    max_depth = 5
     a_disp = math.pi / 6
-    num_branches = 19
+    num_branches = 37
     for i in range(0, num_branches):
-        branch_polylines = [[pos]]
         a_centre = (a_disp / 4) * 2 * (random() - 0.5)
-        add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth, True)
+        disp_rot = StandardDrawing.rotate_about((0, 10), (0,0), i * 2 * math.pi / num_branches)
+        pos_start = (pos[0] + disp_rot[0], pos[1] + disp_rot[1])
+        branch_polylines = [[pos_start]]
+        add_branch(branch_polylines, 0, pos_start, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth, True)
         # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
         d.add_polylines(branch_polylines)
-    
-    pos = (100, 200)
-    line = (0, 20)
-    max_depth = 7
-    a_disp = math.pi / 6
-    num_branches = 19
-    for i in range(0, num_branches):
-        branch_polylines = [[pos]]
-        a_centre = (a_disp / 4) * 2 * (random() - 0.5)
-        add_branch(branch_polylines, 0, pos, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth, False)
-        # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
-        d.add_polylines(branch_polylines)
+        
+    d.add_dot(pos, 10, r_start=9)
+    d.add_dot(pos, 8)
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
