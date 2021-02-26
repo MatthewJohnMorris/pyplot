@@ -771,6 +771,8 @@ def gen_curved_line(start, end):
     return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
 
 def add_thickness(to_extend, to_add, fract):
+        
+    pen_width = 0.6
 
     old_end = to_extend[-1]
     new_end = to_add[-1]
@@ -778,62 +780,80 @@ def add_thickness(to_extend, to_add, fract):
     diff_r = (diff[1], -diff[0])
     dist_diff_r = math.sqrt(diff_r[0]*diff_r[0] + diff_r[1]*diff_r[1])
     norm_diff_r = (diff_r[0] / dist_diff_r, diff_r[1] / dist_diff_r)
-    pen_diff_r = (norm_diff_r[0] * 0.6*fract, norm_diff_r[1] * 0.6*fract)
-    to_extend.append((old_end[0] + pen_diff_r[0], old_end[1] + pen_diff_r[1]))
-    thing1 = [(x[0] + pen_diff_r[0], x[1] + pen_diff_r[1]) for x in to_add]
-    to_extend.extend(thing1)
-    to_extend.extend(thing1[::-1])
-    to_extend.append((old_end[0] - pen_diff_r[0], old_end[1] - pen_diff_r[1]))
-    thing2 = [(x[0] - pen_diff_r[0], x[1] - pen_diff_r[1]) for x in to_add]
-    to_extend.extend(thing2)
-    to_extend.extend(thing2[::-1])
+    
+    while fract > 0.1:
+        pen_diff_r = (norm_diff_r[0] * pen_width*fract, norm_diff_r[1] * pen_width*fract)
+        
+        to_extend.append((old_end[0] + pen_diff_r[0], old_end[1] + pen_diff_r[1]))
+        thing1 = [(x[0] + pen_diff_r[0], x[1] + pen_diff_r[1]) for x in to_add]
+        to_extend.extend(thing1)
+        
+        to_extend.append((new_end[0] - pen_diff_r[0], new_end[1] - pen_diff_r[1]))
+        thing2 = [(x[0] - pen_diff_r[0], x[1] - pen_diff_r[1]) for x in to_add]
+        to_extend.extend(thing2[::-1])
+        to_extend.append((old_end[0] - pen_diff_r[0], old_end[1] - pen_diff_r[1]))
+        
+        fract -= 0.2
+    
     to_extend.append(old_end)
     to_extend.extend([x for x in to_add])
 
-def add_branch(all_lines, ix, pos, line, a_disp, a_centre, depth_remaining, curve):
+def add_branch(all_lines, ix, pos, line, a_disp, depth_remaining, thickness):
 
-    fract = depth_remaining/10
-
-    new_pos = (pos[0]+line[0], pos[1]+line[1])
-    if curve:
-        curved_line = gen_curved_line(pos, new_pos)
-        # print(curved_line)
-        # all_lines[ix].extend(curved_line)
-        add_thickness(all_lines[ix], curved_line, fract)
-    else:
-        # all_lines[ix].append(new_pos)
-        add_thickness(all_lines[ix], [new_pos], fract)
-    
     cut = 2/3
-    if depth_remaining > 0:
-        new_line = (line[0] * cut, line[1] * cut)
-        # random perturbation of the direction of growth
-        a_centre += (a_disp / 2) * 2 * (random() - 0.5)
-        # do the higher-index branch first so our indexing doesn't get messed up!
-        all_lines[ix+1:ix+1] = [[new_pos]]
-        add_branch(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp + a_centre), a_disp, a_centre, depth_remaining - 1, curve)
-        # now go further along the ix-branch
-        add_branch(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp + a_centre), a_disp, a_centre, depth_remaining - 1, curve)
+    new_pos = (pos[0]+line[0], pos[1]+line[1])
+    curved_line = gen_curved_line(pos, new_pos)
+    # print(all_lines)
+    curr_path = all_lines[ix]
+    add_thickness(curr_path, curved_line, thickness)
+    # curr_path.extend(curved_line)
+    # print(all_lines)
+    # raise Exception("foo")
+
+    if depth_remaining == 0:
+        return
+        
+    line_dist = math.sqrt(line[0]*line[0] + line[1]*line[1])
+    new_direction = (curr_path[-1][0] - curr_path[-2][0], curr_path[-1][1] - curr_path[-2][1])
+    new_dist = math.sqrt(new_direction[0]*new_direction[0] + new_direction[1]*new_direction[1])
+    new_norm_direction = (new_direction[0] / new_dist, new_direction[1] / new_dist)
+    
+    scaled_dist = cut * line_dist
+    new_line = (new_norm_direction[0] * scaled_dist, new_norm_direction[1] * scaled_dist)
+    new_thickness = thickness * cut
+    
+    # do the higher-index branch first so our indexing doesn't get messed up!
+    all_lines[ix+1:ix+1] = [[new_pos]]
+    add_branch(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp), a_disp, depth_remaining - 1, new_thickness)
+    # now go further along the ix-branch
+    add_branch(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp), a_disp, depth_remaining - 1, new_thickness)
 
 def draw_tree(d):
     all_polylines = []
     
-    pos = (100, 100)
+    pos = (105, 105)
     line = (0, 30)
-    max_depth = 5
+    max_depth = 7
     a_disp = math.pi / 6
-    num_branches = 37
+    num_branches = 21
+    thickness = 1.0
+    layer0 = d.add_layer("0-dot")
+    layers = [d.add_layer("1-green"), d.add_layer("2-orange"), d.add_layer("3-yellow")]
+    strokes = [svgwrite.rgb(0, 255, 0, '%'), svgwrite.rgb(255, 0, 0, '%'), svgwrite.rgb(255, 255, 0, '%')]
     for i in range(0, num_branches):
+        ix_layer = i % 3
+        layer = layers[ix_layer]
+        stroke = strokes[ix_layer]
         a_centre = (a_disp / 4) * 2 * (random() - 0.5)
         disp_rot = StandardDrawing.rotate_about((0, 10), (0,0), i * 2 * math.pi / num_branches)
         pos_start = (pos[0] + disp_rot[0], pos[1] + disp_rot[1])
         branch_polylines = [[pos_start]]
-        add_branch(branch_polylines, 0, pos_start, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, a_centre, max_depth, True)
+        add_branch(branch_polylines, 0, pos_start, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, max_depth, thickness)
         # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
-        d.add_polylines(branch_polylines)
+        d.add_polylines(branch_polylines, stroke=stroke, container=layer)
         
-    d.add_dot(pos, 10, r_start=9)
-    d.add_dot(pos, 8)
+    d.add_dot(pos, 10, r_start=9, stroke=svgwrite.rgb(64, 64, 64, '%'))
+    d.add_dot(pos, 8, stroke=svgwrite.rgb(64, 64, 64, '%'))
         
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle

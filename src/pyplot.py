@@ -248,7 +248,7 @@ class StandardDrawing:
 
         points = []
         a = 0 # starting angle
-        r_per_circle = pen_width / 2 # half pen width
+        r_per_circle = pen_width * 0.2 # 1/5 pen width
         do_inner_circle = False
         r = r_per_circle / 3 # initial radius
         if not r_start is None:
