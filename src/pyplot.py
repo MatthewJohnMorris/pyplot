@@ -1536,6 +1536,10 @@ class ShapeFiller:
         return hits
         
 class Point:
+
+    @staticmethod
+    def FromTuple(tup):
+        return Point(tup[0], tup[1])
     
     def __init__(self, x, y):
         self.x = x
