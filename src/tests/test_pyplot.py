@@ -180,8 +180,12 @@ def test_point():
     assert(pt4.x == 101)
     assert(pt4.y == 52)
 
-    pt5 = Point.FromTuple((42, 43))
+    pt5 = Point.From((42, 43))
     assert(pt5.x == 42)
     assert(pt5.y == 43)
+    
+    pt6 = Point.From(pt5)
+    assert(pt6.x == 42)
+    assert(pt6.y == 43)
     
 

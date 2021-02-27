@@ -1538,8 +1538,10 @@ class ShapeFiller:
 class Point:
 
     @staticmethod
-    def FromTuple(tup):
-        return Point(tup[0], tup[1])
+    def From(other):
+        if type(other) == Point:
+            return other
+        return Point(other[0], other[1])
     
     def __init__(self, x, y):
         self.x = x
