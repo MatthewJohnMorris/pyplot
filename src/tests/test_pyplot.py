@@ -1,7 +1,7 @@
 import math
 import pytest
 
-from pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
+from pyplot import CircleBlock, PenType, Point, StandardDrawing, ShapeFiller
 
 def test_rotate_sense():
 
@@ -168,7 +168,17 @@ def test_sort_polylines_order():
     assert(sorted[1] == line3[::-1])
     assert(sorted[2] == line2)
 
+def test_point():
+    
+    pt = Point(100,50)
+    pt2 = pt * 3
+    assert(pt2.x == 300)
+    assert(pt2.y == 150)
 
+    pt3 = Point(1,2)
+    pt4 = pt + pt3
+    assert(pt4.x == 101)
+    assert(pt4.y == 52)
 
 
 

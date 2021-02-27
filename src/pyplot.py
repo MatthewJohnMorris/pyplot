@@ -1541,4 +1541,13 @@ class Point:
         self.x = x
         self.y = y
 
+    def __add__(self, o):
+        return Point(self.x + o.x, self.y + o.y)
+        
+    def __mul__(self, other):
+        if type(other) in (int, float):
+            return Point(self.x * other, self.y * other)
+        raise Exception(f'Unexpected mult type for Point: "{type(other)}"')
+        
+        
 
