@@ -508,6 +508,7 @@ class StandardDrawing:
         # draw until we've hit the desired size
         j = 0
         while r <= scale:
+            # print(r, scale)
         
             # Archimedian spiral with constant length of path
             a_inc = c_size / r
@@ -539,7 +540,7 @@ class StandardDrawing:
                 # FUDGE FACTOR TO SPREAD THINGS OUT A LITTLE, GIVEN ROTATION
                 fudge_factor = 1.2
                 
-                segments_to_next_letter = int(w * fudge_factor / c_size)
+                segments_to_next_letter = int(w * fudge_factor / c_size + 0.5)
                 i = 0
                 
                 j += 1
@@ -548,7 +549,7 @@ class StandardDrawing:
                     
         return all_polylines
         
-    def add_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, fontsize=6, family='CNC Vector', container=None, stroke=None):
+    def add_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, fontsize=24, family='CNC Vector', container=None, stroke=None):
 
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
@@ -559,6 +560,7 @@ class StandardDrawing:
  
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
+        
         points = []
         r = 0 if r_initial is None else r_initial # initial radius
         a = 0 # starting angle
@@ -593,14 +595,19 @@ class StandardDrawing:
     def add_wiggle(points, new_point, line_mult):    
 
         prev = points[-1]
-        half = (0.5 * (new_point[0] - prev[0]), 0.5 * (new_point[1] - prev[1]))
-        p1 = (prev[0] + half[0] - (line_mult/2) * half[1], prev[1] + half[1] + (line_mult/2) * half[0])
-        p2 = (prev[0] + half[0] + (line_mult/2) * half[1], prev[1] + half[1] - (line_mult/2) * half[0])
+        half = (new_point - prev) * 0.5
+        mid = prev + half
+        size = line_mult / 2
+        half_r = Point(-half.y, half.x) * size
+        p1 = mid + half_r
+        p2 = mid - half_r
         points.append(p1)
         points.append(p2)
         points.append(new_point)
 
     def make_image_spiral_single(self, file, centre, scale, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
+
+        centre = Point.From(centre)
 
         if colour:
             intensity_converter = lambda r, g, b: self.pen_type.rgb_converter(r, g, b)[cmy_index]
@@ -614,7 +621,7 @@ class StandardDrawing:
         image = cv2.imread(file) #The function to read from an image into OpenCv is imread()
         (h,w,c) = image.shape
         # print(image[0,0])
-        img_centre = (int(h/2), int(w/2))
+        img_centre = Point(int(h/2), int(w/2))
         img_size = min(int(h/2), int(w/2))
      
         pen_width = self.pen_type.pen_width
@@ -662,12 +669,11 @@ class StandardDrawing:
             # output location
             s = math.sin(a)
             c = math.cos(a)
-            x = centre[0] + r * c * r_factor * x_scale
-            y = centre[1] + r * s * r_factor
+            new_point = centre + Point(c * x_scale, s) * (r * r_factor)
 
             # image location (note x/y swap)
-            ix = int(img_centre[0] + img_size * (y - centre[1]) / scale)
-            iy = int(img_centre[1] + img_size * (x - centre[0]) / scale)
+            ix = int(img_centre[0] + img_size * (new_point.y - centre[1]) / scale)
+            iy = int(img_centre[1] + img_size * (new_point.x - centre[0]) / scale)
             
             pt = image[ix, iy]
             
@@ -679,8 +685,7 @@ class StandardDrawing:
             shade = intense * mult * r_factor
 
             # "wiggle" on our way from "prev" to "new" with a width propertional to the intensity
-            new = (x, y)
-            StandardDrawing.add_wiggle(points, new, shade)
+            StandardDrawing.add_wiggle(points, new_point, shade)
 
         return points
 
@@ -735,36 +740,6 @@ class StandardDrawing:
         max_x = min(p[0] for p in points)
         mid_x = (min_x + max_x) / 2
         return [(mid_x + (p[0] - mid_x) * factor, p[1]) for p in points]
-      
-    def fill_in_paths_old(self, path_gen_func):
-
-        pen_width = self.pen_type.pen_width
-        
-        path0 = path_gen_func(0.0)
-        path1 = path_gen_func(1.0)
-        max_dist = 0
-        if len(path0) != len(path1):
-            raise Exception(f'Path length mismatch: len0={len(path0)} len1={len(path1)}')
-        n = len(path0)
-        for i in range(0, n):
-            p0 = path0[i]
-            p1 = path1[i]
-            xd = p0[0] - p1[0]
-            yd = p0[1] - p1[1]
-            dist = math.sqrt(xd*xd + yd*yd)
-            max_dist = max(max_dist, dist)
-        # print(f'max_dist = {max_dist}')
-        # print(f'pen_width = {pen_width}')
-        num_strokes = 1 + int(max_dist / (pen_width * .5))
-        # print(f'num_strokes = {num_strokes}')
-        path = []
-        for i in range(0, num_strokes + 1):
-            t = i / num_strokes
-            path_t = path_gen_func(t)
-            if i % 2 == 1:
-                path_t = path_t[::-1]
-            path.extend(path_t)
-        return path
       
     def fill_in_paths(self, path_gen_func, width_mult=0.4):
 
@@ -955,13 +930,11 @@ class StandardDrawing:
         return branch_polylines
         
     @staticmethod
-    def sort_polylines(polylines):
-    
-        def dist(p1, p2):
-            dx = p2[0] - p1[0]
-            dy = p2[1] - p1[1]
-            return math.sqrt(dx*dx + dy*dy)
-    
+    def sort_polylines(polylines_input):
+
+        # Convert tuples to Points
+        polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
+        
         i_start = 0
         unsorted = [x for x in polylines]
         sorted = [unsorted[i_start]]
@@ -974,8 +947,8 @@ class StandardDrawing:
             min_ix = 0
             for i in range(0, len(unsorted)):
                 p = unsorted[i]
-                dist_s = dist(p[0], e)
-                dist_e = dist(p[-1], e)
+                dist_s = (e - p[0]).dist()
+                dist_e = (e - p[-1]).dist()
                 if dist_e < min_dist:
                     min_ix = i
                     is_fwd = False
@@ -1044,6 +1017,7 @@ class ShapeFiller:
             self.max_y = max_y
 
     def __init__(self, shapes_input):
+        # Convert tuples to Point
         shapes = [[Point.From(pt) for pt in shape] for shape in shapes_input]
         self.unrotated_shapes = shapes
         self.shape_limits = [ShapeFiller.Limits(min([pt.x for pt in shape]), min(pt.x for pt in shape), max([pt.y for pt in shape]), max(pt.y for pt in shape)) for shape in shapes]
@@ -1263,6 +1237,7 @@ class ShapeFiller:
         
     def clip(self, polylines_input, union=False, inverse=False):
     
+        # Convert tuples to Point
         polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
         split_polylines = self.split_polylines(polylines)
         
@@ -1555,14 +1530,10 @@ class Point:
         return Point(self.x / dist, self.y / dist)
         
     def __mul__(self, other):
-        if type(other) in (int, float):
-            return Point(self.x * other, self.y * other)
-        raise Exception(f'Unexpected mul type for Point: "{type(other)}"')
+        return Point(self.x * other, self.y * other)
         
     def __truediv__ (self, other):
-        if type(other) in (int, float):
-            return Point(self.x / other, self.y / other)
-        raise Exception(f'Unexpected truediv  type for Point: "{type(other)}"')
+        return Point(self.x / other, self.y / other)
         
     def __len__(self):
         return 2
