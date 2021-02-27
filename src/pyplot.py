@@ -847,10 +847,10 @@ class StandardDrawing:
         norm_rs = []
         prev = line_start
         for pt in new_points:
-            diff = (pt[0] - prev[0], pt[1] - prev[1])
-            diff_r = (diff[1], -diff[0])
-            dist_diff = math.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
-            norm_diff_r = (diff_r[0] / dist_diff, diff_r[1] / dist_diff)
+            diff = pt - prev
+            diff_r = Point(diff[1], -diff[0])
+            dist_diff = diff_r.dist()
+            norm_diff_r = diff_r / dist_diff
             norm_rs.append(norm_diff_r)
             total_dist += dist_diff
             total_dists.append(total_dist)
@@ -911,7 +911,7 @@ class StandardDrawing:
             t2 = 2/3
             control2 = start + diff * t2 + Point(rand_1(), rand_1()) * d2
             
-            return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
+            return [Point.From(b[2]) for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
             
         def rand_1():
 
@@ -934,20 +934,18 @@ class StandardDrawing:
         if depth_remaining == 0:
             return
             
-        line_dist = math.sqrt(line[0]*line[0] + line[1]*line[1])
-        new_direction = (curr_path[-1][0] - curr_path[-2][0], curr_path[-1][1] - curr_path[-2][1])
-        new_dist = math.sqrt(new_direction[0]*new_direction[0] + new_direction[1]*new_direction[1])
-        new_norm_direction = (new_direction[0] / new_dist, new_direction[1] / new_dist)
+        line_dist = line.dist()
+        new_norm_direction = Point(curr_path[-1][0] - curr_path[-2][0], curr_path[-1][1] - curr_path[-2][1]).norm()
         
         scaled_dist = cut * line_dist
-        new_line = (new_norm_direction[0] * scaled_dist, new_norm_direction[1] * scaled_dist)
+        new_line = new_norm_direction * scaled_dist
         new_thickness = thickness_mm * cut
         
         # do the higher-index branch first so our indexing doesn't get messed up!
         all_lines[ix+1:ix+1] = [[new_pos]]
-        StandardDrawing.make_branch_recurse(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp), a_disp, depth_remaining - 1, new_thickness)
+        StandardDrawing.make_branch_recurse(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, Point.Origin(), -a_disp), a_disp, depth_remaining - 1, new_thickness)
         # now go further along the ix-branch
-        StandardDrawing.make_branch_recurse(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp), a_disp, depth_remaining - 1, new_thickness)
+        StandardDrawing.make_branch_recurse(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, Point.Origin(), a_disp), a_disp, depth_remaining - 1, new_thickness)
 
     @staticmethod
     def make_branch(pos_start, line, a_disp, max_depth, thickness_mm):
@@ -1556,11 +1554,20 @@ class Point:
 
     def dist(self):
         return math.sqrt(self.x*self.x + self.y*self.y)
+
+    def norm(self):
+        dist = self.dist()
+        return Point(self.x / dist, self.y / dist)
         
     def __mul__(self, other):
         if type(other) in (int, float):
             return Point(self.x * other, self.y * other)
-        raise Exception(f'Unexpected mult type for Point: "{type(other)}"')
+        raise Exception(f'Unexpected mul type for Point: "{type(other)}"')
+        
+    def __truediv__ (self, other):
+        if type(other) in (int, float):
+            return Point(self.x / other, self.y / other)
+        raise Exception(f'Unexpected truediv  type for Point: "{type(other)}"')
         
     def __len__(self):
         return 2
