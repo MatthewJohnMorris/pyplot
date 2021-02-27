@@ -848,7 +848,7 @@ class StandardDrawing:
         prev = line_start
         for pt in new_points:
             diff = pt - prev
-            diff_r = Point(diff[1], -diff[0])
+            diff_r = Point(diff.y, -diff.x)
             dist_diff = diff_r.dist()
             norm_diff_r = diff_r / dist_diff
             norm_rs.append(norm_diff_r)
@@ -878,14 +878,14 @@ class StandardDrawing:
             points_norms_and_thicknesses = [x for x in zip(new_points, norm_rs, thicknesses)]
         
             # Start off to the side of the starting point
-            thick_line_points.append((line_start[0] + norm_r_start[0] * adj_thickness_start, line_start[1] + norm_r_start[1] * adj_thickness_start))
+            thick_line_points.append(line_start + norm_r_start * adj_thickness_start)
             # Draw a line to the end, along the same side
-            thing1 = [(pt[0] + norm_r[0]*thickness, pt[1] + norm_r[1]*thickness) for (pt, norm_r, thickness) in points_norms_and_thicknesses]
+            thing1 = [pt + norm_r * thickness for (pt, norm_r, thickness) in points_norms_and_thicknesses]
             thick_line_points.extend(thing1)
             # Draw a line back to the start along the opposite side
-            thing2 = [(pt[0] - norm_r[0]*thickness, pt[1] - norm_r[1]*thickness) for (pt, norm_r, thickness) in points_norms_and_thicknesses]
+            thing2 = [pt - norm_r * thickness for (pt, norm_r, thickness) in points_norms_and_thicknesses]
             thick_line_points.extend(thing2[::-1])
-            thick_line_points.append((line_start[0] - norm_r_start[0] * adj_thickness_start, line_start[1] - norm_r_start[1] * adj_thickness_start))
+            thick_line_points.append(line_start - norm_r_start * adj_thickness_start)
 
             # Reduce thickness - something adjusted by pen width would probably be best here
             thickness_adj += row_width
@@ -935,7 +935,7 @@ class StandardDrawing:
             return
             
         line_dist = line.dist()
-        new_norm_direction = Point(curr_path[-1][0] - curr_path[-2][0], curr_path[-1][1] - curr_path[-2][1]).norm()
+        new_norm_direction = (curr_path[-1] - curr_path[-2]).norm()
         
         scaled_dist = cut * line_dist
         new_line = new_norm_direction * scaled_dist
