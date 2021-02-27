@@ -830,6 +830,134 @@ class StandardDrawing:
             rot_polylines.append(rot_path)
         
         return rot_polylines
+
+    @staticmethod
+    def make_thick_line(line_start, new_points, total_thickness_start, total_thickness_end, row_width):
+
+        line_end = new_points[-1]
+        thickness_start = total_thickness_start / 2
+        thickness_end = total_thickness_end / 2
+        
+        thick_line_points = []
+
+        # Get distances, and normalised (length-1) vectors at right angles to our line segments
+        total_dist = 0
+        total_dists = []
+        norm_rs = []
+        prev = line_start
+        for pt in new_points:
+            diff = (pt[0] - prev[0], pt[1] - prev[1])
+            diff_r = (diff[1], -diff[0])
+            dist_diff = math.sqrt(diff[0]*diff[0] + diff[1]*diff[1])
+            norm_diff_r = (diff_r[0] / dist_diff, diff_r[1] / dist_diff)
+            norm_rs.append(norm_diff_r)
+            total_dist += dist_diff
+            total_dists.append(total_dist)
+        norm_r_start = norm_rs[0]
+        norm_r_end = norm_rs[-1]
+            
+        # Get fractional distances of endpoints
+        # This is used to interpolate between thickness_start and thickness_end
+        fract_dists = [dist / total_dist for dist in total_dists]
+
+        # Add lines around the central line
+        max_thickness = max(thickness_start, thickness_end)
+        thickness_adj = 0
+        while (max_thickness - thickness_adj) > 0.1:
+
+            # Get adjusted range (floored at zero)
+            adj_thickness_start = max(0, thickness_start - thickness_adj)
+            adj_thickness_end = max(0, thickness_end - thickness_adj)
+            
+            # Get thicknesses at endpoints - theoretically loglinear interp might make most sense but save that for when/if we
+            # plot something where this makes a visible difference
+            thicknesses = [adj_thickness_start + (adj_thickness_end - adj_thickness_start) * fract_dist for fract_dist in fract_dists]
+            
+            # Combine our points, right-angle-vectors and thicknesses
+            points_norms_and_thicknesses = [x for x in zip(new_points, norm_rs, thicknesses)]
+        
+            # Start off to the side of the starting point
+            thick_line_points.append((line_start[0] + norm_r_start[0] * adj_thickness_start, line_start[1] + norm_r_start[1] * adj_thickness_start))
+            # Draw a line to the end, along the same side
+            thing1 = [(pt[0] + norm_r[0]*thickness, pt[1] + norm_r[1]*thickness) for (pt, norm_r, thickness) in points_norms_and_thicknesses]
+            thick_line_points.extend(thing1)
+            # Draw a line back to the start along the opposite side
+            thing2 = [(pt[0] - norm_r[0]*thickness, pt[1] - norm_r[1]*thickness) for (pt, norm_r, thickness) in points_norms_and_thicknesses]
+            thick_line_points.extend(thing2[::-1])
+            thick_line_points.append((line_start[0] - norm_r_start[0] * adj_thickness_start, line_start[1] - norm_r_start[1] * adj_thickness_start))
+
+            # Reduce thickness - something adjusted by pen width would probably be best here
+            thickness_adj += row_width
+        
+        # Add the central line
+        thick_line_points.append(line_start)
+        thick_line_points.extend([x for x in new_points])
+        
+        return thick_line_points
+
+    @staticmethod
+    def make_branch_recurse(all_lines, ix, pos, line, a_disp, depth_remaining, thickness_mm):
+
+        def gen_curved_line(start, end):
+
+            dx = end[0] - start[0]
+            dy = end[1] - start[1]
+            d = math.sqrt(dx*dx+dy*dy)
+            d1 = d / 5
+            d2 = d / 8
+            #d1 = 0
+            #d2 =0
+            
+            t1 = 1/3
+            t1_pos = (start[0] + t1 * dx, start[1] + t1 * dy)
+            control1 = (t1_pos[0] + d1 * rand_1(), t1_pos[1] + d1 * rand_1())
+            t2 = 2/3
+            t2_pos = (start[0] + t2 * dx, start[1] + t2 * dy)
+            control2 = (t2_pos[0] + d2 * rand_1(), t2_pos[1] + d2 * rand_1())
+            return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
+            
+        def rand_1():
+
+            return 2 * (random() - 0.5)
+
+        # TODO: Pen width
+        row_width = 0.2 * 0.6
+        
+        cut = 2/3
+        new_pos = (pos[0]+line[0], pos[1]+line[1])
+        curved_line = gen_curved_line(pos, new_pos)
+        # print(all_lines)
+        curr_path = all_lines[ix]
+        paths = StandardDrawing.make_thick_line(curr_path[-1], curved_line, thickness_mm, thickness_mm*cut, row_width)
+        curr_path.extend(paths)
+        # curr_path.extend(curved_line)
+        # print(all_lines)
+        # raise Exception("foo")
+
+        if depth_remaining == 0:
+            return
+            
+        line_dist = math.sqrt(line[0]*line[0] + line[1]*line[1])
+        new_direction = (curr_path[-1][0] - curr_path[-2][0], curr_path[-1][1] - curr_path[-2][1])
+        new_dist = math.sqrt(new_direction[0]*new_direction[0] + new_direction[1]*new_direction[1])
+        new_norm_direction = (new_direction[0] / new_dist, new_direction[1] / new_dist)
+        
+        scaled_dist = cut * line_dist
+        new_line = (new_norm_direction[0] * scaled_dist, new_norm_direction[1] * scaled_dist)
+        new_thickness = thickness_mm * cut
+        
+        # do the higher-index branch first so our indexing doesn't get messed up!
+        all_lines[ix+1:ix+1] = [[new_pos]]
+        StandardDrawing.make_branch_recurse(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), -a_disp), a_disp, depth_remaining - 1, new_thickness)
+        # now go further along the ix-branch
+        StandardDrawing.make_branch_recurse(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, (0, 0), a_disp), a_disp, depth_remaining - 1, new_thickness)
+
+    @staticmethod
+    def make_branch(pos_start, line, a_disp, max_depth, thickness_mm):
+
+        branch_polylines = [[pos_start]]
+        StandardDrawing.make_branch_recurse(branch_polylines, 0, pos_start, line, a_disp, max_depth, thickness_mm)
+        return branch_polylines
         
     @staticmethod
     def sort_polylines(polylines):
@@ -1406,5 +1534,11 @@ class ShapeFiller:
         hits = sorted(hits, key=lambda hit: hit.x)
         
         return hits
+        
+class Point:
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
 
 
