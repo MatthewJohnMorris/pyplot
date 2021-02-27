@@ -771,22 +771,27 @@ def gen_curved_line(start, end):
     return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
 
 def add_thickness(to_extend, to_add, thickness_start, thickness_end):
-        
-    # Get a normalised (length-1) vector at right angles to our line
+
     old_end = to_extend[-1]
     new_end = to_add[-1]
+
+    # Get a normalised (length-1) vectors at right angles to our line
+    prev = old_end
+    # for pt in to_add:
+        # diff = (pt[0] - prev[0], pt[1] - prev[1]new_end[0] - old_end[0], new_end[1] - old_end[1])
+    
     diff = (new_end[0] - old_end[0], new_end[1] - old_end[1])
     diff_r = (diff[1], -diff[0])
     dist_diff_r = math.sqrt(diff_r[0]*diff_r[0] + diff_r[1]*diff_r[1])
     norm_diff_r = (diff_r[0] / dist_diff_r, diff_r[1] / dist_diff_r)
-    
+        
     # Get distances
     total_dist = 0
     total_dists = []
     prev = old_end
     for pt in to_add:
         dx = pt[0] - prev[0]
-        dy = pt[1] - prev[0]
+        dy = pt[1] - prev[1]
         dist = math.sqrt(dx*dx+dy*dy)
         total_dist += dist
         total_dists.append(total_dist)
