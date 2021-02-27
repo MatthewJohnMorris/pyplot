@@ -779,10 +779,11 @@ def draw_tree(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-# draw_false_prophets(d)
-# draw_shape_clips(d)
-# draw_word_square(d)
+draw_false_prophets(d)
+draw_shape_clips(d)
+draw_word_square(d)
 draw_tree(d)
+# test_text_and_shape(d)
 
 '''
 test_text_and_shape(d)

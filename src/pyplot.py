@@ -1043,9 +1043,10 @@ class ShapeFiller:
             self.max_x = max_x
             self.max_y = max_y
 
-    def __init__(self, shapes):
+    def __init__(self, shapes_input):
+        shapes = [[Point.From(pt) for pt in shape] for shape in shapes_input]
         self.unrotated_shapes = shapes
-        self.shape_limits = [ShapeFiller.Limits(min([pt[0] for pt in shape]), min(pt[1] for pt in shape), max([pt[0] for pt in shape]), max(pt[1] for pt in shape)) for shape in shapes]
+        self.shape_limits = [ShapeFiller.Limits(min([pt.x for pt in shape]), min(pt.x for pt in shape), max([pt.y for pt in shape]), max(pt.y for pt in shape)) for shape in shapes]
         self.min_x = min(limit.min_x for limit in self.shape_limits)
         self.min_y = min(limit.min_y for limit in self.shape_limits)
         self.max_x = max(limit.max_x for limit in self.shape_limits)
@@ -1061,8 +1062,8 @@ class ShapeFiller:
             shapes.append([StandardDrawing.rotate_about(x, (0,0), angle) for x in unrotated_shape])
     
         # scan all y-lines in range and get the crossing points
-        y_min = min([min([p[1] for p in shape]) for shape in shapes])
-        y_max = max([max([p[1] for p in shape]) for shape in shapes])
+        y_min = min([min([p.y for p in shape]) for shape in shapes])
+        y_max = max([max([p.y for p in shape]) for shape in shapes])
         y = y_min
         all_crossings = []
         while y <= y_max:
@@ -1205,17 +1206,14 @@ class ShapeFiller:
         # now reverse the rotation
         returned_paths = []
         for rotated_path in all_paths:
-            returned_paths.append([StandardDrawing.rotate_about(x, (0,0), -angle) for x in rotated_path])
+            returned_paths.append([StandardDrawing.rotate_about(x, Point.Origin(), -angle) for x in rotated_path])
             
         return returned_paths
         
     def is_inside(self, pt, any=False):
 
-        x = pt[0]
-        y = pt[1]
-
         # Gross bounds check
-        if x <= self.min_x or y <= self.min_y or x >= self.max_x or y >= self.max_y:
+        if pt.x <= self.min_x or pt.y <= self.min_y or pt.x >= self.max_x or pt.y >= self.max_y:
             return False
         
         # Are we on a constant-y edge? get_crossings() ignores these so check up front
@@ -1223,27 +1221,27 @@ class ShapeFiller:
             n_points = len(shape)
             for ix_s in range(0, n_points):
                 ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
-                if shape[ix_s][1] == y and shape[ix_e][1] == y:
-                    xs = shape[ix_s][0]
-                    xe = shape[ix_e][0]
-                    if xs == x or xe == x:
+                if shape[ix_s].y == pt.y and shape[ix_e].y == pt.y:
+                    xs = shape[ix_s].x
+                    xe = shape[ix_e].x
+                    if xs == pt.x or xe == pt.x:
                         return False
-                    if xs > x and x > xe:
+                    if xs > pt.x and pt.x > xe:
                         return False
-                    if xs < x and x < xe:
+                    if xs < pt.x and pt.x < xe:
                         return False
         
         # Otherwise we exclude anything actually *on* an edge - otherwise we 
         # are "inside" if we are inside an odd number of shapes. We are inside 
         # a given shape if we have an odd number of crossings as we increase x
-        crossings = ShapeFiller.get_crossings(self.unrotated_shapes, y)
+        crossings = ShapeFiller.get_crossings(self.unrotated_shapes, pt.y)
             
         counts = {}
         hits = {}
         for crossing in crossings:
-            if crossing.x == x:
+            if crossing.x == pt.x:
                 hits[crossing.ix_shape] = True
-            elif crossing.x > x:
+            elif crossing.x > pt.x:
                 if not crossing.ix_shape in counts:
                     counts[crossing.ix_shape] = 1
                 else:
@@ -1263,7 +1261,9 @@ class ShapeFiller:
                     inside_count += 1;
         return inside_count % 2 == 1
         
-    def clip(self, polylines, union=False, inverse=False):
+    def clip(self, polylines_input, union=False, inverse=False):
+    
+        polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
         split_polylines = self.split_polylines(polylines)
         
         clipped_polylines = []
@@ -1271,7 +1271,7 @@ class ShapeFiller:
             path = []
             s = polyline[0]
             for e in polyline[1:]:
-                m = ((s[0]+e[0])/2, (s[1]+e[1])/2)
+                m = (s + e) / 2
                 include = not self.is_inside(m, union)
                 if inverse:
                     include = not include
@@ -1349,9 +1349,7 @@ class ShapeFiller:
                         # You just end up with floating point errors giving us repeatedly dividing an edge by tiny amounts
                         if abs(k) > 1e-6 and abs(k-1) > 1e-6:
                             # Get the intersection point and split the edge at it
-                            pt_x = edge[0][0] + k * (edge[1][0] - edge[0][0])
-                            pt_y = edge[0][1] + k * (edge[1][1] - edge[0][1])
-                            pt = (pt_x, pt_y)
+                            pt = edge[0] + (edge[1] - edge[0]) * k
                             e = split_edges[i][1]
                             split_edges[i] = (split_edges[i][0], pt)
                             split_edges[i+1:i+1] = [(pt, e)]
@@ -1374,14 +1372,14 @@ class ShapeFiller:
         e1 = line1[1]
         s2 = line2[0]
         e2 = line2[1]
-        x0 = s1[0]
-        y0 = s1[1]
-        x1 = e1[0]
-        y1 = e1[1]
-        a0 = s2[0]
-        b0 = s2[1]
-        a1 = e2[0]
-        b1 = e2[1]
+        x0 = s1.x
+        y0 = s1.y
+        x1 = e1.x
+        y1 = e1.y
+        a0 = s2.x
+        b0 = s2.y
+        a1 = e2.x
+        b1 = e2.y
 
         def is_between(x0, x, x1):
             return x0 <= x and x <= x1
@@ -1434,8 +1432,8 @@ class ShapeFiller:
         # we don't do crossings for such edges in get_crossings()
         prev_p1 = shape[prev_ix1]
         prev_p2 = shape[prev_ix2]
-        y1 = prev_p1[1]
-        y2 = prev_p2[1]
+        y1 = prev_p1.y
+        y2 = prev_p2.y
         if y1 == y2:
             raise Exception(f"We should not have a constant-Y edge with a crossing. ix_shape={ix_shape}, c_prev={prev_p1},{prev_pw})")
         inc = -1 if y1 > y2 else +1
@@ -1450,7 +1448,7 @@ class ShapeFiller:
             # print(f"Search: {[ix, ix_next]} {shape[ix]}->{shape[ix_next]}")
             if ix_next == ix_start:
                 raise Exception(f"We have gone all around a shape, which should be impossible. ix_shape={ix_shape}, c_prev={prev_p1},{prev_pw})")
-            y_next = shape[ix_next][1]
+            y_next = shape[ix_next].y
             # y has started decreasing - give up
             if y_next < y_curr:
                 # print("Search: not found")
@@ -1483,11 +1481,10 @@ class ShapeFiller:
             n_points = len(shape)
             for ix_s in range(0, n_points):
                 ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
-                p_s = shape[ix_s]
-                p_e = shape[ix_e]
-                y_s = p_s[1]
-                y_e = p_e[1]
-                # print(f"shape:{ix_shape},ix_s:{ix_s}: ({p_s[0]},{p_s[1]})->({p_e[0]},{p_e[1]})")
+                y_s = shape[ix_s].y
+                y_e = shape[ix_e].y
+                x_s = shape[ix_s].x
+                x_e = shape[ix_e].x
                 
                 # We want to be a bit careful about *what* crossings we add!
                 if y_e == y and y_s == y:
@@ -1495,7 +1492,7 @@ class ShapeFiller:
                     hits = hits
                 elif y_e == y:
                     # We are ENDING at the y-line - we always include a crossing in this case
-                    hits.append(ShapeFiller.EdgeHit(p_e[0], ix_shape, ix_s, ix_e))
+                    hits.append(ShapeFiller.EdgeHit(x_e, ix_shape, ix_s, ix_e))
                 elif y_s == y:
                     # We are STARTING at the y-line - here we need to be careful.
                     # 
@@ -1510,17 +1507,15 @@ class ShapeFiller:
                     # approached from the same direction both before and after it is hit: if so, then it's a corner (and we DO want
                     # to add this segment, else it's a crossing (and we DON'T want to add this segment).
                     ix_before_s = ix_s
-                    while shape[ix_before_s][1] == y:
+                    while shape[ix_before_s].y == y:
                         ix_before_s = n_points - 1 if ix_before_s == 0 else ix_before_s - 1
-                    y_prev = shape[ix_before_s][1]
+                    y_prev = shape[ix_before_s].y
                     sign_prev = -1 if y_prev < y else +1
                     sign_next = -1 if y_e < y else +1
                     if sign_prev == sign_next:
-                        hits.append(ShapeFiller.EdgeHit(p_s[0], ix_shape, ix_s, ix_e))
+                        hits.append(ShapeFiller.EdgeHit(x_s, ix_shape, ix_s, ix_e))
                 elif (y_s < y and y_e > y) or (y_s > y and y_e < y):
                     # We are crossing the y-line - these segments always get added as a crossing point
-                    x_s = p_s[0]
-                    x_e = p_e[0]
                     x = x_s + (x_e - x_s) * (y - y_s) / (y_e - y_s)
                     hits.append(ShapeFiller.EdgeHit(x, ix_shape, ix_s, ix_e))
                         
