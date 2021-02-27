@@ -188,4 +188,24 @@ def test_point():
     assert(pt6.x == 42)
     assert(pt6.y == 43)
     
+    pt7 = pt - pt3
+    assert(pt7.x == 99)
+    assert(pt7.y == 48)
 
+def test_point_tuple():
+
+    pt = Point(100, 50)
+    
+    (x, y) = pt
+
+def test_point_dist():
+
+    pt1 = Point(0, 1)
+    assert(1 == pt1.dist())
+    
+    pt2 = Point(1, 0)
+    assert(1 == pt2.dist())
+    
+    pt3 = Point(3, 4)
+    assert(5 == pt3.dist())
+    

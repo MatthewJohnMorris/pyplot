@@ -16,7 +16,7 @@ seed(10)
 
 import math
 
-from pyplot import CircleBlock, PenType, StandardDrawing, ShapeFiller
+from pyplot import CircleBlock, PenType, Point, StandardDrawing, ShapeFiller
 from perlin import PerlinNoise
 from bezier import *
   
@@ -751,8 +751,8 @@ def draw_word_square(d):
 def draw_tree(d):
     all_polylines = []
     
-    pos = (105, 105)
-    line = (0, 30)
+    pos = Point(105, 105)
+    line = Point(0, 30)
     max_depth = 7
     a_disp = math.pi / 6
     num_branches = 21
@@ -764,9 +764,9 @@ def draw_tree(d):
         ix_layer = i % 3
         layer = layers[ix_layer]
         stroke = strokes[ix_layer]
-        disp_rot = StandardDrawing.rotate_about((0, 10), (0,0), i * 2 * math.pi / num_branches)
-        pos_start = (pos[0] + disp_rot[0], pos[1] + disp_rot[1])
-        branch_polylines = StandardDrawing.make_branch(pos_start, StandardDrawing.rotate_about(line, (0,0), i * 2 * math.pi / num_branches), a_disp, max_depth, thickness_mm)
+        disp_rot = StandardDrawing.rotate_about(Point(0, 10), Point.Origin(), i * 2 * math.pi / num_branches)
+        pos_start = pos + disp_rot
+        branch_polylines = StandardDrawing.make_branch(pos_start, StandardDrawing.rotate_about(line, Point.Origin(), i * 2 * math.pi / num_branches), a_disp, max_depth, thickness_mm)
         # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
         d.add_polylines(branch_polylines, stroke=stroke, container=layer)
         

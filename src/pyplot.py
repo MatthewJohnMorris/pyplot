@@ -702,15 +702,16 @@ class StandardDrawing:
             self.image_spiral_single(layer, file, centre, scale, stroke=svgwrite.rgb(stroke_rgb[0], stroke_rgb[1], stroke_rgb[2], '%'), colour=True, cmy_index=cmy_index)
 
     @staticmethod
-    def rotate_about(point, centre, a):
+    def rotate_about(point_, centre, a):
 
+        point = Point.From(point_)
         c = math.cos(a)
         s = math.sin(a)
         dx = point[0] - centre[0]
         dy = point[1] - centre[1]
         x = c * dx - s * dy
         y = c * dy + s * dx
-        return (centre[0] + x, centre[1] + y)
+        return Point(centre[0] + x, centre[1] + y)
 
     def make_rotated_polyline(self, points, centre, n, phase_add=0):
     
@@ -900,20 +901,16 @@ class StandardDrawing:
 
         def gen_curved_line(start, end):
 
-            dx = end[0] - start[0]
-            dy = end[1] - start[1]
-            d = math.sqrt(dx*dx+dy*dy)
+            diff = end - start
+            d = diff.dist()
             d1 = d / 5
             d2 = d / 8
-            #d1 = 0
-            #d2 =0
             
             t1 = 1/3
-            t1_pos = (start[0] + t1 * dx, start[1] + t1 * dy)
-            control1 = (t1_pos[0] + d1 * rand_1(), t1_pos[1] + d1 * rand_1())
+            control1 = start + diff * t1 + Point(rand_1(), rand_1()) * d1
             t2 = 2/3
-            t2_pos = (start[0] + t2 * dx, start[1] + t2 * dy)
-            control2 = (t2_pos[0] + d2 * rand_1(), t2_pos[1] + d2 * rand_1())
+            control2 = start + diff * t2 + Point(rand_1(), rand_1()) * d2
+            
             return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
             
         def rand_1():
@@ -924,7 +921,7 @@ class StandardDrawing:
         row_width = 0.2 * 0.6
         
         cut = 2/3
-        new_pos = (pos[0]+line[0], pos[1]+line[1])
+        new_pos = pos + line
         curved_line = gen_curved_line(pos, new_pos)
         # print(all_lines)
         curr_path = all_lines[ix]
@@ -1542,6 +1539,10 @@ class Point:
         if type(other) == Point:
             return other
         return Point(other[0], other[1])
+
+    @staticmethod
+    def Origin():
+        return Point(0, 0)
     
     def __init__(self, x, y):
         self.x = x
@@ -1549,11 +1550,24 @@ class Point:
 
     def __add__(self, o):
         return Point(self.x + o.x, self.y + o.y)
+
+    def __sub__(self, o):
+        return Point(self.x - o.x, self.y - o.y)
+
+    def dist(self):
+        return math.sqrt(self.x*self.x + self.y*self.y)
         
     def __mul__(self, other):
         if type(other) in (int, float):
             return Point(self.x * other, self.y * other)
         raise Exception(f'Unexpected mult type for Point: "{type(other)}"')
         
+    def __len__(self):
+        return 2
         
-
+    def __getitem__(self, key):
+        if key == 0:
+            return self.x
+        if key == 1:
+            return self.y
+        raise IndexError
