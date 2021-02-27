@@ -770,10 +770,9 @@ def gen_curved_line(start, end):
     control2 = (t2_pos[0] + d2 * rand_1(), t2_pos[1] + d2 * rand_1())
     return [b[2] for b in bezier_subdivide(start, [[control1, control2, end]], 0.01)]
 
-def add_thickness(to_extend, to_add, fract):
+def add_thickness(to_extend, to_add, thickness_start, thickness_end):
         
-    pen_width = 0.6
-
+    # Get a normalised (length-1) vector at right angles to our line
     old_end = to_extend[-1]
     new_end = to_add[-1]
     diff = (new_end[0] - old_end[0], new_end[1] - old_end[1])
@@ -781,31 +780,61 @@ def add_thickness(to_extend, to_add, fract):
     dist_diff_r = math.sqrt(diff_r[0]*diff_r[0] + diff_r[1]*diff_r[1])
     norm_diff_r = (diff_r[0] / dist_diff_r, diff_r[1] / dist_diff_r)
     
-    while fract > 0.1:
-        pen_diff_r = (norm_diff_r[0] * pen_width*fract, norm_diff_r[1] * pen_width*fract)
-        
-        to_extend.append((old_end[0] + pen_diff_r[0], old_end[1] + pen_diff_r[1]))
-        thing1 = [(x[0] + pen_diff_r[0], x[1] + pen_diff_r[1]) for x in to_add]
+    # Get distances
+    total_dist = 0
+    total_dists = []
+    prev = old_end
+    for pt in to_add:
+        dx = pt[0] - prev[0]
+        dy = pt[1] - prev[0]
+        dist = math.sqrt(dx*dx+dy*dy)
+        total_dist += dist
+        total_dists.append(total_dist)
+        prev = pt
+    # Get fractional distances of endpoints
+    final_dist = total_dists[-1]
+    fract_dists = [dist / final_dist for dist in total_dists]
+
+    # Add lines around the central line
+    max_thickness = max(thickness_start, thickness_end)
+    thickness_adj = 0
+    while (max_thickness - thickness_adj) > 0.1:
+
+        # Get adjusted range (floored at zero)
+        adj_thickness_start = max(0, thickness_start - thickness_adj)
+        adj_thickness_end = max(0, thickness_end - thickness_adj)
+        # Get thicknesses at endpoints
+        thicknesses = [adj_thickness_start + (adj_thickness_end - adj_thickness_start) * fract_dist for fract_dist in fract_dists]
+        # Zip with our points to add
+        points_and_thicknesses = [x for x in zip(to_add, thicknesses)]
+    
+        to_extend.append((old_end[0] + norm_diff_r[0] * adj_thickness_start, old_end[1] + norm_diff_r[1] * adj_thickness_start))
+        thing1 = [(pt[0] + norm_diff_r[0]*thickness, pt[1] + norm_diff_r[1]*thickness) for (pt, thickness) in points_and_thicknesses]
         to_extend.extend(thing1)
         
-        to_extend.append((new_end[0] - pen_diff_r[0], new_end[1] - pen_diff_r[1]))
-        thing2 = [(x[0] - pen_diff_r[0], x[1] - pen_diff_r[1]) for x in to_add]
+        to_extend.append((new_end[0] - norm_diff_r[0] * adj_thickness_end, new_end[1] - norm_diff_r[1] * adj_thickness_end))
+        thing2 = [(pt[0] - norm_diff_r[0]*thickness, pt[1] - norm_diff_r[1]*thickness) for (pt, thickness) in points_and_thicknesses]
         to_extend.extend(thing2[::-1])
-        to_extend.append((old_end[0] - pen_diff_r[0], old_end[1] - pen_diff_r[1]))
+        to_extend.append((old_end[0] - norm_diff_r[0] * adj_thickness_start, old_end[1] - norm_diff_r[1] * adj_thickness_start))
         
-        fract -= 0.2
+        thickness_adj += 0.2
     
+    # Add the central line
     to_extend.append(old_end)
     to_extend.extend([x for x in to_add])
+    
+    # raise Exception("goo")
 
 def add_branch(all_lines, ix, pos, line, a_disp, depth_remaining, thickness):
 
+    pen_width = 0.6
     cut = 2/3
     new_pos = (pos[0]+line[0], pos[1]+line[1])
     curved_line = gen_curved_line(pos, new_pos)
     # print(all_lines)
     curr_path = all_lines[ix]
-    add_thickness(curr_path, curved_line, thickness)
+    thickness_mm = thickness*pen_width
+    add_thickness(curr_path, curved_line, thickness_mm, thickness_mm*cut)
     # curr_path.extend(curved_line)
     # print(all_lines)
     # raise Exception("foo")
@@ -844,7 +873,6 @@ def draw_tree(d):
         ix_layer = i % 3
         layer = layers[ix_layer]
         stroke = strokes[ix_layer]
-        a_centre = (a_disp / 4) * 2 * (random() - 0.5)
         disp_rot = StandardDrawing.rotate_about((0, 10), (0,0), i * 2 * math.pi / num_branches)
         pos_start = (pos[0] + disp_rot[0], pos[1] + disp_rot[1])
         branch_polylines = [[pos_start]]
