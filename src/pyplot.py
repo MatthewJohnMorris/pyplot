@@ -744,14 +744,6 @@ class StandardDrawing:
         for rot_points in a:
             self.add_polyline(rot_points, stroke=stroke, container=container)
       
-    @staticmethod
-    def scale_x(points, factor):
-    
-        min_x = min(p[0] for p in points)
-        max_x = min(p[0] for p in points)
-        mid_x = (min_x + max_x) / 2
-        return [(mid_x + (p[0] - mid_x) * factor, p[1]) for p in points]
-      
     def fill_in_paths(self, path_gen_func, width_mult=0.4):
 
         pen_width = self.pen_type.pen_width

@@ -730,12 +730,8 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # draw_false_prophets(d)
 # draw_shape_clips(d)
 # draw_word_square(d)
-# draw_tree(d)
+draw_tree(d)
 # test_text_and_shape(d)
-
-speed_limit_test(d)
-
-draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 
 '''
 test_text_and_shape(d)
