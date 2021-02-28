@@ -168,7 +168,7 @@ def text_in_circle(drawing):
     radius = 30
     layer = drawing.add_layer('1')
     for angle in range(0, 360, 30):
-        drawing.add_spiral_letter("X", 6, centre, radius, angle=angle, family='CNC Vector', container=layer)
+        drawing.add_spiral_letter("X", 24, centre, radius, angle=angle*math.pi/180, family='CNC Vector', container=layer)
     drawing.add_dot(centre, radius + 7.3, r_start = radius  + 5.8, stroke=svgwrite.rgb(255, 255, 0, '%'), container=layer)
     drawing.add_dot(centre, radius - 1.8, r_start = radius  - 3.3, stroke=svgwrite.rgb(255, 255, 0, '%'), container=layer)
 
@@ -693,7 +693,7 @@ def draw_shape_clips(d):
 
 def draw_word_square(d):
 
-    d.add_polylines(d.make_word_square((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"]))
+    d.add_polylines(d.make_word_square((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"], angle=math.pi/7))
 
 def draw_tree(d):
     all_polylines = []
@@ -726,42 +726,39 @@ def draw_tree(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-# d.add_spiral_text((100.75, 100.75), 60)
-# draw_false_prophets(d)
-# draw_shape_clips(d)
-# draw_word_square(d)
-draw_tree(d)
-# test_text_and_shape(d)
+if False:
+    draw_shape_clips(d)
+    draw_word_square(d)
+    draw_tree(d)
+    draw_false_prophets(d)
+    test_text_and_shape(d)
+    image_sketch(d)
+    speed_limit_test(d)
+    test_boxed_text(d)
+    draw_riley(d)
+    fill_test(d)
+    test_shape_filler(d)
+    valentine(d)
+    burroughs_medal(d)
+    test_height(d)
+    test_hearts(d)
+    test_dots(d)
+    test_dots2(d)
+    multi_burroughs(d)
+    draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
+    random_rects(d)
+    plot_perlin_spirals(d)
+    d.add_spiral((60, 60), 30)
+    d.add_spiral((61.6666, 61.666), 30)
+    d.add_spiral_text((100.75, 100.75), 60)
+    draw_unknown_pleasures(d)
+    d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
+    d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
+    d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80)
+    # d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
+    plot_surface(d)
+    plot_perlin_drape_spiral(d, 6)
+    plot_perlin_drape_spiral(d, 8)
 
-'''
-test_text_and_shape(d)
-image_sketch(d)
-speed_limit_test(d)
-test_boxed_text(d)
-draw_riley(d)
-fill_test(d)
-test_shape_filler(d)
-valentine(d)
-burroughs_medal(d)
-test_height(d)
-test_hearts(d)
-test_dots(d)
-test_dots2(d)
-multi_burroughs(d)
-draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-random_rects(d)
-plot_perlin_spirals(d)
-d.add_spiral((60, 60), 30)
-d.add_spiral((61.6666, 61.666), 30)
-d.add_spiral_text((100.75, 100.75), 60)
-draw_unknown_pleasures(d)
-d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
-d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
-d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80)
-# d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
-plot_surface(d)
-plot_perlin_drape_spiral(d, 6)
-plot_perlin_drape_spiral(d, 8)
-'''
 
 d.dwg.save()

@@ -326,7 +326,9 @@ class StandardDrawing:
         self.add_polyline(points, stroke=stroke, container=container)
                     
     def make_surface(self, top_left, x_size, y_size, z_function, projection_angle=None):
-    
+
+        top_left = Point.From(top_left)
+        
         # can render texture with z-function applied by preserving x, and doing y-out = y * cos(a) + z * sin(a) with a the viewing angle?  
         projection_angle = math.pi * 3 /8 if projection_angle is None else projection_angle
         min_adj_y_for_x = {}
@@ -342,7 +344,7 @@ class StandardDrawing:
                     min_adj_y_for_x[x] = y_adj
                 else:
                     y_adj = min_adj_y
-                points.append((top_left[0] + x, top_left[1] + y_adj))
+                points.append(top_left + Point(x, y_adj))
             all_points.append(points)
         return all_points
 
@@ -383,8 +385,9 @@ class StandardDrawing:
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
     # * No longer need to use Object->Path to print things out in Inkscape
     # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
-    def make_text(self, text, position, fontsize, family='Arial', transform=None):
+    def make_text(self, text, base_position, fontsize, family='Arial', transform=None):
 
+        base_position = Point.From(base_position)
         fontsize = self.default_fontsize(fontsize)
         transform = (lambda x: x) if transform is None else transform
 
@@ -403,13 +406,11 @@ class StandardDrawing:
 
         # Assemble a svgwrite path from our Cario path
         # TODO: render bezier splines as polynomials, with resolution guided by pen_type.pen_width
-        x0 = position[0]
-        y0 = position[1]
         
         svgpath = svgwrite.path.Path()
         all_polylines = []
         curr_polyline = []
-        prev_position = None
+        prev_relative_position = None
         pending_splines = []
         #for type, points in path:
         #    print(type,points)
@@ -417,26 +418,29 @@ class StandardDrawing:
             if type != cairo.PATH_CURVE_TO:
                 if len(pending_splines) > 0:
                     # convert any pending splines to small enough subsections that we can plot them as stright lines
-                    a = bezier_subdivide(prev_position, pending_splines, self.pen_type.pen_width / 5)
+                    a = bezier_subdivide(prev_relative_position, pending_splines, self.pen_type.pen_width / 5)
                     for small_spline in a:
                         x, y = small_spline[2]
-                        prev_position = (x,y)
-                        curr_polyline.append((x0+x,y0+y))
+                        pt = Point(x,y)
+                        prev_relative_position = pt
+                        curr_polyline.append(base_position + pt)
                     pending_splines = []
                     
             if type == cairo.PATH_MOVE_TO:
                 if len(curr_polyline) > 0:
                     raise Exception(f"Found PATH_MOVE_TO but not at start of path")
                 x, y = transform(points)
-                prev_position = (x,y)
-                curr_polyline.append((x0+x,y0+y))
+                pt = Point(x,y)
+                prev_relative_position = pt
+                curr_polyline.append(base_position + pt)
 
             elif type == cairo.PATH_LINE_TO:
                 if len(curr_polyline) == 0:
                     raise Exception(f"Found PATH_LINE_TO but no prior MOVE_TO in path")
                 x, y = transform(points)
-                prev_position = (x,y)
-                curr_polyline.append((x0+x,y0+y))
+                pt = Point(x,y)
+                prev_relative_position = pt
+                curr_polyline.append(base_position + pt)
 
             elif type == cairo.PATH_CURVE_TO:
                 if len(curr_polyline) == 0:
@@ -447,7 +451,7 @@ class StandardDrawing:
             elif type == cairo.PATH_CLOSE_PATH:
                 all_polylines.append(curr_polyline)
                 curr_polyline = []
-                prev_position = None
+                prev_relative_position = None
                 pending_splines = []
     
         return all_polylines
@@ -471,11 +475,13 @@ class StandardDrawing:
 
     def make_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial'):
         
+        spiral_centre = Point.From(spiral_centre)
+        
         # unadjusted y is at bottom left (high y, low x)
 
         (w,h) = self.text_bound_letter(letter, fontsize, family)
         
-        letter_position = (spiral_centre[0], spiral_centre[1] - radius)
+        letter_position = (spiral_centre.x, spiral_centre.y - radius)
         
         # transform is applied to letter BEFORE we translate by letter_position
         # e.g. it's relative to (0,0)
@@ -486,7 +492,7 @@ class StandardDrawing:
         return ((w, h), all_polylines)
 
     def add_spiral_letter(self, letter, fontsize, spiral_centre, radius, angle=0, family='Arial', container=None, stroke=None):
-
+    
         stroke = self.default_stroke(stroke)
         container = self.default_container(container)
 
@@ -499,6 +505,8 @@ class StandardDrawing:
 
     def make_spiral_text(self, centre, scale, radial_adjust=0, repeat=False, text=None, fontsize=6, family='CNC Vector'):
 
+        centre = Point.From(centre)
+        
         points = []
         points.append(centre)
         r = 0.5 # initial radius
@@ -526,18 +534,10 @@ class StandardDrawing:
             a += a_inc
             r += r_per_circle * a_inc / (2 * math.pi)
             
-            # output location
-            s = math.sin(a)
-            c = math.cos(a)
-            x = centre[0] + r * c
-            y = centre[1] + r * s
-            
             i += 1
             if i == segments_to_next_letter:
                 pos = j % len(text)
                 letter = text[pos]
-                # add_spiral_letter works in degrees rather than radians
-                degrees = a / (2*math.pi) * 360 + 90
                 # family = 'CNC Vector' # good machine font
                 # family = 'CutlingsGeometric' # spaces too big!
                 # family = 'CutlingsGeometricRound' # spaces too big!
@@ -571,7 +571,7 @@ class StandardDrawing:
  
     def make_spiral(self, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
-        
+        centre = Point.From(centre)
         points = []
         r = 0 if r_initial is None else r_initial # initial radius
         a = 0 # starting angle
@@ -590,10 +590,9 @@ class StandardDrawing:
             # output location
             s = math.sin(a)
             c = math.cos(a)
-            x = centre[0] + r * c
-            y = centre[1] + r * s
+            pt = centre + Point(c, s) * r
             
-            points.append((x, y))
+            points.append(pt)
             
         return points
 
@@ -718,16 +717,17 @@ class StandardDrawing:
             self.image_spiral_single(layer, file, centre, scale, stroke=svgwrite.rgb(stroke_rgb[0], stroke_rgb[1], stroke_rgb[2], '%'), colour=True, cmy_index=cmy_index)
 
     @staticmethod
-    def rotate_about(point_, centre, a):
+    def rotate_about(point, centre, a):
 
-        point = Point.From(point_)
+        point = Point.From(point)
+        centre = Point.From(centre)
         c = math.cos(a)
         s = math.sin(a)
+        diff = point - centre
         dx = point[0] - centre[0]
         dy = point[1] - centre[1]
-        x = c * dx - s * dy
-        y = c * dy + s * dx
-        return Point(centre[0] + x, centre[1] + y)
+        rot_diff = Point(c * diff.x - s * diff.y, c * diff.y + s * diff.x)
+        return centre + rot_diff
 
     def make_rotated_polyline(self, points, centre, n, phase_add=0):
     
@@ -773,34 +773,28 @@ class StandardDrawing:
             max_height = max(max_height, ext.height)
         max_text_side = max(max_width, max_height)
         square_size = max_text_side + 2
-        use_position = (position[0], position[1] + square_size)
+        use_position = Point(position[0], position[1] + square_size)
         for r in range(0, len(square)):
             for c in range(0, len(square[r])):
                 letter = square[r][c]
                 ext = self.text_bound(letter, fontsize, family)
-                pos = (use_position[0] + (c+0.5) * square_size, use_position[1] + (r+0.5) * square_size)
-                start_x = ext.x_bearing
-                end_x = start_x + ext.width
-                mid_x = (start_x + end_x) / 2
-                start_y = ext.y_bearing
-                end_y = start_y + ext.height
-                mid_y = (start_y + end_y) / 2
-                pos = (pos[0] - ext.width/2, pos[1] - ext.height/2)
-                text_paths = self.make_text(letter, pos, fontsize=fontsize, family=family)
+                pos_square_centre = use_position + Point((c+0.5) * square_size, (r+0.5) * square_size)
+                pos_square_text = pos_square_centre - Point(ext.width/2, ext.height/2)
+                text_paths = self.make_text(letter, pos_square_text, fontsize=fontsize, family=family)
                 sf = ShapeFiller(text_paths)
                 filled_text_paths = sf.get_paths(self.pen_type.pen_width / 5)
                 for p in filled_text_paths:
                     all_polylines.append(p)
-                shape = self.make_square(Point(pos[0], pos[1] + ext.y_bearing-1), len(square)*square_size + 2)
-                # print(ext)
+                    
         width = fontsize / 24 * 2
-        shape1 = self.make_square(Point(use_position[0]-width/4 + ext.x_bearing, use_position[1]-width/4 + ext.y_bearing), len(square)*square_size + width/2)
-        shape2 = self.make_square(Point(use_position[0]-width/2 + ext.x_bearing, use_position[1]-width/2 + ext.y_bearing), len(square)*square_size + width)
+        topleft = use_position + Point(ext.x_bearing, ext.y_bearing)
+        shape1 = self.make_square(topleft - Point(width/4, width/4), len(square)*square_size + width/2)
+        shape2 = self.make_square(topleft - Point(width/2, width/2), len(square)*square_size + width)
         sf = ShapeFiller([shape1, shape2])
         paths = sf.get_paths(self.pen_type.pen_width / 5 * 2)
         all_polylines.extend(paths)
         
-        centre = (use_position[0] + n * square_size/2, use_position[1] + n * square_size/2)
+        centre = use_position + Point(1, 1) * n * square_size/2
         
         angle = 0 if angle is None else angle
         rot_polylines = []
@@ -1036,7 +1030,7 @@ class ShapeFiller:
     
         shapes = []
         for unrotated_shape in self.unrotated_shapes:
-            shapes.append([StandardDrawing.rotate_about(x, (0,0), angle) for x in unrotated_shape])
+            shapes.append([StandardDrawing.rotate_about(x, Point.Origin(), angle) for x in unrotated_shape])
     
         # scan all y-lines in range and get the crossing points
         y_min = min([min([p.y for p in shape]) for shape in shapes])
