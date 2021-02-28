@@ -799,11 +799,11 @@ class StandardDrawing:
                 filled_text_paths = sf.get_paths(self.pen_type.pen_width / 5)
                 for p in filled_text_paths:
                     all_polylines.append(p)
-                shape = self.make_square(pos[0], pos[1] + ext.y_bearing-1, len(square)*square_size + 2)
+                shape = self.make_square(Point(pos[0], pos[1] + ext.y_bearing-1), len(square)*square_size + 2)
                 # print(ext)
         width = fontsize / 24 * 2
-        shape1 = self.make_square(use_position[0]-width/4 + ext.x_bearing, use_position[1]-width/4 + ext.y_bearing, len(square)*square_size + width/2)
-        shape2 = self.make_square(use_position[0]-width/2 + ext.x_bearing, use_position[1]-width/2 + ext.y_bearing, len(square)*square_size + width)
+        shape1 = self.make_square(Point(use_position[0]-width/4 + ext.x_bearing, use_position[1]-width/4 + ext.y_bearing), len(square)*square_size + width/2)
+        shape2 = self.make_square(Point(use_position[0]-width/2 + ext.x_bearing, use_position[1]-width/2 + ext.y_bearing), len(square)*square_size + width)
         sf = ShapeFiller([shape1, shape2])
         paths = sf.get_paths(self.pen_type.pen_width / 5 * 2)
         all_polylines.extend(paths)

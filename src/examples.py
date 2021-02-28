@@ -720,7 +720,7 @@ def draw_shape_clips(d):
         x = 20 + random() * 25
         y = 170 + random() * 25
         size = 2.5 + 10 * random()
-        shape = d.make_square(x, y, size)
+        shape = d.make_square(Point(x, y), size)
         a = random()*math.pi*2
         shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
         polyline = [x for x in shape]
