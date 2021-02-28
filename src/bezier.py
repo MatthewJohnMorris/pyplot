@@ -51,13 +51,13 @@ def bezier_split_at_t( p, t ):
 
 def bezier_subdivide( start, spline_array, flat ):
     """
-    Break up a bezier curve into smaller curves, each of which
-    is approximately a straight line within a given tolerance
-    (the "smoothness" defined by [flat]).
+    Break up a bezier curve into smaller curves, each of which is approximately a straight line within a given
+    tolerance (the "smoothness" defined by [flat]). Done in-place.
     
     Rewritten from scratch as no idea what the axidraw stuff thought it was doing - it sort of
-    worked but started showing distorion on very long splines. Maybe that's me being unable to
-    transcribe, but seemed best to get it right from the ground up.
+    worked but started showing distorion on very long splines, and didn't work when the initial set
+    just had one bezier spline. Maybe that's me being unable to transcribe, but seemed best to get it
+    right from the ground up.
     """
 
     i = 0
