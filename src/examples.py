@@ -411,61 +411,17 @@ def test_boxed_text(d):
 def speed_limit_test(d):
     mult = 0.4
     layer = d.add_layer("1")
-    for j in range(0, 5):
-        x = 20 + 10 * j
-        y = 20
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("2")
-    for j in range(0, 5):
-        x = 120 + 10 * j
-        y = 20
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("3")
-    for j in range(0, 5):
-        x = 20 + 10 * j
-        y = 70
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("4")
-    for j in range(0, 5):
-        x = 120 + 10 * j
-        y = 70
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("5")
-    for j in range(0, 5):
-        x = 20 + 10 * j
-        y = 120
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("6")
-    for j in range(0, 5):
-        x = 120 + 10 * j
-        y = 120
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("7")
-    for j in range(0, 5):
-        x = 20 + 10 * j
-        y = 170
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
-    layer = d.add_layer("8")
-    for j in range(0, 5):
-        x = 120 + 10 * j
-        y = 170
-        for i in range(0, 10):
-            x += d.pen_type.pen_width * mult
-            d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+    bases = [Point(20, 20), Point(120,20), Point(20, 70), Point(120, 70), Point(20, 120), Point(120, 120), Point(20, 170), Point(120, 170)]
+    ix_layer = 1
+    for base in bases:
+        layer = d.add_layer(str(ix_layer))
+        for j in range(0, 5):
+            x = base.x + 10 * j
+            y = base.y
+            for i in range(0, 10):
+                x += d.pen_type.pen_width * mult
+                d.add_polyline([(x, y), (x, y + 5 * (j+1))], container=layer)
+        ix_layer += 1
 
 def get_image_intensity(image, x, y):
 
@@ -774,8 +730,10 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # draw_false_prophets(d)
 # draw_shape_clips(d)
 # draw_word_square(d)
-draw_tree(d)
+# draw_tree(d)
 # test_text_and_shape(d)
+
+speed_limit_test(d)
 
 '''
 test_text_and_shape(d)
