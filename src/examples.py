@@ -162,15 +162,6 @@ def multi_burroughs(drawing):
     layer3 = drawing.add_layer('3')
     drawing.image_spiral_single(layer3, 'burroughs.jpg', (100, 200), 30, svgwrite.rgb(0, 255, 0, '%'))
 
-def text_smear(drawing):
-
-    centre = (100,160)
-    scale = 60
-    text="testing, testing, one two three"
-    d.plot_spiral_text(centre, scale, text=text, container=drawing.add_layer('1'), stroke=svgwrite.rgb(255, 0, 255, '%'), radial_adjust=-0.8)
-    d.plot_spiral_text(centre, scale, text=text, container=drawing.add_layer('2'), stroke=svgwrite.rgb(255, 0, 0, '%'), radial_adjust=-0.4)
-    d.plot_spiral_text(centre, scale, text=text, container=drawing.add_layer('3'), stroke=svgwrite.rgb(255, 255, 255, '%'), radial_adjust=-0.0)
-
 def text_in_circle(drawing):
 
     centre = (100,160)
@@ -779,11 +770,11 @@ def draw_tree(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-d.add_spiral_text((100.75, 100.75), 60)
+# d.add_spiral_text((100.75, 100.75), 60)
 # draw_false_prophets(d)
 # draw_shape_clips(d)
 # draw_word_square(d)
-# draw_tree(d)
+draw_tree(d)
 # test_text_and_shape(d)
 
 '''
@@ -800,9 +791,6 @@ test_height(d)
 test_hearts(d)
 test_dots(d)
 test_dots2(d)
-test_solid_poly(d)
-test_triangle(d)
-text_smear(d)
 multi_burroughs(d)
 draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
 random_rects(d)
@@ -814,7 +802,7 @@ draw_unknown_pleasures(d)
 d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
 d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
 d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80)
-d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
+# d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
 plot_surface(d)
 plot_perlin_drape_spiral(d, 6)
 plot_perlin_drape_spiral(d, 8)

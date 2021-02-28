@@ -189,17 +189,28 @@ class StandardDrawing:
         polygon = self.dwg.polygon(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none')
         container.add(polygon)
 
-    def make_square(self, x, y, size):
+    def make_square(self, pt, size):
         points = []
-        points.append((x, y))
-        points.append((x + size, y))
-        points.append((x + size, y + size))
-        points.append((x, y + size))
+        points.append(pt)
+        points.append((pt.x + size, pt.y))
+        points.append((pt.x + size, pt.y + size))
+        points.append((pt.x, pt.y + size))
         return points
 
-    def add_square(self, x, y, size, stroke=None, container=None):    
-        points = self.make_square(x, y, size)
-        self.add_polygon(points, stroke, container)
+    def add_square(self, pt_input, size, start_size=None, stroke=None, container=None):    
+    
+        pt = Point.From(pt_input)
+        
+        if start_size is None:
+            points = self.make_square(pt, size)
+            self.add_polygon(points, stroke, container)
+            return
+          
+        diff = (size - start_size) / 2
+        diff_pt = pt + Point(diff, diff)
+        sf = ShapeFiller([self.make_square(diff_pt, start_size), self.make_square(pt, size)])
+        paths = sf.get_paths(self.pen_type.pen_width * 0.2)
+        self.add_polylines(paths, stroke, container)
 
     def make_rect(self, top_left, x_size, y_size):
         points = []
