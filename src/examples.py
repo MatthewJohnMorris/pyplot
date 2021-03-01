@@ -13,13 +13,13 @@ from svgwrite.extensions import Inkscape
 
 from random import random, seed
 seed(10)
-
+  
 import math
 
 from pyplot import CircleBlock, PenType, Point, StandardDrawing, ShapeFiller
 from perlin import PerlinNoise
 from bezier import *
-  
+
 def draw_riley(drawing):    
 
     nslice = 40    
@@ -667,7 +667,6 @@ def draw_false_prophets(drawing):
 
     drawing.add_polylines(polylines)
 
-
 def draw_shape_clips(d):
 
     all_polylines = []
@@ -725,6 +724,9 @@ def draw_tree(d):
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+
+draw_tree(d)
+draw_shape_clips(d)
 
 if False:
     draw_shape_clips(d)
