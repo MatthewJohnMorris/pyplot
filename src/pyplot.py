@@ -868,8 +868,7 @@ class StandardDrawing:
         
         return thick_line_points
 
-    @staticmethod
-    def make_branch_recurse(all_lines, ix, pos, line, a_disp, depth_remaining, thickness_mm):
+    def make_branch_recurse(self, all_lines, ix, pos, line, cut, a_disp, depth_remaining, thickness_mm):
 
         def gen_curved_line(start, end):
 
@@ -889,10 +888,8 @@ class StandardDrawing:
 
             return 2 * (random() - 0.5)
 
-        # TODO: Pen width
-        row_width = 0.2 * 0.6
+        row_width = self.pen_type.pen_width / 5
         
-        cut = 2/3
         new_pos = pos + line
         curved_line = gen_curved_line(pos, new_pos)
         # print(all_lines)
@@ -915,15 +912,14 @@ class StandardDrawing:
         
         # do the higher-index branch first so our indexing doesn't get messed up!
         all_lines[ix+1:ix+1] = [[new_pos]]
-        StandardDrawing.make_branch_recurse(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, Point.Origin(), -a_disp), a_disp, depth_remaining - 1, new_thickness)
+        self.make_branch_recurse(all_lines, ix+1, new_pos, StandardDrawing.rotate_about(new_line, Point.Origin(), -a_disp), cut, a_disp, depth_remaining - 1, new_thickness)
         # now go further along the ix-branch
-        StandardDrawing.make_branch_recurse(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, Point.Origin(), a_disp), a_disp, depth_remaining - 1, new_thickness)
+        self.make_branch_recurse(all_lines, ix, new_pos, StandardDrawing.rotate_about(new_line, Point.Origin(), a_disp), cut, a_disp, depth_remaining - 1, new_thickness)
 
-    @staticmethod
-    def make_branch(pos_start, line, a_disp, max_depth, thickness_mm):
+    def make_branch(self, pos_start, line, cut, a_disp, max_depth, thickness_mm):
 
         branch_polylines = [[pos_start]]
-        StandardDrawing.make_branch_recurse(branch_polylines, 0, pos_start, line, a_disp, max_depth, thickness_mm)
+        self.make_branch_recurse(branch_polylines, 0, pos_start, line, cut, a_disp, max_depth, thickness_mm)
         return branch_polylines
         
     @staticmethod

@@ -700,6 +700,7 @@ def draw_tree(d):
     pos = Point(105, 105)
     line = Point(0, 30)
     max_depth = 7
+    cut = 2 / 3
     a_disp = math.pi / 6
     num_branches = 21
     thickness_mm = 1.2
@@ -712,7 +713,7 @@ def draw_tree(d):
         stroke = strokes[ix_layer]
         disp_rot = StandardDrawing.rotate_about(Point(0, 10), Point.Origin(), i * 2 * math.pi / num_branches)
         pos_start = pos + disp_rot
-        branch_polylines = StandardDrawing.make_branch(pos_start, StandardDrawing.rotate_about(line, Point.Origin(), i * 2 * math.pi / num_branches), a_disp, max_depth, thickness_mm)
+        branch_polylines = d.make_branch(pos_start, StandardDrawing.rotate_about(line, Point.Origin(), i * 2 * math.pi / num_branches), cut, a_disp, max_depth, thickness_mm)
         # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
         d.add_polylines(branch_polylines, stroke=stroke, container=layer)
         
