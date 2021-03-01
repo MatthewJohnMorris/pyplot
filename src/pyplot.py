@@ -1508,7 +1508,13 @@ class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-
+        
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
+            
     def __add__(self, o):
         return Point(self.x + o.x, self.y + o.y)
 
@@ -1537,3 +1543,6 @@ class Point:
         if key == 1:
             return self.y
         raise IndexError
+
+    def __repr__(self):
+        return f"({self.x},{self.y})"

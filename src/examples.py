@@ -671,10 +671,10 @@ def draw_shape_clips(d):
 
     all_polylines = []
     shapes = []
-    for i in range(0, 100):
+    for i in range(0, 4):
         x = 20 + random() * 25
-        y = 170 + random() * 25
-        size = 2.5 + 10 * random()
+        y = 20 + random() * 25
+        size = 2.5 + 30 * random()
         shape = d.make_square(Point(x, y), size)
         a = random()*math.pi*2
         shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
@@ -686,6 +686,8 @@ def draw_shape_clips(d):
             # print(f"shapes={shapes}")
             sf = ShapeFiller(shapes)
             polylines = sf.clip([polyline], union=True)
+            print(polyline)
+            print(polylines)
             all_polylines.extend(polylines)
         shapes.append(shape)
     d.add_polylines(all_polylines)
@@ -728,8 +730,9 @@ def draw_tree(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_tree(d)
+# draw_tree(d)
 draw_shape_clips(d)
+# draw_false_prophets(d)
 
 if False:
     draw_shape_clips(d)

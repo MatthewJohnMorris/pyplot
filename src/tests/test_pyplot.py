@@ -67,91 +67,91 @@ def test_text_bound_letter_matches_text_bound():
     
 def test_inside_square():
 
-    shape = [(1, 1), (1, 3), (3, 3), (3, 1)]
+    shape = [Point(1, 1), Point(1, 3), Point(3, 3), Point(3, 1)]
     shapes = [shape]
     sf = ShapeFiller(shapes)
 
-    assert(not sf.is_inside((2, 3)))
+    assert(not sf.is_inside(Point(2, 3)))
 
     # inside is inside
-    assert(sf.is_inside((2, 2)))
+    assert(sf.is_inside(Point(2, 2)))
     
     # perimeter is outside
-    assert(not sf.is_inside((1, 1)))
-    assert(not sf.is_inside((1, 2)))
-    assert(not sf.is_inside((1, 3)))
-    assert(not sf.is_inside((2, 3)))
-    assert(not sf.is_inside((3, 3)))
-    assert(not sf.is_inside((3, 2)))
-    assert(not sf.is_inside((3, 1)))
-    assert(not sf.is_inside((2, 1)))
+    assert(not sf.is_inside(Point(1, 1)))
+    assert(not sf.is_inside(Point(1, 2)))
+    assert(not sf.is_inside(Point(1, 3)))
+    assert(not sf.is_inside(Point(2, 3)))
+    assert(not sf.is_inside(Point(3, 3)))
+    assert(not sf.is_inside(Point(3, 2)))
+    assert(not sf.is_inside(Point(3, 1)))
+    assert(not sf.is_inside(Point(2, 1)))
     
     # outside stuff is outside
-    assert(not sf.is_inside((0, 0)))
-    assert(not sf.is_inside((0, 2)))
-    assert(not sf.is_inside((0, 4)))
-    assert(not sf.is_inside((2, 4)))
-    assert(not sf.is_inside((4, 4)))
-    assert(not sf.is_inside((4, 2)))
-    assert(not sf.is_inside((4, 0)))
-    assert(not sf.is_inside((2, 0)))
+    assert(not sf.is_inside(Point(0, 0)))
+    assert(not sf.is_inside(Point(0, 2)))
+    assert(not sf.is_inside(Point(0, 4)))
+    assert(not sf.is_inside(Point(2, 4)))
+    assert(not sf.is_inside(Point(4, 4)))
+    assert(not sf.is_inside(Point(4, 2)))
+    assert(not sf.is_inside(Point(4, 0)))
+    assert(not sf.is_inside(Point(2, 0)))
 
 def test_inside_diamond():
 
-    shape = [(2, 1), (3, 2), (2, 3), (1, 2)]
+    shape = [Point(2, 1), Point(3, 2), Point(2, 3), Point(1, 2)]
     shapes = [shape]
     sf = ShapeFiller(shapes)
 
     # inside is inside
-    assert(sf.is_inside((2, 2)))
+    assert(sf.is_inside(Point(2, 2)))
     
     # perimeter is outside
-    assert(not sf.is_inside((2, 1)))
-    assert(not sf.is_inside((3, 2)))
-    assert(not sf.is_inside((2, 4)))
-    assert(not sf.is_inside((1, 2)))
+    assert(not sf.is_inside(Point(2, 1)))
+    assert(not sf.is_inside(Point(3, 2)))
+    assert(not sf.is_inside(Point(2, 4)))
+    assert(not sf.is_inside(Point(1, 2)))
     
     # outside stuff is outside
-    assert(not sf.is_inside((0, 0)))
-    assert(not sf.is_inside((0, 4)))
-    assert(not sf.is_inside((4, 4)))
-    assert(not sf.is_inside((4, 0)))
+    assert(not sf.is_inside(Point(0, 0)))
+    assert(not sf.is_inside(Point(0, 4)))
+    assert(not sf.is_inside(Point(4, 4)))
+    assert(not sf.is_inside(Point(4, 0)))
 
 def test_split_edges_square():
 
-    shape = [(1, 1), (1, 3), (3, 3), (3, 1)]
+    shape = [Point(1, 1), Point(1, 3), Point(3, 3), Point(3, 1)]
     shapes = [shape]
     sf = ShapeFiller(shapes)
 
-    assert(sf.split_edge_endpoints((0,1), (4,1)) == [(1,1), (3,1), (4,1)])
-    assert(sf.split_edge_endpoints((0,2), (4,2)) == [(1,2), (3,2), (4,2)])
-    assert(sf.split_edge_endpoints((0,3), (4,3)) == [(1,3), (3,3), (4,3)])
+    assert(sf.split_edge_endpoints(Point(0,1), Point(4,1)) == [Point(1,1), Point(3,1), Point(4,1)])
+    assert(sf.split_edge_endpoints(Point(0,2), Point(4,2)) == [Point(1,2), Point(3,2), Point(4,2)])
+    assert(sf.split_edge_endpoints(Point(0,3), Point(4,3)) == [Point(1,3), Point(3,3), Point(4,3)])
 
-    assert(sf.split_edge_endpoints((0,0), (4,0)) == [(4,0)])
-    assert(sf.split_edge_endpoints((0,4), (4,4)) == [(4,4)])
+    assert(sf.split_edge_endpoints(Point(0,0), Point(4,0)) == [Point(4,0)])
+    assert(sf.split_edge_endpoints(Point(0,4), Point(4,4)) == [Point(4,4)])
 
 def test_split_edges_diamond():
 
-    shape = [(8, 4), (12, 12), (8, 20), (4, 12)]
+    shape = [Point(8, 4), Point(12, 12), Point(8, 20), Point(4, 12)]
     shapes = [shape]
     sf = ShapeFiller(shapes)
 
-    assert(sf.split_edge_endpoints((0,0),  (16,0))  == [(16,0)])
-    assert(sf.split_edge_endpoints((0,4),  (16,4))  == [(8,4),  (16,4)])
-    assert(sf.split_edge_endpoints((0,6),  (16,6))  == [(7,6),  (9,6),   (16,6)])
-    assert(sf.split_edge_endpoints((0,8),  (16,8))  == [(6,8),  (10,8),  (16,8)])
-    assert(sf.split_edge_endpoints((0,12), (16,12)) == [(4,12), (12,12), (16,12)])
-    assert(sf.split_edge_endpoints((0,16), (16,16)) == [(6,16), (10,16), (16,16)])
-    assert(sf.split_edge_endpoints((0,18), (16,18)) == [(7,18), (9,18),  (16,18)])
-    assert(sf.split_edge_endpoints((0,20), (16,20)) == [(8,20), (16,20)])
-    assert(sf.split_edge_endpoints((0,24), (16,24)) == [(16,24)])
+    assert(sf.split_edge_endpoints(Point(0,0),  Point(16,0))  == [Point(16,0)])
+    assert(sf.split_edge_endpoints(Point(0,4),  Point(16,4))  == [Point(8,4),  Point(16,4)])
+    assert(sf.split_edge_endpoints(Point(0,6),  Point(16,6))  == [Point(7,6),  Point(9,6),   Point(16,6)])
+    assert(sf.split_edge_endpoints(Point(0,8),  Point(16,8))  == [Point(6,8),  Point(10,8),  Point(16,8)])
+    assert(sf.split_edge_endpoints(Point(0,12), Point(16,12)) == [Point(4,12), Point(12,12), Point(16,12)])
+    assert(sf.split_edge_endpoints(Point(0,16), Point(16,16)) == [Point(6,16), Point(10,16), Point(16,16)])
+    assert(sf.split_edge_endpoints(Point(0,18), Point(16,18)) == [Point(7,18), Point(9,18),  Point(16,18)])
+    assert(sf.split_edge_endpoints(Point(0,20), Point(16,20)) == [Point(8,20), Point(16,20)])
+    assert(sf.split_edge_endpoints(Point(0,24), Point(16,24)) == [Point(16,24)])
 
 def test_sort_polylines_zigzag():
 
     # Expect same order
-    line1 = [(0, 0), (10, 0)]
-    line2 = [(10, 1), (0, 1)]
-    line3 = [(0, 2), (10, 2)]
+    line1 = [Point(0, 0), Point(10, 0)]
+    line2 = [Point(10, 1), Point(0, 1)]
+    line3 = [Point(0, 2), Point(10, 2)]
     sorted = StandardDrawing.sort_polylines([line1, line2, line3])
     assert(sorted[0] == line1)
     assert(sorted[1] == line2)
@@ -160,9 +160,9 @@ def test_sort_polylines_zigzag():
 def test_sort_polylines_order():
 
     # Expect reordering as well as line3 reversed
-    line1 = [(0, 0), (10, 0)]
-    line2 = [(0, 2), (10, 2)]
-    line3 = [(0, 1), (10, 1)]
+    line1 = [Point(0, 0), Point(10, 0)]
+    line2 = [Point(0, 2), Point(10, 2)]
+    line3 = [Point(0, 1), Point(10, 1)]
     sorted = StandardDrawing.sort_polylines([line1, line2, line3])
     assert(sorted[0] == line1)
     assert(sorted[1] == line3[::-1])
@@ -209,3 +209,15 @@ def test_point_dist():
     pt3 = Point(3, 4)
     assert(5 == pt3.dist())
     
+def test_clip():
+
+    disp = (0,5)
+    shape1 = [Point(10, 10), Point(20, 10), Point(20, 20), Point(10, 20)]
+    shape2 = [Point(11, 11), Point(19, 11), Point(19, 19), Point(11, 19)]
+    # shape2 = [(x[0] + disp[0], x[1] + disp[1]) for x in shape1]
+    sf = ShapeFiller([shape1])
+    polylines = sf.clip([shape2], union=True)
+    print(polylines)
+    assert(True)
+    
+
