@@ -702,11 +702,13 @@ def draw_tree(d):
     max_depth = 7
     cut = 2 / 3
     a_disp = math.pi / 6
+    # a_disp = math.pi / 12
     num_branches = 21
     thickness_mm = 1.2
     layer0 = d.add_layer("0-dot")
     layers = [d.add_layer("1-green"), d.add_layer("2-orange"), d.add_layer("3-yellow")]
     strokes = [svgwrite.rgb(0, 255, 0, '%'), svgwrite.rgb(255, 0, 0, '%'), svgwrite.rgb(255, 255, 0, '%')]
+    # strokes = [svgwrite.rgb(255, 255, 255, '%'), svgwrite.rgb(255, 255, 255, '%'), svgwrite.rgb(255, 255, 255, '%')]
     for i in range(0, num_branches):
         ix_layer = i % 3
         layer = layers[ix_layer]
