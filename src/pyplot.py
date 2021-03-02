@@ -1013,7 +1013,7 @@ class ShapeFiller:
         # Convert tuples to Point
         shapes = [[Point.From(pt) for pt in shape] for shape in shapes_input]
         self.unrotated_shapes = shapes
-        self.shape_limits = [ShapeFiller.Limits(min([pt.x for pt in shape]), min(pt.x for pt in shape), max([pt.y for pt in shape]), max(pt.y for pt in shape)) for shape in shapes]
+        self.shape_limits = [ShapeFiller.Limits(min([pt.x for pt in shape]), min(pt.y for pt in shape), max([pt.x for pt in shape]), max(pt.y for pt in shape)) for shape in shapes]
         self.min_x = min(limit.min_x for limit in self.shape_limits)
         self.min_y = min(limit.min_y for limit in self.shape_limits)
         self.max_x = max(limit.max_x for limit in self.shape_limits)
@@ -1232,8 +1232,16 @@ class ShapeFiller:
     
         # Convert tuples to Point
         polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
-        split_polylines = self.split_polylines(polylines)
         
+        #print("pre-split shapes")
+        #print(self.unrotated_shapes)
+        #print("pre-split")
+        #print(polylines)
+        split_polylines = self.split_polylines(polylines)
+        #print("post-split")
+        #print(split_polylines)
+        
+        #print("start")
         clipped_polylines = []
         for polyline in split_polylines:
             path = []
@@ -1243,11 +1251,13 @@ class ShapeFiller:
                 include = not self.is_inside(m, union)
                 if inverse:
                     include = not include
+                #print(f"s={s}, e={e}, m={m}, include={include}")
                     
                 if include:
                     if len(path) == 0:
                         path.append(s)
                     path.append(e)
+                    #print(path)
                 else:
                     if len(path) > 0:
                         clipped_polylines.append(path)
@@ -1265,10 +1275,11 @@ class ShapeFiller:
         s = polyline[0]
         path = [s]
         for e in polyline[1:]:
+            #print("split_edge_endpoints", s, e)
             path.extend(self.split_edge_endpoints(s, e))
             s = e
-        # if len(polyline) != len(path):
-        #     print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
+        #if len(polyline) != len(path):
+            #print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
         return path
         
     def split_edge_endpoints(self, s, e):
@@ -1284,12 +1295,16 @@ class ShapeFiller:
                 edge_e = edge[1]
                 shape_limits = self.shape_limits[ix_shape]
                 if max(edge_s[0], edge_e[0]) < shape_limits.min_x:
+                    #print("bail:min-x", edge_s, edge_e, shape_limits.min_x)
                     continue
                 if min(edge_s[0], edge_e[0]) > shape_limits.max_x:
+                    #print("bail:max-x")
                     continue
                 if max(edge_s[1], edge_e[1]) < shape_limits.min_y:
+                    #print("bail:min-y")
                     continue
                 if min(edge_s[1], edge_e[1]) > shape_limits.max_y:
+                    #print("bail:max-y")
                     continue
                 
                 # Try each shape edge in turn
@@ -1301,15 +1316,20 @@ class ShapeFiller:
                     
                     # Minimise full intersection checks: shape edge bounding box
                     if max(edge_s[0], edge_e[0]) < min(shape_s[0], shape_e[0]):
+                        #print("bail:shape")
                         continue
                     if min(edge_s[0], edge_e[0]) > max(shape_s[0], shape_e[0]):
+                        #print("bail:shape")
                         continue
                     if max(edge_s[1], edge_e[1]) < min(shape_s[1], shape_e[1]):
+                        #print("bail:shape")
                         continue
                     if min(edge_s[1], edge_e[1]) > max(shape_s[1], shape_e[1]):
+                        #print("bail:shape")
                         continue
                         
                     # We are inside shape edge bounding box: do a full intersection check
+                    #print("check", edge, (shape_s, shape_e))
                     intersect = ShapeFiller.line_intersection(edge, (shape_s, shape_e))
                     if not intersect is None:
                         k = intersect[0]

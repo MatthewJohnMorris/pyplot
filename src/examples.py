@@ -671,25 +671,66 @@ def draw_shape_clips(d):
 
     all_polylines = []
     shapes = []
-    for i in range(0, 4):
+    for i in range(0, 40):
         x = 20 + random() * 25
         y = 20 + random() * 25
         size = 2.5 + 30 * random()
         shape = d.make_square(Point(x, y), size)
         a = random()*math.pi*2
         shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
-        polyline = [x for x in shape]
-        polyline.append(polyline[0])
+        shape_polyline = [x for x in shape]
+        shape_polyline.append(shape_polyline[0])
+        # print(shape_polyline)
         if i == 0:
-            all_polylines.append(polyline)
+            all_polylines.append(shape_polyline)
         else:
             # print(f"shapes={shapes}")
             sf = ShapeFiller(shapes)
-            polylines = sf.clip([polyline], union=True)
-            print(polyline)
-            print(polylines)
-            all_polylines.extend(polylines)
+            clipped_polylines = sf.clip([shape_polyline], union=True)
+            #print(polyline)
+            #print(polylines)
+            all_polylines.extend(clipped_polylines)
+        #print(all_polylines[-1])
         shapes.append(shape)
+    d.add_polylines(all_polylines)
+
+def draw_shape_clips2(d):
+
+    all_polylines = []
+    shapes = []
+    shape0 = d.make_square(Point(20, 20), 20)
+    shape1 = d.make_square(Point(8, 8), 20)
+    shape2 = d.make_square(Point(8, 32), 20)
+    shape3 = d.make_square(Point(32, 32), 20)
+    shape4 = d.make_square(Point(32, 8), 20)
+    shape5 = d.make_square(Point(18, 18), 24)
+    shapes = [shape0, shape1, shape2, shape3, shape4, shape5]
+    shapes = [shape4, shape5]
+    shapeA = d.make_square(Point(30, 10), 40)
+    shapeB = d.make_square(Point(20, 20), 40)
+    shapes = [shapeA, shapeB]
+    clip_shapes = []
+    for shape in shapes:
+        print("shape",shape)
+        shape_polyline = [x for x in shape]
+        shape_polyline.append(shape_polyline[0])
+        print(shape_polyline)
+        if len(all_polylines) == 0:
+            all_polylines.append(shape_polyline)
+        else:
+            # print(f"shapes={shapes}")
+            print("clip_shapes")
+            print(clip_shapes)
+            sf = ShapeFiller(clip_shapes)
+            print("pre-clip")
+            print(shape_polyline)
+            clipped_polylines = sf.clip([shape_polyline], union=True)
+            print("clipped")
+            print(clipped_polylines)
+            #print(polylines)
+            all_polylines.extend(clipped_polylines)
+        print(all_polylines[-1])
+        clip_shapes.append(shape)
     d.add_polylines(all_polylines)
 
 def draw_word_square(d):
@@ -732,6 +773,7 @@ d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 
 # draw_tree(d)
 draw_shape_clips(d)
+# draw_shape_clips2(d)
 # draw_false_prophets(d)
 
 if False:
