@@ -220,11 +220,13 @@ def test_clip():
     polylines = sf.clip([shape2], union=True)
     assert(len(polylines) == 0)
 
+    def clip_displaced_square(sf, disp):
+        shape2 = [(x[0] + disp[0], x[1] + disp[1]) for x in shape1]
+        shape2.append(shape2[0])
+        return sf.clip([shape2], union=True)
+
     # (15,15) - (25,15) - (25,25) - (15,25) - (15,15)
-    shape2 = [(x[0] + 5, x[1] + 5) for x in shape1]
-    shape2.append(shape2[0])
-    polylines = sf.clip([shape2], union=True)
-    print(polylines)
+    polylines = clip_displaced_square(sf, (5,5))
     assert(len(polylines) == 1)
     assert(len(polylines[0]) == 5)
     assert(polylines[0][0] == (20,15))
@@ -234,10 +236,7 @@ def test_clip():
     assert(polylines[0][4] == (15,20))
 
     # (5,15) - (15,15) - (15,25) - (5,25) - (5,15)
-    shape2 = [(x[0] - 5, x[1] + 5) for x in shape1]
-    shape2.append(shape2[0])
-    polylines = sf.clip([shape2], union=True)
-    print(polylines)
+    polylines = clip_displaced_square(sf, (-5,5))
     assert(len(polylines) ==2)
     assert(len(polylines[0]) == 2)
     assert(len(polylines[1]) == 4)
@@ -249,10 +248,7 @@ def test_clip():
     assert(polylines[1][3] == (5,15))
 
     # (5,5) - (15,5) - (15,15) - (5,15) - (5,5)
-    shape2 = [(x[0] - 5, x[1] - 5) for x in shape1]
-    shape2.append(shape2[0])
-    polylines = sf.clip([shape2], union=True)
-    print(polylines)
+    polylines = clip_displaced_square(sf, (-5,-5))
     assert(len(polylines) ==2)
     assert(len(polylines[0]) == 3)
     assert(len(polylines[1]) == 3)
@@ -264,10 +260,7 @@ def test_clip():
     assert(polylines[1][2] == (5,5))
 
     # (15,5) - (25,5) - (25,15) - (15,15) - (15,5)
-    shape2 = [(x[0] + 5, x[1] - 5) for x in shape1]
-    shape2.append(shape2[0])
-    polylines = sf.clip([shape2], union=True)
-    print(polylines)
+    polylines = clip_displaced_square(sf, (5,-5))
     assert(len(polylines) ==2)
     assert(len(polylines[0]) == 4)
     assert(len(polylines[1]) == 2)
