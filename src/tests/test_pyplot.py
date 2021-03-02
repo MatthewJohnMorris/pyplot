@@ -213,11 +213,67 @@ def test_clip():
 
     disp = (0,5)
     shape1 = [Point(10, 10), Point(20, 10), Point(20, 20), Point(10, 20)]
+    
+    # all inside
     shape2 = [Point(11, 11), Point(19, 11), Point(19, 19), Point(11, 19)]
-    # shape2 = [(x[0] + disp[0], x[1] + disp[1]) for x in shape1]
     sf = ShapeFiller([shape1])
     polylines = sf.clip([shape2], union=True)
-    print(polylines)
-    assert(True)
-    
+    assert(len(polylines) == 0)
 
+    # (15,15) - (25,15) - (25,25) - (15,25) - (15,15)
+    shape2 = [(x[0] + 5, x[1] + 5) for x in shape1]
+    shape2.append(shape2[0])
+    polylines = sf.clip([shape2], union=True)
+    print(polylines)
+    assert(len(polylines) == 1)
+    assert(len(polylines[0]) == 5)
+    assert(polylines[0][0] == (20,15))
+    assert(polylines[0][1] == (25,15))
+    assert(polylines[0][2] == (25,25))
+    assert(polylines[0][3] == (15,25))
+    assert(polylines[0][4] == (15,20))
+
+    # (5,15) - (15,15) - (15,25) - (5,25) - (5,15)
+    shape2 = [(x[0] - 5, x[1] + 5) for x in shape1]
+    shape2.append(shape2[0])
+    polylines = sf.clip([shape2], union=True)
+    print(polylines)
+    assert(len(polylines) ==2)
+    assert(len(polylines[0]) == 2)
+    assert(len(polylines[1]) == 4)
+    assert(polylines[0][0] == (5,15))
+    assert(polylines[0][1] == (10,15))
+    assert(polylines[1][0] == (15,20))
+    assert(polylines[1][1] == (15,25))
+    assert(polylines[1][2] == (5,25))
+    assert(polylines[1][3] == (5,15))
+
+    # (5,5) - (15,5) - (15,15) - (5,15) - (5,5)
+    shape2 = [(x[0] - 5, x[1] - 5) for x in shape1]
+    shape2.append(shape2[0])
+    polylines = sf.clip([shape2], union=True)
+    print(polylines)
+    assert(len(polylines) ==2)
+    assert(len(polylines[0]) == 3)
+    assert(len(polylines[1]) == 3)
+    assert(polylines[0][0] == (5,5))
+    assert(polylines[0][1] == (15,5))
+    assert(polylines[0][2] == (15,10))
+    assert(polylines[1][0] == (10,15))
+    assert(polylines[1][1] == (5,15))
+    assert(polylines[1][2] == (5,5))
+
+    # (15,5) - (25,5) - (25,15) - (15,15) - (15,5)
+    shape2 = [(x[0] + 5, x[1] - 5) for x in shape1]
+    shape2.append(shape2[0])
+    polylines = sf.clip([shape2], union=True)
+    print(polylines)
+    assert(len(polylines) ==2)
+    assert(len(polylines[0]) == 4)
+    assert(len(polylines[1]) == 2)
+    assert(polylines[0][0] == (15,5))
+    assert(polylines[0][1] == (25,5))
+    assert(polylines[0][2] == (25,15))
+    assert(polylines[0][3] == (20,15))
+    assert(polylines[1][0] == (15,10))
+    assert(polylines[1][1] == (15,5))

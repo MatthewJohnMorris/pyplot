@@ -1532,6 +1532,8 @@ class Point:
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
+        elif isinstance(other, tuple):
+            return self.x == other[0] and self.y == other[1]
         else:
             return False
             
