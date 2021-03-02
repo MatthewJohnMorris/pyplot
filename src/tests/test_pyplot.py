@@ -214,7 +214,7 @@ def test_clip():
     disp = (0,5)
     shape1 = [Point(10, 10), Point(20, 10), Point(20, 20), Point(10, 20)]
     
-    # all inside
+    # all inside: clip everything
     shape2 = [Point(11, 11), Point(19, 11), Point(19, 19), Point(11, 19)]
     sf = ShapeFiller([shape1])
     polylines = sf.clip([shape2], union=True)
@@ -224,6 +224,16 @@ def test_clip():
         shape2 = [(x[0] + disp[0], x[1] + disp[1]) for x in shape1]
         shape2.append(shape2[0])
         return sf.clip([shape2], union=True)
+
+    # on boundary - no clipping
+    polylines = clip_displaced_square(sf, (0,0))
+    assert(len(polylines) == 1)
+    assert(len(polylines[0]) == 5)
+    assert(polylines[0][0] == (10,10))
+    assert(polylines[0][1] == (20,10))
+    assert(polylines[0][2] == (20,20))
+    assert(polylines[0][3] == (10,20))
+    assert(polylines[0][4] == (10,10))
 
     # (15,15) - (25,15) - (25,25) - (15,25) - (15,15)
     polylines = clip_displaced_square(sf, (5,5))
