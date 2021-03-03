@@ -768,6 +768,15 @@ def draw_tree(d):
     d.add_dot(pos, 10, r_start=9, stroke=svgwrite.rgb(64, 64, 64, '%'))
     d.add_dot(pos, 8, stroke=svgwrite.rgb(64, 64, 64, '%'))
 
+def cube_points(proj_points):
+
+    polylines = []
+    polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0], proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4], proj_points[0]])
+    polylines.append([proj_points[1], proj_points[5]])
+    polylines.append([proj_points[2], proj_points[6]])
+    polylines.append([proj_points[3], proj_points[7]])
+    return polylines
+
 def draw_3d(d):
 
     cameraToWorld = numpy.identity(4)
@@ -797,13 +806,7 @@ def draw_3d(d):
             proj_points = t.project(world_points)
             
             proj_points = [(x[0]+100, x[1]+100) for x in proj_points]
-            polylines = []
-            polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0]])
-            polylines.append([proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4]])
-            polylines.append([proj_points[0], proj_points[4]])
-            polylines.append([proj_points[1], proj_points[5]])
-            polylines.append([proj_points[2], proj_points[6]])
-            polylines.append([proj_points[3], proj_points[7]])
+            polylines = cube_points(proj_points)
             d.add_polylines(polylines)
 
 def draw_3d2(d):
@@ -855,11 +858,7 @@ def draw_3d3(d):
         
         proj_points = t.project(world_points)
         proj_points = [(x[0]+100, x[1]) for x in proj_points]
-        polylines = []
-        polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0], proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4], proj_points[0]])
-        polylines.append([proj_points[1], proj_points[5]])
-        polylines.append([proj_points[2], proj_points[6]])
-        polylines.append([proj_points[3], proj_points[7]])
+        polylines = cube_points(proj_points)
         d.add_polylines(polylines)
         a += math.pi / 7
 
