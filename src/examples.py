@@ -782,15 +782,16 @@ def draw_3d(d):
         for y in range(-4, 5, 2):
             world_points = [p for p in base_points]
             world_points = [(p[0]+x, p[1]+y, p[2], p[3]) for p in world_points]
-            a = math.pi / 9
+            a = math.pi / 5 * -1
             y_rot = [(math.cos(a), 0, math.sin(a), 0), (0, 1, 0, 0), (-math.sin(a), 0, math.cos(a), 0), (0, 0, 0, 1)]
-            a = a / 2
+            a = a
             x_rot = [(1, 0, 0, 0), (0, math.cos(a), math.sin(a), 0), (0, -math.sin(a), math.cos(a), 0), (0, 0, 0, 1)]
             world_points = numpy.matmul(world_points, y_rot)
             world_points = numpy.matmul(world_points, x_rot)
             cameraToWorld = numpy.identity(4)
             cameraToWorld[3][2] = 10
             proj_points = [computePixelCoordinates(x, cameraToWorld, canvasWidth=canvasWidth, canvasHeight=canvasHeight, imageWidth=imageWidth, imageHeight=imageHeight) for x in world_points]
+            proj_points = [(x[0]+100, x[1]) for x in proj_points]
             polylines = []
             polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0]])
             polylines.append([proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4]])
