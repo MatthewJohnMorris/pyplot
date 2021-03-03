@@ -781,10 +781,6 @@ def draw_3d(d):
 
     cameraToWorld = numpy.identity(4)
     cameraToWorld[3][2] = 10
-    canvasWidth = 2
-    canvasHeight = 2
-    imageWidth = 100 
-    imageHeight = 100
     t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
         
     h = 1
@@ -822,7 +818,6 @@ def draw_3d2(d):
     paths_4pt = [[(pt[0], -pt[1], z, h) for pt in path] for path in paths]
     
     a = math.pi / 14
-    # Note here we are transforming lists of paths
     paths_4pt = Transform3D.rotY(paths_4pt, a)
     paths_4pt = Transform3D.rotX(paths_4pt, a)
 
@@ -843,9 +838,7 @@ def draw_3d3(d):
     s = 0.3
     base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
 
-    i = 0
     a = math.pi / 11
-    z = 0
     for i in range(0, 35):
         world_points = [p for p in base_points]
         world_points = Transform3D.rotZ(world_points, a)
@@ -869,8 +862,8 @@ def draw_3d3(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-#draw_3d(d)
-#draw_3d2(d)
+draw_3d(d)
+draw_3d2(d)
 draw_3d3(d)
 # draw_tree(d)
 # draw_shape_clips(d)
