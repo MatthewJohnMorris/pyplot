@@ -776,7 +776,7 @@ def draw_3d(d):
     canvasHeight = 2
     imageWidth = 100 
     imageHeight = 100
-    t = Transform3D(cameraToWorld, canvasWidth=canvasWidth, canvasHeight=canvasHeight, imageWidth=imageWidth, imageHeight=imageHeight)
+    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
         
     h = 1
     s = 0.6
@@ -790,13 +790,12 @@ def draw_3d(d):
                 continue
             world_points = [p for p in base_points]
             world_points = [(p[0]+x, p[1]+y, p[2], p[3]) for p in world_points]
+            
             a = math.pi / 11
-            y_rot = [(math.cos(a), 0, math.sin(a), 0), (0, 1, 0, 0), (-math.sin(a), 0, math.cos(a), 0), (0, 0, 0, 1)]
-            a = a * 2
-            x_rot = [(1, 0, 0, 0), (0, math.cos(a), math.sin(a), 0), (0, -math.sin(a), math.cos(a), 0), (0, 0, 0, 1)]
-            world_points = numpy.matmul(world_points, y_rot)
-            world_points = numpy.matmul(world_points, x_rot)
-            proj_points = [t.project(x) for x in world_points]
+            world_points = Transform3D.rotY(world_points, a)
+            world_points = Transform3D.rotX(world_points, a*2)
+            proj_points = t.project(world_points)
+            
             proj_points = [(x[0]+100, x[1]+100) for x in proj_points]
             polylines = []
             polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0]])
@@ -806,14 +805,74 @@ def draw_3d(d):
             polylines.append([proj_points[2], proj_points[6]])
             polylines.append([proj_points[3], proj_points[7]])
             d.add_polylines(polylines)
+
+def draw_3d2(d):
+
+    cameraToWorld = numpy.identity(4)
+    cameraToWorld[3][2] = 40
+    t = Transform3D(cameraToWorld, canvasWidth=1.2, canvasHeight=1.2, imageWidth=100, imageHeight=100)
+
+    paths = d.make_text("TEST", (0, 0), 24, family="Arial")
+
+    z = 0        
+    h = 1
+    paths_4pt = [[(pt[0], -pt[1], z, h) for pt in path] for path in paths]
+    
+    a = math.pi / 14
+    # Note here we are transforming lists of paths
+    paths_4pt = Transform3D.rotY(paths_4pt, a)
+    paths_4pt = Transform3D.rotX(paths_4pt, a)
+
+    proj_polylines = t.project(paths_4pt)
+    
+    sf = ShapeFiller(proj_polylines)
+    proj_polylines = sf.get_paths(d.pen_type.pen_width / 5, angle=math.pi/2)
+    
+    d.add_polylines(proj_polylines)
+
+def draw_3d3(d):
+
+    cameraToWorld = numpy.identity(4)
+    cameraToWorld[3][2] = 3
+    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
         
+    h = 1
+    s = 0.3
+    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
+
+    i = 0
+    a = math.pi / 11
+    z = 0
+    for i in range(0, 35):
+        world_points = [p for p in base_points]
+        world_points = Transform3D.rotZ(world_points, a)
+        world_points = Transform3D.rotY(world_points, math.pi / 7)
+        
+        xc = 2*math.cos(a)
+        yc = 2*math.sin(-a)
+        zc = -i/2
+        world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
+        
+        proj_points = t.project(world_points)
+        proj_points = [(x[0]+100, x[1]) for x in proj_points]
+        polylines = []
+        polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0], proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4], proj_points[0]])
+        polylines.append([proj_points[1], proj_points[5]])
+        polylines.append([proj_points[2], proj_points[6]])
+        polylines.append([proj_points[3], proj_points[7]])
+        d.add_polylines(polylines)
+        a += math.pi / 7
+
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_3d(d)
+#draw_3d(d)
+#draw_3d2(d)
+draw_3d3(d)
 # draw_tree(d)
 # draw_shape_clips(d)
 # draw_shape_clips2(d)

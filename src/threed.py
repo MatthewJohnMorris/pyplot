@@ -1,3 +1,4 @@
+import math
 import numpy.matlib 
 import numpy as np 
 
@@ -13,6 +14,10 @@ class Transform3D:
         self.imageHeight = imageHeight
         
     def project(self, pWorld):
+        # Allow lists (of lists of...) points
+        if type(pWorld) == list:
+            return [self.project(x) for x in pWorld]
+            
         pCamera = numpy.matmul(pWorld, self.worldToCamera)
         # Coordinates of the point on the canvas. Use perspective projection.
         screen_x = pCamera[0] / -pCamera[2]
@@ -30,6 +35,29 @@ class Transform3D:
 
         return (raster_x, raster_y)
     
+    @staticmethod
+    def rotX(points, a):
+        x_rot = [(1, 0, 0, 0), (0, math.cos(a), math.sin(a), 0), (0, -math.sin(a), math.cos(a), 0), (0, 0, 0, 1)]
+        # Allow lists (of lists of...) points
+        if type(points) == list:
+            return [Transform3D.rotX(x, a) for x in points]
+        return numpy.matmul(points, x_rot)
+        
+    @staticmethod
+    def rotY(points, a):
+        y_rot = [(math.cos(a), 0, math.sin(a), 0), (0, 1, 0, 0), (-math.sin(a), 0, math.cos(a), 0), (0, 0, 0, 1)]
+        # Allow lists (of lists of...) points
+        if type(points) == list:
+            return [Transform3D.rotY(x, a) for x in points]
+        return numpy.matmul(points, y_rot)
+        
+    @staticmethod
+    def rotZ(points, a):
+        z_rot = [(math.cos(a), math.sin(a), 0, 0), (-math.sin(a), math.cos(a), 0, 0), (0, 0, 1, 0), (0, 0, 0, 1)]
+        # Allow lists (of lists of...) points
+        if type(points) == list:
+            return [Transform3D.rotZ(x, a) for x in points]
+        return numpy.matmul(points, z_rot)
 
 def computePixelCoordinates( 
     pWorld, 
