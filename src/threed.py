@@ -1,6 +1,36 @@
 import numpy.matlib 
 import numpy as np 
 
+class Transform3D:
+
+    def __init__(self, cameraToWorld, canvasWidth, canvasHeight, imageWidth, imageHeight):
+        self.cameraToWorld = cameraToWorld
+        # First transform the 3D point from world space to camera space. 
+        self.worldToCamera = np.linalg.inv(cameraToWorld)
+        self.canvasWidth = canvasWidth
+        self.canvasHeight = canvasHeight
+        self.imageWidth = imageWidth
+        self.imageHeight = imageHeight
+        
+    def project(self, pWorld):
+        pCamera = numpy.matmul(pWorld, self.worldToCamera)
+        # Coordinates of the point on the canvas. Use perspective projection.
+        screen_x = pCamera[0] / -pCamera[2]
+        screen_y = pCamera[1] / -pCamera[2]
+        # If the x- or y-coordinate absolute value is greater than the canvas width 
+        # or height respectively, the point is not visible
+        if (abs(screen_x) > self.canvasWidth or abs(screen_y) > self.canvasHeight):
+            return None 
+        # Normalize. Coordinates will be in the range [0,1]
+        ndc_x = (screen_x + self.canvasWidth / 2) / self.canvasWidth 
+        ndc_y = (screen_y + self.canvasHeight / 2) / self.canvasHeight 
+        # Finally convert to pixel coordinates. Don't forget to invert the y coordinate
+        raster_x = (ndc_x * self.imageWidth) 
+        raster_y = ((1 - ndc_y) * self.imageHeight)
+
+        return (raster_x, raster_y)
+    
+
 def computePixelCoordinates( 
     pWorld, 
     cameraToWorld, 
