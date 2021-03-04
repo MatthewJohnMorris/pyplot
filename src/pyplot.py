@@ -188,6 +188,13 @@ class StandardDrawing:
         container = self.default_container(container)
         polygon = self.dwg.polygon(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none')
         container.add(polygon)
+        
+    def add_polygons(self, a, stroke=None, container=None):
+        stroke = self.default_stroke(stroke)
+        container = self.default_container(container)
+        for x in a:
+            polygon = self.dwg.polygon(x, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none')
+            container.add(polygon)
 
     def make_square(self, pt, size):
         points = []
