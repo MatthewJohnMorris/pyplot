@@ -771,7 +771,7 @@ def draw_tree(d):
 def cube_points(proj_points):
 
     polylines = []
-    polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0], proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4], proj_points[0]])
+    polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0], proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4]])
     polylines.append([proj_points[1], proj_points[5]])
     polylines.append([proj_points[2], proj_points[6]])
     polylines.append([proj_points[3], proj_points[7]])
@@ -855,6 +855,39 @@ def draw_3d3(d):
         d.add_polylines(polylines)
         a += math.pi / 7
 
+def draw_3d4(d):
+
+    cameraToWorld = numpy.identity(4)
+    cameraToWorld[3][2] = 10
+    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
+        
+    h = 1
+    s = 0.3
+    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
+
+    a = math.pi / 11
+    n = 160
+    for i in range(0, n):
+        world_points = [p for p in base_points]
+        # world_points = Transform3D.rotY(world_points, math.pi / 7)
+        # world_points = Transform3D.rotX(world_points, math.pi / 7)
+        
+        # xc = 2*math.cos(a)
+        # yc = 2*math.sin(-a)
+        zc = (i - n/2)/14
+        xc = 6
+        yc = 0
+        # zc = 0
+        world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
+        world_points = Transform3D.rotZ(world_points, a)
+        world_points = Transform3D.rotX(world_points, math.pi * 0.5)
+        
+        proj_points = t.project(world_points)
+        proj_points = [(x[0]+20, x[1]+70) for x in proj_points]
+        polylines = cube_points(proj_points)
+        d.add_polylines(polylines)
+        a += 0.2 # math.pi / 7
+
 def mothers_day(d):
     all_polylines = []
     
@@ -917,6 +950,8 @@ def mothers_day(d):
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+
+draw_3d4(d)
 
 if False:
     mothers_day(d)
