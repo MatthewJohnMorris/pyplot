@@ -866,11 +866,10 @@ def mothers_day(d):
     # a_disp = math.pi / 12
     num_branches = 21
     thickness_mm = 1.2
-    layer0 = d.add_layer("4-dot")
     layers = [d.add_layer("1-green"), d.add_layer("2-orange"), d.add_layer("3-yellow")]
     strokes = [svgwrite.rgb(0, 255, 0, '%'), svgwrite.rgb(255, 0, 0, '%'), svgwrite.rgb(255, 255, 0, '%')]
     # strokes = [svgwrite.rgb(255, 255, 255, '%'), svgwrite.rgb(255, 255, 255, '%'), svgwrite.rgb(255, 255, 255, '%')]
-    inner_radius = 20
+    inner_radius = 18
     for i in range(0, num_branches):
         ix_layer = i % 3
         layer = layers[ix_layer]
@@ -881,12 +880,11 @@ def mothers_day(d):
         # don't bunch all the polylines together in a single bulk-add: there are loads of them and it'll make the optimisation of drawing order take ages
         d.add_polylines(branch_polylines, stroke=stroke, container=layer)
         
-    d.add_dot(pos, inner_radius, r_start=(inner_radius-1), stroke=svgwrite.rgb(64, 64, 64, '%'), container=layer)
-    
-    #layerB = d.add_layer("6_black")
-    #d.add_dot(pos, inner_radius-1, stroke=svgwrite.rgb(63, 63, 63, '%'), container=layerB)
+    layer4 = d.add_layer("4-dot")
+    w = 0.8
+    d.add_dot(pos, inner_radius-0*w, r_start=(inner_radius-1*w), stroke=svgwrite.rgb(64, 64, 64, '%'), container=layer4)
 
-    inner_layer = d.add_layer("7-inner")
+    layer5 = d.add_layer("5-text")
     inner_stroke = svgwrite.rgb(255, 255, 255, '%')
     family = "Sylfaen"
     family = "Arial"
@@ -896,23 +894,23 @@ def mothers_day(d):
     text_shapes = d.make_text("Mother's", pos_text, 24, family=family)
     sf = ShapeFiller(text_shapes)
     text_paths = sf.get_paths(d.pen_type.pen_width / 5)
-    d.add_polylines(text_paths, container=inner_layer, stroke=inner_stroke)
+    d.add_polylines(text_paths, container=layer5, stroke=inner_stroke)
     
     ext = d.text_bound("Happy", 24, family=family)
     pos_text = pos - Point(ext.width/2, -ext.height/2 + ext.height*1.5)
     text_shapes = d.make_text("Happy", pos_text, 24, family=family)
     sf = ShapeFiller(text_shapes)
     text_paths = sf.get_paths(d.pen_type.pen_width / 5)
-    d.add_polylines(text_paths, container=inner_layer, stroke=inner_stroke)
+    d.add_polylines(text_paths, container=layer5, stroke=inner_stroke)
     
-    ext = d.text_bound("Day!", 24, family=family)
+    ext = d.text_bound("Day", 24, family=family)
     pos_text = pos - Point(ext.width/2, -ext.height/2 - ext.height*1.1)
-    text_shapes = d.make_text("Day!", pos_text, 24, family=family)
+    text_shapes = d.make_text("Day", pos_text, 24, family=family)
     sf = ShapeFiller(text_shapes)
     text_paths = sf.get_paths(d.pen_type.pen_width / 5)
-    d.add_polylines(text_paths, container=inner_layer, stroke=inner_stroke)
+    d.add_polylines(text_paths, container=layer5, stroke=inner_stroke)
     
-    d.add_circle(pos, 65)
+    d.add_circle(pos, 60)
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -920,9 +918,8 @@ def mothers_day(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-mothers_day(d)
-
 if False:
+    mothers_day(d)
     draw_3d(d)
     draw_3d2(d)
     draw_3d3(d)
