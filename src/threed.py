@@ -37,6 +37,21 @@ class Transform3D:
         return (raster_x, raster_y, camera_z)
     
     @staticmethod
+    def isForward(face):
+        x0 = face[0][0]
+        y0 = face[0][1]
+        x1 = face[1][0]
+        y1 = face[1][1]
+        x2 = face[2][0]
+        y2 = face[2][1]
+        x01 = x1 - x0
+        y01 = y1 - y0
+        x12 = x2 - x1
+        y12 = y2 - y1
+        norm = x01 * y12 - x12 * y01
+        return norm > 0
+    
+    @staticmethod
     def rotX(points, a):
         x_rot = [(1, 0, 0, 0), (0, math.cos(a), math.sin(a), 0), (0, -math.sin(a), math.cos(a), 0), (0, 0, 0, 1)]
         # Allow lists (of lists of...) points

@@ -835,21 +835,7 @@ def draw_3d(d):
         a += 0.2 # math.pi / 7
 
     # Backface culling
-    faces_forward = []
-    for face in all_faces:
-        x0 = face[0][0]
-        y0 = face[0][1]
-        x1 = face[1][0]
-        y1 = face[1][1]
-        x2 = face[2][0]
-        y2 = face[2][1]
-        x01 = x1 - x0
-        y01 = y1 - y0
-        x12 = x2 - x1
-        y12 = y2 - y1
-        norm = x01 * y12 - x12 * y01
-        if norm > 0:
-            faces_forward.append(face)
+    faces_forward = [face for face in all_faces if Transform3D.isForward(face)]
 
     # Distance averaging and sorting
     faces_with_z = []
