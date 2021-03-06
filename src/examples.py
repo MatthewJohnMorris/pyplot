@@ -834,16 +834,9 @@ def draw_3d(d):
                 
         a += 0.2 # math.pi / 7
 
-    # Distance averaging
-    all_faces_with_z = []
-    for face in all_faces:
-        avg_z = sum(pt[2] for pt in face) / len(face)
-        all_faces_with_z.append((face, avg_z))
-
     # Backface culling
-    faces_with_z = []
-    for face_with_z in all_faces_with_z:
-        face = face_with_z[0]
+    faces_forward = []
+    for face in all_faces:
         x0 = face[0][0]
         y0 = face[0][1]
         x1 = face[1][0]
@@ -856,18 +849,21 @@ def draw_3d(d):
         y12 = y2 - y1
         norm = x01 * y12 - x12 * y01
         if norm > 0:
-            faces_with_z.append(face_with_z)
-        
-    # distance sorting    
-    sorted_faces = sorted(faces_with_z, key=lambda x: x[1])
-    sorted_faces2 = [[(pt[0], pt[1]) for pt in line[0]] for line in sorted_faces]
+            faces_forward.append(face)
+
+    # Distance averaging and sorting
+    faces_with_z = []
+    for face in faces_forward:
+        avg_z = sum(pt[2] for pt in face) / len(face)
+        faces_with_z.append((face, avg_z))
+    sorted_faces_with_z = sorted(faces_with_z, key=lambda x: x[1])
+    sorted_faces = [[(pt[0], pt[1]) for pt in line[0]] for line in sorted_faces_with_z]
     
-    #for f in sorted_faces:
-    #    print(f)
-    print(f"Found {len(sorted_faces2)} faces")
+    # Clipping
+    print(f"Found {len(sorted_faces)} faces")
     shapes = []
     all_polylines = []
-    for face in sorted_faces2:
+    for face in sorted_faces:
         if len(shapes) == 0:
             all_polylines.append(face)
             shapes.append(face[0:-1])
