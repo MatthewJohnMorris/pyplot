@@ -867,6 +867,7 @@ def draw_3d(d):
             if len(clipped) > 0:
                 all_polylines.extend(clipped)
                 shapes.append(face[0:-1])
+                
     print(f"Adding polylines")
     d.add_polylines(all_polylines)
 
