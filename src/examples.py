@@ -800,7 +800,7 @@ def draw_3d(d):
 
     a = math.pi / 11 + 1
     n = 200
-    all_faces_with_z = []
+    all_faces = []
     for i in range(0,n): # [110]: # range(0, n):
         world_points = [p for p in base_points]
         # world_points = Transform3D.rotY(world_points, math.pi / 7)
@@ -829,13 +829,17 @@ def draw_3d(d):
         proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
         polylines = cube_faces(proj_points)
 
-        # Distance averaging
         for face in polylines:
-            avg_z = sum(pt[2] for pt in face) / len(face)
-            all_faces_with_z.append((face, avg_z))
+            all_faces.append(face)
                 
         a += 0.2 # math.pi / 7
-                
+
+    # Distance averaging
+    all_faces_with_z = []
+    for face in all_faces:
+        avg_z = sum(pt[2] for pt in face) / len(face)
+        all_faces_with_z.append((face, avg_z))
+
     # Backface culling
     faces_with_z = []
     for face_with_z in all_faces_with_z:
