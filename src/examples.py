@@ -795,117 +795,6 @@ def draw_3d(d):
     t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
         
     h = 1
-    s = 0.6
-    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
-
-    i = 0
-    for x in range(-4, 5, 2):
-        for y in range(-4, 5, 2):
-            i += 1
-            if i % 2 == 100:
-                continue
-            world_points = [p for p in base_points]
-            world_points = [(p[0]+x, p[1]+y, p[2], p[3]) for p in world_points]
-            
-            a = math.pi / 11
-            world_points = Transform3D.rotY(world_points, a)
-            world_points = Transform3D.rotX(world_points, a*2)
-            proj_points = t.project(world_points)
-            
-            proj_points = [(x[0]+100, x[1]+100) for x in proj_points]
-            polylines = cube_points(proj_points)
-            d.add_polylines(polylines)
-
-def draw_3d2(d):
-
-    cameraToWorld = numpy.identity(4)
-    cameraToWorld[3][2] = 40
-    t = Transform3D(cameraToWorld, canvasWidth=1.2, canvasHeight=1.2, imageWidth=100, imageHeight=100)
-
-    paths = d.make_text("TEST", (0, 0), 24, family="Arial")
-
-    z = 0        
-    h = 1
-    paths_4pt = [[(pt[0], -pt[1], z, h) for pt in path] for path in paths]
-    
-    a = math.pi / 14
-    paths_4pt = Transform3D.rotY(paths_4pt, a)
-    paths_4pt = Transform3D.rotX(paths_4pt, a)
-
-    proj_polylines = t.project(paths_4pt)
-    
-    sf = ShapeFiller(proj_polylines)
-    proj_polylines = sf.get_paths(d.pen_type.pen_width / 5, angle=math.pi/2)
-    
-    d.add_polylines(proj_polylines)
-
-def draw_3d3(d):
-
-    cameraToWorld = numpy.identity(4)
-    cameraToWorld[3][2] = 3
-    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
-        
-    h = 1
-    s = 0.3
-    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
-
-    a = math.pi / 11
-    for i in range(0, 35):
-        world_points = [p for p in base_points]
-        world_points = Transform3D.rotZ(world_points, a)
-        world_points = Transform3D.rotY(world_points, math.pi / 7)
-        
-        xc = 2*math.cos(a)
-        yc = 2*math.sin(-a)
-        zc = -i/2
-        world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
-        
-        proj_points = t.project(world_points)
-        proj_points = [(x[0]+100, x[1]) for x in proj_points]
-        polylines = cube_points(proj_points)
-        d.add_polylines(polylines)
-        a += math.pi / 7
-
-def draw_3d4(d):
-
-    cameraToWorld = numpy.identity(4)
-    cameraToWorld[3][2] = 10
-    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
-        
-    h = 1
-    s = 0.3
-    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
-
-    a = math.pi / 11
-    n = 160
-    for i in range(0, n):
-        world_points = [p for p in base_points]
-        # world_points = Transform3D.rotY(world_points, math.pi / 7)
-        # world_points = Transform3D.rotX(world_points, math.pi / 7)
-        
-        # xc = 2*math.cos(a)
-        # yc = 2*math.sin(-a)
-        zc = (i - n/2)/14
-        xc = 6
-        yc = 0
-        # zc = 0
-        world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
-        world_points = Transform3D.rotZ(world_points, a)
-        world_points = Transform3D.rotX(world_points, math.pi * 0.5)
-        
-        proj_points = t.project(world_points)
-        proj_points = [(x[0]+20, x[1]+70) for x in proj_points]
-        polylines = cube_faces(proj_points)
-        d.add_polylines(polylines)
-        a += 0.2 # math.pi / 7
-
-def draw_3d5(d):
-
-    cameraToWorld = numpy.identity(4)
-    cameraToWorld[3][2] = 10
-    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
-        
-    h = 1
     s = 0.3
     base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
 
@@ -1044,13 +933,11 @@ def mothers_day(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_3d5(d)
+draw_3d(d)
 
 if False:
     mothers_day(d)
     draw_3d(d)
-    draw_3d2(d)
-    draw_3d3(d)
     draw_shape_clips(d)
     draw_word_square(d)
     draw_tree(d)
