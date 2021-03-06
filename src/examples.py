@@ -800,7 +800,7 @@ def draw_3d(d):
 
     a = math.pi / 11 + 1
     n = 200
-    faces_with_z = []
+    all_faces_with_z = []
     for i in range(0,n): # [110]: # range(0, n):
         world_points = [p for p in base_points]
         # world_points = Transform3D.rotY(world_points, math.pi / 7)
@@ -829,23 +829,30 @@ def draw_3d(d):
         proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
         polylines = cube_faces(proj_points)
 
-        # Backface culling and distance averaging
+        # Distance averaging
         for face in polylines:
             avg_z = sum(pt[2] for pt in face) / len(face)
-            x0 = face[0][0]
-            y0 = face[0][1]
-            x1 = face[1][0]
-            y1 = face[1][1]
-            x2 = face[2][0]
-            y2 = face[2][1]
-            x01 = x1 - x0
-            y01 = y1 - y0
-            x12 = x2 - x1
-            y12 = y2 - y1
-            norm = x01 * y12 - x12 * y01
-            if norm > 0:
-                faces_with_z.append((face, avg_z))
+            all_faces_with_z.append((face, avg_z))
+                
         a += 0.2 # math.pi / 7
+                
+    # Backface culling
+    faces_with_z = []
+    for face_with_z in all_faces_with_z:
+        face = face_with_z[0]
+        x0 = face[0][0]
+        y0 = face[0][1]
+        x1 = face[1][0]
+        y1 = face[1][1]
+        x2 = face[2][0]
+        y2 = face[2][1]
+        x01 = x1 - x0
+        y01 = y1 - y0
+        x12 = x2 - x1
+        y12 = y2 - y1
+        norm = x01 * y12 - x12 * y01
+        if norm > 0:
+            faces_with_z.append(face_with_z)
         
     # distance sorting    
     sorted_faces = sorted(faces_with_z, key=lambda x: x[1])
