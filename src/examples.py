@@ -777,6 +777,17 @@ def cube_points(proj_points):
     polylines.append([proj_points[3], proj_points[7]])
     return polylines
 
+def cube_faces(proj_points):
+
+    polylines = []
+    polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0]])
+    polylines.append([proj_points[1], proj_points[0], proj_points[4], proj_points[5], proj_points[1]])
+    polylines.append([proj_points[2], proj_points[1], proj_points[5], proj_points[6], proj_points[2]])
+    polylines.append([proj_points[3], proj_points[2], proj_points[6], proj_points[7], proj_points[3]])
+    polylines.append([proj_points[0], proj_points[3], proj_points[7], proj_points[4], proj_points[0]])
+    polylines.append([proj_points[7], proj_points[6], proj_points[5], proj_points[4], proj_points[7]])
+    return polylines
+
 def draw_3d(d):
 
     cameraToWorld = numpy.identity(4)
@@ -884,9 +895,91 @@ def draw_3d4(d):
         
         proj_points = t.project(world_points)
         proj_points = [(x[0]+20, x[1]+70) for x in proj_points]
-        polylines = cube_points(proj_points)
+        polylines = cube_faces(proj_points)
         d.add_polylines(polylines)
         a += 0.2 # math.pi / 7
+
+def draw_3d5(d):
+
+    cameraToWorld = numpy.identity(4)
+    cameraToWorld[3][2] = 10
+    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
+        
+    h = 1
+    s = 0.3
+    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
+
+    a = math.pi / 11 + 1
+    n = 200
+    faces_with_z = []
+    for i in range(0,n): # [110]: # range(0, n):
+        world_points = [p for p in base_points]
+        # world_points = Transform3D.rotY(world_points, math.pi / 7)
+        # world_points = Transform3D.rotX(world_points, math.pi / 7)
+        
+        # xc = 2*math.cos(a)
+        # yc = 2*math.sin(-a)
+        zc = (i - n/2)/14
+        xc = 6
+        yc = 0
+        # zc = 0
+        world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
+        world_points = Transform3D.rotZ(world_points, a)
+        world_points = Transform3D.rotX(world_points, math.pi * 0.5)
+
+        #world_points = [(p[0]-16, p[1], p[2], p[3]) for p in world_points]
+        #world_points = Transform3D.rotZ(world_points, a/20) # 0.03*i)
+        #world_points = [(p[0]+16, p[1], p[2], p[3]) for p in world_points]
+        #world_points = [(p[0]-16, p[1], p[2], p[3]) for p in world_points]
+
+        # world_points = Transform3D.rotX(world_points, math.pi * 0.1)
+
+        # world_points = Transform3D.rotY(world_points, math.pi * 0.2)
+        
+        proj_points = t.project(world_points)
+        proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
+        polylines = cube_faces(proj_points)
+
+        # Backface culling and distance averaging
+        for face in polylines:
+            avg_z = sum(pt[2] for pt in face) / len(face)
+            x0 = face[0][0]
+            y0 = face[0][1]
+            x1 = face[1][0]
+            y1 = face[1][1]
+            x2 = face[2][0]
+            y2 = face[2][1]
+            x01 = x1 - x0
+            y01 = y1 - y0
+            x12 = x2 - x1
+            y12 = y2 - y1
+            norm = x01 * y12 - x12 * y01
+            if norm > 0:
+                faces_with_z.append((face, avg_z))
+        a += 0.2 # math.pi / 7
+        
+    # distance sorting    
+    sorted_faces = sorted(faces_with_z, key=lambda x: x[1])
+    sorted_faces2 = [[(pt[0], pt[1]) for pt in line[0]] for line in sorted_faces]
+    
+    #for f in sorted_faces:
+    #    print(f)
+    print(f"Found {len(sorted_faces2)} faces")
+    shapes = []
+    all_polylines = []
+    for face in sorted_faces2:
+        if len(shapes) == 0:
+            all_polylines.append(face)
+            shapes.append(face[0:-1])
+        else:
+            print(f".", end='', flush=True)
+            sf = ShapeFiller(shapes)
+            clipped = sf.clip([face], union=True)
+            if len(clipped) > 0:
+                all_polylines.extend(clipped)
+                shapes.append(face[0:-1])
+    print(f"Adding polylines")
+    d.add_polylines(all_polylines)
 
 def mothers_day(d):
     all_polylines = []
@@ -951,7 +1044,7 @@ def mothers_day(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_3d4(d)
+draw_3d5(d)
 
 if False:
     mothers_day(d)

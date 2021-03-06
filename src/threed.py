@@ -32,8 +32,9 @@ class Transform3D:
         # Finally convert to pixel coordinates. Don't forget to invert the y coordinate
         raster_x = (ndc_x * self.imageWidth) 
         raster_y = ((1 - ndc_y) * self.imageHeight)
+        camera_z = -pCamera[2]
 
-        return (raster_x, raster_y)
+        return (raster_x, raster_y, camera_z)
     
     @staticmethod
     def rotX(points, a):
