@@ -1340,7 +1340,8 @@ class ShapeFiller:
                     intersect = ShapeFiller.line_intersection(edge, (shape_s, shape_e))
                     if not intersect is None:
                         k = intersect[0]
-                        # Don't count it as an interssction if we are very nearly at an endpoint
+                        # We don't count intersections as endpoints.
+                        # So don't count it as an interssction if we are very nearly at an endpoint
                         # You just end up with floating point errors giving us repeatedly dividing an edge by tiny amounts
                         if abs(k) > 1e-6 and abs(k-1) > 1e-6:
                             # Get the intersection point and split the edge at it
