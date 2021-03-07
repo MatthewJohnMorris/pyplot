@@ -1322,18 +1322,23 @@ class ShapeFiller:
                 edge_s = edge[0]
                 edge_e = edge[1]
                 shape_limits = self.shape_limits[ix_shape]
-                edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), max(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[1], edge_e[1]))
+                edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[0], edge_e[0]), max(edge_s[1], edge_e[1]))
                 if edge_limits.max_x < shape_limits.min_x:
                     #print("bail:min-x", edge_s, edge_e, shape_limits.min_x)
                     continue
                 if edge_limits.min_x > shape_limits.max_x:
-                    #print("bail:max-x")
+                    #print("bail:max-x", edge_s, edge_e, shape_limits.max_x)
                     continue
                 if edge_limits.max_y < shape_limits.min_y:
-                    #print("bail:min-y")
+                    #print("bail:min-y", edge_s, edge_e, shape_limits.min_y)
                     continue
                 if edge_limits.min_y > shape_limits.max_y:
-                    #print("bail:max-y")
+                    #print(shape)
+                    #print(edge_limits.min_y)
+                    #print(edge_limits.max_y)
+                    #print(shape_limits.min_y)
+                    #print(shape_limits.max_y)
+                    #print("bail:max-y", edge_s, edge_e, shape_limits.max_y)
                     continue
                 
                 # Try each shape edge in turn

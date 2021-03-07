@@ -239,6 +239,7 @@ def test_clip():
     polylines = clip_displaced_square(sf, (5,5))
     assert(len(polylines) == 1)
     assert(len(polylines[0]) == 5)
+    print(polylines)
     assert(polylines[0][0] == (20,15))
     assert(polylines[0][1] == (25,15))
     assert(polylines[0][2] == (25,25))
