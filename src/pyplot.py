@@ -15,6 +15,7 @@ from random import random, seed
 seed(10)
 
 import math
+import time
 
 from bezier import *
 
@@ -989,6 +990,10 @@ class CircleBlock:
         return path
 
 class ShapeFiller:
+
+    tot_split = 0
+    tot_split2 = 0
+    tot_split3 = 0
     
     class PathState:
 
@@ -1025,6 +1030,7 @@ class ShapeFiller:
         self.min_y = min(limit.min_y for limit in self.shape_limits)
         self.max_x = max(limit.max_x for limit in self.shape_limits)
         self.max_y = max(limit.max_y for limit in self.shape_limits)
+        self.tot = 0
 
     # "Clever" plotting of crossings
     # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
@@ -1220,22 +1226,23 @@ class ShapeFiller:
                     counts[crossing.ix_shape] = 1
                 else:
                     counts[crossing.ix_shape] += 1
-                    
-        if any:
-            for ix_shape in counts:
-                if ix_shape not in hits:
-                    if counts[ix_shape] % 2 == 1:
-                        return True
-            return False
         
         inside_count = 0
         for ix_shape in counts:
             if ix_shape not in hits:
                 if counts[ix_shape] % 2 == 1:
+                    if any:
+                        return True
                     inside_count += 1;
         return inside_count % 2 == 1
         
+    timeTotal1 = 0
+    timeTotal2 = 0
+
     def clip(self, polylines_input, union=False, inverse=False):
+
+        (t1, t2, t3) = (ShapeFiller.tot_split, ShapeFiller.tot_split2, ShapeFiller.tot_split3)
+        tStart = time.perf_counter()
     
         # Convert tuples to Point
         polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
@@ -1247,6 +1254,9 @@ class ShapeFiller:
         split_polylines = self.split_polylines(polylines)
         #print("post-split")
         #print(split_polylines)
+        
+        tEnd1 = time.perf_counter()
+        ShapeFiller.timeTotal1 += (tEnd1 - tStart)
         
         #print("start")
         clipped_polylines = []
@@ -1273,12 +1283,19 @@ class ShapeFiller:
             if len(path) > 0:
                 clipped_polylines.append(path)
                 path = []
+                
+        tEnd2 = time.perf_counter()
+        ShapeFiller.timeTotal2 += (tEnd2 - tEnd1)
+                
+        print("clip.split", ShapeFiller.tot_split - t1, ShapeFiller.tot_split2 - t2, ShapeFiller.tot_split3 - t3, ShapeFiller.timeTotal1, ShapeFiller.timeTotal2)
+            
         return clipped_polylines
-        
+
     def split_polylines(self, polylines):
         return [self.split_polyline(p) for p in polylines]
             
     def split_polyline(self, polyline):
+    
         s = polyline[0]
         path = [s]
         for e in polyline[1:]:
@@ -1287,13 +1304,17 @@ class ShapeFiller:
             s = e
         #if len(polyline) != len(path):
             #print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
+            
         return path
         
     def split_edge_endpoints(self, s, e):
+    
         split_edges = [(s, e)]
         i = 0
         while i < len(split_edges):
             for ix_shape in range(0, len(self.unrotated_shapes)):
+            
+                ShapeFiller.tot_split += 1
                 shape = self.unrotated_shapes[ix_shape]
                 
                 # Minimise full intersection checks: whole shape bounding box
@@ -1318,6 +1339,9 @@ class ShapeFiller:
                 # Try each shape edge in turn
                 n_points = len(shape)
                 for ix_s in range(0, n_points):
+                
+                    ShapeFiller.tot_split2 += 1
+                    
                     ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
                     shape_s = shape[ix_s]
                     shape_e = shape[ix_e]
@@ -1345,6 +1369,9 @@ class ShapeFiller:
                         # So don't count it as an interssction if we are very nearly at an endpoint
                         # You just end up with floating point errors giving us repeatedly dividing an edge by tiny amounts
                         if abs(k) > 1e-6 and abs(k-1) > 1e-6:
+                        
+                            ShapeFiller.tot_split3 += 1
+                            
                             # Get the intersection point and split the edge at it
                             pt = edge[0] + (edge[1] - edge[0]) * k
                             e = split_edges[i][1]

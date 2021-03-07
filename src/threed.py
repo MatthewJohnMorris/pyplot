@@ -1,6 +1,7 @@
 import math
 import numpy.matlib 
 import numpy as np 
+import time
 
 from pyplot import ShapeFiller
 
@@ -53,6 +54,9 @@ class Transform3D:
     
     @staticmethod
     def clip(sorted_faces):
+        
+        tStart = time.perf_counter()
+    
         shapes = []
         all_polylines = []
         for face in sorted_faces:
@@ -66,6 +70,10 @@ class Transform3D:
                 if len(clipped) > 0:
                     all_polylines.extend(clipped)
                     shapes.append(face[0:-1])
+                    
+        tEnd = time.perf_counter()
+        print("clip-tot", tEnd - tStart)
+                    
         return all_polylines
     
     @staticmethod
