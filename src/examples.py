@@ -802,28 +802,14 @@ def draw_3d(d):
     n = 200
     all_faces = []
     for i in range(0,n): # [110]: # range(0, n):
+    
         world_points = [p for p in base_points]
-        # world_points = Transform3D.rotY(world_points, math.pi / 7)
-        # world_points = Transform3D.rotX(world_points, math.pi / 7)
-        
-        # xc = 2*math.cos(a)
-        # yc = 2*math.sin(-a)
         zc = (i - n/2)/14
         xc = 6
         yc = 0
-        # zc = 0
         world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
         world_points = Transform3D.rotZ(world_points, a)
         world_points = Transform3D.rotX(world_points, math.pi * 0.5)
-
-        #world_points = [(p[0]-16, p[1], p[2], p[3]) for p in world_points]
-        #world_points = Transform3D.rotZ(world_points, a/20) # 0.03*i)
-        #world_points = [(p[0]+16, p[1], p[2], p[3]) for p in world_points]
-        #world_points = [(p[0]-16, p[1], p[2], p[3]) for p in world_points]
-
-        # world_points = Transform3D.rotX(world_points, math.pi * 0.1)
-
-        # world_points = Transform3D.rotY(world_points, math.pi * 0.2)
         
         proj_points = t.project(world_points)
         proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
