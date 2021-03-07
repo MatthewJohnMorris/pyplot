@@ -1301,16 +1301,17 @@ class ShapeFiller:
                 edge_s = edge[0]
                 edge_e = edge[1]
                 shape_limits = self.shape_limits[ix_shape]
-                if max(edge_s[0], edge_e[0]) < shape_limits.min_x:
+                edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), max(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[1], edge_e[1]))
+                if edge_limits.max_x < shape_limits.min_x:
                     #print("bail:min-x", edge_s, edge_e, shape_limits.min_x)
                     continue
-                if min(edge_s[0], edge_e[0]) > shape_limits.max_x:
+                if edge_limits.min_x > shape_limits.max_x:
                     #print("bail:max-x")
                     continue
-                if max(edge_s[1], edge_e[1]) < shape_limits.min_y:
+                if edge_limits.max_y < shape_limits.min_y:
                     #print("bail:min-y")
                     continue
-                if min(edge_s[1], edge_e[1]) > shape_limits.max_y:
+                if edge_limits.min_y > shape_limits.max_y:
                     #print("bail:max-y")
                     continue
                 
@@ -1322,16 +1323,16 @@ class ShapeFiller:
                     shape_e = shape[ix_e]
                     
                     # Minimise full intersection checks: shape edge bounding box
-                    if max(edge_s[0], edge_e[0]) < min(shape_s[0], shape_e[0]):
+                    if edge_limits.max_x < min(shape_s[0], shape_e[0]):
                         #print("bail:shape")
                         continue
-                    if min(edge_s[0], edge_e[0]) > max(shape_s[0], shape_e[0]):
+                    if edge_limits.min_x > max(shape_s[0], shape_e[0]):
                         #print("bail:shape")
                         continue
-                    if max(edge_s[1], edge_e[1]) < min(shape_s[1], shape_e[1]):
+                    if edge_limits.max_y < min(shape_s[1], shape_e[1]):
                         #print("bail:shape")
                         continue
-                    if min(edge_s[1], edge_e[1]) > max(shape_s[1], shape_e[1]):
+                    if edge_limits.min_y > max(shape_s[1], shape_e[1]):
                         #print("bail:shape")
                         continue
                         
@@ -1353,6 +1354,7 @@ class ShapeFiller:
                             edge = split_edges[i]
                             edge_s = edge[0]
                             edge_e = edge[1]
+                            edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), max(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[1], edge_e[1]))
                             
             # This edge has done intersection checks for all shapes: go to the next (if any)
             i += 1
