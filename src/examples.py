@@ -834,32 +834,7 @@ def draw_3d(d):
                 
         a += 0.2 # math.pi / 7
 
-    # Backface culling
-    faces_forward = [face for face in all_faces if Transform3D.isForward(face)]
-
-    # Distance averaging and sorting
-    faces_with_z = []
-    for face in faces_forward:
-        avg_z = sum(pt[2] for pt in face) / len(face)
-        faces_with_z.append((face, avg_z))
-    sorted_faces_with_z = sorted(faces_with_z, key=lambda x: x[1])
-    sorted_faces = [[(pt[0], pt[1]) for pt in line[0]] for line in sorted_faces_with_z]
-    
-    # Clipping
-    print(f"Found {len(sorted_faces)} faces")
-    shapes = []
-    all_polylines = []
-    for face in sorted_faces:
-        if len(shapes) == 0:
-            all_polylines.append(face)
-            shapes.append(face[0:-1])
-        else:
-            print(f".", end='', flush=True)
-            sf = ShapeFiller(shapes)
-            clipped = sf.clip([face], union=True)
-            if len(clipped) > 0:
-                all_polylines.extend(clipped)
-                shapes.append(face[0:-1])
+    all_polylines = Transform3D.convertToPolylines(all_faces)
                 
     print(f"Adding polylines")
     d.add_polylines(all_polylines)

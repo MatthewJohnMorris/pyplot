@@ -2,6 +2,8 @@ import math
 import numpy.matlib 
 import numpy as np 
 
+from pyplot import ShapeFiller
+
 class Transform3D:
 
     def __init__(self, cameraToWorld, canvasWidth, canvasHeight, imageWidth, imageHeight):
@@ -35,6 +37,45 @@ class Transform3D:
         camera_z = -pCamera[2]
 
         return (raster_x, raster_y, camera_z)
+    
+    @staticmethod
+    def convertToPolylines(all_faces):
+    
+        # Backface culling
+        faces_forward = [face for face in all_faces if Transform3D.isForward(face)]
+
+        # Distance averaging and sorting
+        sorted_faces = Transform3D.sortByDistance(faces_forward)
+        print(f"Found {len(sorted_faces)} faces")
+        
+        # Clipping
+        return Transform3D.clip(sorted_faces)
+    
+    @staticmethod
+    def clip(sorted_faces):
+        shapes = []
+        all_polylines = []
+        for face in sorted_faces:
+            if len(shapes) == 0:
+                all_polylines.append(face)
+                shapes.append(face[0:-1])
+            else:
+                print(f".", end='', flush=True)
+                sf = ShapeFiller(shapes)
+                clipped = sf.clip([face], union=True)
+                if len(clipped) > 0:
+                    all_polylines.extend(clipped)
+                    shapes.append(face[0:-1])
+        return all_polylines
+    
+    @staticmethod
+    def sortByDistance(faces):
+        faces_with_z = []
+        for face in faces:
+            avg_z = sum(pt[2] for pt in face) / len(face)
+            faces_with_z.append((face, avg_z))
+        sorted_faces_with_z = sorted(faces_with_z, key=lambda x: x[1])
+        return[face_with_z[0] for face_with_z in sorted_faces_with_z]
     
     @staticmethod
     def isForward(face):
