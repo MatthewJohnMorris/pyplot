@@ -1264,6 +1264,8 @@ class ShapeFiller:
             path = []
             s = polyline[0]
             for e in polyline[1:]:
+            
+                # are we going to include this edge?
                 m = (s + e) / 2
                 include = not self.is_inside(m, union)
                 if inverse:
@@ -1271,15 +1273,19 @@ class ShapeFiller:
                 #print(f"s={s}, e={e}, m={m}, include={include}")
                     
                 if include:
+                    # add to pending path
                     if len(path) == 0:
                         path.append(s)
                     path.append(e)
                     #print(path)
                 else:
+                    # commit any pending path
                     if len(path) > 0:
                         clipped_polylines.append(path)
                         path = []
                 s = e
+                
+            # commit any pending path
             if len(path) > 0:
                 clipped_polylines.append(path)
                 path = []
