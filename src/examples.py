@@ -799,7 +799,7 @@ def draw_3d(d):
     base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
 
     a = math.pi / 11 + 1
-    n = 200
+    n = 800
     all_faces = []
     for i in range(0,n): # [110]: # range(0, n):
     
@@ -812,11 +812,17 @@ def draw_3d(d):
         world_points = Transform3D.rotX(world_points, math.pi * 0.5)
         
         proj_points = t.project(world_points)
-        proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
-        polylines = cube_faces(proj_points)
+        any_none = False
+        for x in proj_points:
+            if x is None:
+                any_none = True
+                break
+        if not any_none:
+            proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
+            polylines = cube_faces(proj_points)
 
-        for face in polylines:
-            all_faces.append(face)
+            for face in polylines:
+                all_faces.append(face)
                 
         a += 0.2 # math.pi / 7
 
