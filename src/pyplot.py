@@ -1195,45 +1195,34 @@ class ShapeFiller:
         # Gross bounds check
         if pt.x <= self.min_x or pt.y <= self.min_y or pt.x >= self.max_x or pt.y >= self.max_y:
             return False
+
+        inside_count = 0
         
-        # Are we on a constant-y edge? get_crossings() ignores these so check up front
-        for shape in self.unrotated_shapes:
-            n_points = len(shape)
-            for ix_s in range(0, n_points):
-                ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
-                if shape[ix_s].y == pt.y and shape[ix_e].y == pt.y:
-                    xs = shape[ix_s].x
-                    xe = shape[ix_e].x
-                    if xs == pt.x or xe == pt.x:
-                        return False
-                    if xs > pt.x and pt.x > xe:
-                        return False
-                    if xs < pt.x and pt.x < xe:
-                        return False
-        
-        # Otherwise we exclude anything actually *on* an edge - otherwise we 
+        # We exclude anything actually *on* an edge - otherwise we 
         # are "inside" if we are inside an odd number of shapes. We are inside 
         # a given shape if we have an odd number of crossings as we increase x
-        crossings = ShapeFiller.get_crossings(self.unrotated_shapes, pt.y)
-            
-        counts = {}
-        hits = {}
-        for crossing in crossings:
-            if crossing.x == pt.x:
-                hits[crossing.ix_shape] = True
-            elif crossing.x > pt.x:
-                if not crossing.ix_shape in counts:
-                    counts[crossing.ix_shape] = 1
-                else:
-                    counts[crossing.ix_shape] += 1
+        for shape in self.unrotated_shapes:
         
-        inside_count = 0
-        for ix_shape in counts:
-            if ix_shape not in hits:
-                if counts[ix_shape] % 2 == 1:
-                    if any:
-                        return True
-                    inside_count += 1;
+            crossings = ShapeFiller.get_crossings([shape], pt.y)
+                
+            counts = {}
+            hits = {}
+            for crossing in crossings:
+                if crossing.x == pt.x:
+                    hits[crossing.ix_shape] = True
+                elif crossing.x > pt.x:
+                    if not crossing.ix_shape in counts:
+                        counts[crossing.ix_shape] = 1
+                    else:
+                        counts[crossing.ix_shape] += 1
+            
+            for ix_shape in counts:
+                if ix_shape not in hits:
+                    if counts[ix_shape] % 2 == 1:
+                        if any:
+                            return True
+                        inside_count += 1;
+                    
         return inside_count % 2 == 1
         
     timeTotal1 = 0
