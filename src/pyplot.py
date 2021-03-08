@@ -1246,6 +1246,7 @@ class ShapeFiller:
         
     timeTotal1 = 0
     timeTotal2 = 0
+    timeTotal3 = 0
 
     def clip(self, polylines_input, union=False, inverse=False):
 
@@ -1301,11 +1302,12 @@ class ShapeFiller:
         tEnd2 = time.perf_counter()
         ShapeFiller.timeTotal2 += (tEnd2 - tEnd1)
                 
-        print("clip.split", ShapeFiller.tot_split - t1, ShapeFiller.tot_split2 - t2, ShapeFiller.tot_split3 - t3, ShapeFiller.timeTotal1, ShapeFiller.timeTotal2)
+        print("clip.split", ShapeFiller.tot_split - t1, ShapeFiller.tot_split2 - t2, ShapeFiller.tot_split3 - t3, ShapeFiller.timeTotal1, ShapeFiller.timeTotal2, ShapeFiller.timeTotal3)
             
         return clipped_polylines
 
     def split_polylines(self, polylines):
+    
         return [self.split_polyline(p) for p in polylines]
             
     def split_polyline(self, polyline):
@@ -1331,7 +1333,11 @@ class ShapeFiller:
             edge = split_edges[i]
             edge_s = edge[0]
             edge_e = edge[1]
-            edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[0], edge_e[0]), max(edge_s[1], edge_e[1]))
+            edge_s_x = edge_s[0]
+            edge_s_y = edge_s[1]
+            edge_e_x = edge_e[0]
+            edge_e_y = edge_e[1]
+            edge_limits = ShapeFiller.Limits(min(edge_s_x, edge_e_x), min(edge_s_y, edge_e_y), max(edge_s_x, edge_e_x), max(edge_s_y, edge_e_y))
             
             # Check against overall bound
             if edge_limits.max_x < self.min_x:
@@ -1381,18 +1387,22 @@ class ShapeFiller:
                     ix_e = 0 if ix_s == n_points - 1 else ix_s + 1
                     shape_s = shape[ix_s]
                     shape_e = shape[ix_e]
+                    shape_s_x = shape_s[0]
+                    shape_e_x = shape_e[0]
+                    shape_s_y = shape_s[1]
+                    shape_e_y = shape_e[1]
                     
                     # Minimise full intersection checks: shape edge bounding box
-                    if edge_limits.max_x < min(shape_s[0], shape_e[0]):
+                    if edge_limits.max_x < min(shape_s_x, shape_e_x):
                         #print("bail:shape")
                         continue
-                    if edge_limits.min_x > max(shape_s[0], shape_e[0]):
+                    if edge_limits.min_x > max(shape_s_x, shape_e_x):
                         #print("bail:shape")
                         continue
-                    if edge_limits.max_y < min(shape_s[1], shape_e[1]):
+                    if edge_limits.max_y < min(shape_s_y, shape_e_y):
                         #print("bail:shape")
                         continue
-                    if edge_limits.min_y > max(shape_s[1], shape_e[1]):
+                    if edge_limits.min_y > max(shape_s_y, shape_e_y):
                         #print("bail:shape")
                         continue
                         
@@ -1400,6 +1410,9 @@ class ShapeFiller:
                     #print("check", edge, (shape_s, shape_e))
                     intersect = ShapeFiller.line_intersection(edge, (shape_s, shape_e))
                     if not intersect is None:
+                    
+                        tStart3 = time.perf_counter()
+                    
                         k = intersect[0]
                         # We don't count intersections as endpoints.
                         # So don't count it as an interssction if we are very nearly at an endpoint
@@ -1418,6 +1431,9 @@ class ShapeFiller:
                             edge_s = edge[0]
                             edge_e = edge[1]
                             edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), max(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[1], edge_e[1]))
+
+                        tEnd3 = time.perf_counter()
+                        ShapeFiller.timeTotal3 += (tEnd3 - tStart3)
                             
             # This edge has done intersection checks for all shapes: go to the next (if any)
             i += 1
