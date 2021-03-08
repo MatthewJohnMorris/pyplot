@@ -67,9 +67,11 @@ class Transform3D:
             else:
                 # 4% just from this!
                 print(f".", end='', flush=True)
+                
+                # TODO: extend rather than recreate
                 sf = ShapeFiller(shapes)
                 
-                # 50% of the time spent here?
+                # Only 50% of the time spent here?
                 clipped = sf.clip([face], union=True)
                 
                 if len(clipped) > 0:
