@@ -57,31 +57,34 @@ class Transform3D:
         
         tStart = time.perf_counter()
     
-        shapes = []
+        all_shapes = []
         all_polylines = []
         
         for face in sorted_faces:
-            if len(shapes) == 0:
+            if len(all_shapes) == 0:
                 all_polylines.append(face)
-                shapes.append(face[0:-1])
+                shape = face[0:-1]
+                all_shapes.append(shape)
+                sf = ShapeFiller([shape])
             else:
                 # 4% just from this!
                 print(f".", end='', flush=True)
                 
                 # TODO: extend rather than recreate
-                sf = ShapeFiller(shapes)
                 
                 # Only 50% of the time spent here?
                 clipped = sf.clip([face], union=True)
                 
                 if len(clipped) > 0:
                     all_polylines.extend(clipped)
-                    shapes.append(face[0:-1])
+                    shape = face[0:-1]
+                    all_shapes.append(shape)
+                    sf.add_shape(shape)
                     
         tEnd = time.perf_counter()
         print("clip-tot", tEnd - tStart)
         print(f"len(all_polylines)={len(all_polylines)}")
-        print(f"len(shapes)={len(shapes)}")
+        print(f"len(shapes)={len(all_shapes)}")
                     
         return all_polylines
     

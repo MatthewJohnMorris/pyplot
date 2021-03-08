@@ -1032,6 +1032,16 @@ class ShapeFiller:
         self.max_y = max(limit.max_y for limit in self.shape_limits)
         self.tot = 0
 
+    def add_shape(self, shape):
+        shape = [Point.From(pt) for pt in shape]
+        self.unrotated_shapes.append(shape)
+        limit = ShapeFiller.Limits(min([pt.x for pt in shape]), min(pt.y for pt in shape), max([pt.x for pt in shape]), max(pt.y for pt in shape))
+        self.shape_limits.append(limit)
+        self.min_x = min(limit.min_x, self.min_x)
+        self.min_y = min(limit.min_y, self.min_y)
+        self.max_x = max(limit.max_x, self.max_x)
+        self.max_y = max(limit.max_y, self.max_y)
+
     # "Clever" plotting of crossings
     # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
     # Could try to reorder to get optimal TSP type path between sections but won't really make much difference to time
