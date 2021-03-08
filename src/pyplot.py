@@ -944,20 +944,20 @@ class StandardDrawing:
             e = sorted[-1][-1]
             # print(e)
             is_fwd = True
-            min_dist = 1000000
+            min_dist2 = 100000000000000000
             min_ix = 0
             for i in range(0, len(unsorted)):
                 p = unsorted[i]
-                dist_s = (e - p[0]).dist()
-                dist_e = (e - p[-1]).dist()
-                if dist_e < min_dist:
+                dist2_s = (e - p[0]).dist2()
+                dist2_e = (e - p[-1]).dist2()
+                if dist2_e < min_dist2:
                     min_ix = i
                     is_fwd = False
-                    min_dist = dist_e
-                if dist_s < min_dist:
+                    min_dist2 = dist2_e
+                if dist2_s < min_dist2:
                     min_ix = i
                     is_fwd = True
-                    min_dist = dist_s
+                    min_dist2 = dist2_s
                     
             best = unsorted[min_ix]
             sorted.append(best if is_fwd else best[::-1])
@@ -1636,6 +1636,9 @@ class Point:
 
     def dist(self):
         return math.sqrt(self.x*self.x + self.y*self.y)
+
+    def dist2(self):
+        return self.x*self.x + self.y*self.y
 
     def norm(self):
         dist = self.dist()

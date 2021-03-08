@@ -888,7 +888,8 @@ def mothers_day(d):
 d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-draw_shape_clips(d)
+#import cProfile
+#cProfile.run('draw_3d(d)')
 draw_3d(d)
 
 if False:
