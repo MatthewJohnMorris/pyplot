@@ -1512,7 +1512,9 @@ class ShapeFiller:
                 x_e = shape[ix_e].x
                 
                 # We want to be a bit careful about *what* crossings we add!
-                if y_e == y and y_s == y:
+                if (y_s < y and y_e < y) or (y_s > y and y_e > y):
+                    continue
+                elif y_e == y and y_s == y:
                     # We are wholly along the y-line - we ignore segments like this
                     hits = hits
                 elif y_e == y:
