@@ -1201,8 +1201,17 @@ class ShapeFiller:
         # We exclude anything actually *on* an edge - otherwise we 
         # are "inside" if we are inside an odd number of shapes. We are inside 
         # a given shape if we have an odd number of crossings as we increase x
-        for shape in self.unrotated_shapes:
+        for ix_shape in range(0, len(self.unrotated_shapes)):
         
+            shape = self.unrotated_shapes[ix_shape]
+            shape_limit = self.shape_limits[ix_shape]
+
+            # Short-circuit if we know we're outside shape bounds
+            if pt.y > shape_limit.max_y:
+                continue
+            if pt.y < shape_limit.min_y:
+                continue
+            
             crossings = ShapeFiller.get_crossings([shape], pt.y)
                 
             counts = {}
@@ -1307,17 +1316,34 @@ class ShapeFiller:
         split_edges = [(s, e)]
         i = 0
         while i < len(split_edges):
+
+            # Get edge details
+            edge = split_edges[i]
+            edge_s = edge[0]
+            edge_e = edge[1]
+            edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[0], edge_e[0]), max(edge_s[1], edge_e[1]))
+            
+            # Check against overall bound
+            if edge_limits.max_x < self.min_x:
+                i += 1
+                continue
+            if edge_limits.min_x > self.max_x:
+                i += 1
+                continue
+            if edge_limits.max_y < self.min_y:
+                i += 1
+                continue
+            if edge_limits.min_y > self.max_y:
+                i += 1
+                continue
+        
             for ix_shape in range(0, len(self.unrotated_shapes)):
             
                 ShapeFiller.tot_split += 1
                 shape = self.unrotated_shapes[ix_shape]
+                shape_limits = self.shape_limits[ix_shape]
                 
                 # Minimise full intersection checks: whole shape bounding box
-                edge = split_edges[i]
-                edge_s = edge[0]
-                edge_e = edge[1]
-                shape_limits = self.shape_limits[ix_shape]
-                edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[0], edge_e[0]), max(edge_s[1], edge_e[1]))
                 if edge_limits.max_x < shape_limits.min_x:
                     #print("bail:min-x", edge_s, edge_e, shape_limits.min_x)
                     continue
