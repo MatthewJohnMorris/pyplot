@@ -933,9 +933,16 @@ class StandardDrawing:
     @staticmethod
     def sort_polylines(polylines_input):
 
+        tStart = time.perf_counter()
+
         # Convert tuples to Points
         polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
+
+        k = len(polylines)
+        n = 0
         
+        # O(n*n) single greedy runthrough. Not exactly optimised, but full-on TSP seems overkill
+        # and I can't be bothered to try out space-filling curves or space partitioning trees.
         i_start = 0
         unsorted = [x for x in polylines]
         sorted = [unsorted[i_start]]
@@ -947,6 +954,9 @@ class StandardDrawing:
             min_dist2 = 100000000000000000
             min_ix = 0
             for i in range(0, len(unsorted)):
+            
+                n += 1
+            
                 p = unsorted[i]
                 dist2_s = (e - p[0]).dist2()
                 dist2_e = (e - p[-1]).dist2()
@@ -963,6 +973,10 @@ class StandardDrawing:
             sorted.append(best if is_fwd else best[::-1])
             del unsorted[min_ix:min_ix+1]
     
+        tEnd = time.perf_counter()
+        print(F"sort-tot for {len(polylines)} polylines", tEnd - tStart)
+        print(F"Estimated Comparisons: {n} vs {k*(k+1)/2}")
+
         return sorted
 
 class CircleBlock:    
@@ -1662,3 +1676,6 @@ class Point:
 
     def __repr__(self):
         return f"({self.x},{self.y})"
+        
+    def __hash__(self):
+        return hash((self.x, self.y))
