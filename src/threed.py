@@ -84,7 +84,7 @@ class Transform3D:
             sf.add_shape(shape)
                     
         tEnd = time.perf_counter()
-        print("clip-tot", tEnd - tStart)
+        print(f"clip-tot={tEnd - tStart:.2f}s")
         print(f"len(all_polylines)={len(all_polylines)}")
         print(f"len(shapes)={len(all_shapes)}")
                     

@@ -974,7 +974,7 @@ class StandardDrawing:
             del unsorted[min_ix:min_ix+1]
     
         tEnd = time.perf_counter()
-        print(F"sort-tot for {len(polylines)} polylines", tEnd - tStart)
+        print(F"sort-tot for {len(polylines)} polylines={tEnd - tStart:.2f}s")
         print(F"Estimated Comparisons: {n} vs {k*(k+1)/2}")
 
         return sorted
@@ -1316,7 +1316,7 @@ class ShapeFiller:
         tEnd2 = time.perf_counter()
         ShapeFiller.timeTotal2 += (tEnd2 - tEnd1)
                 
-        print("clip.split", ShapeFiller.tot_split - t1, ShapeFiller.tot_split2 - t2, ShapeFiller.tot_split3 - t3, ShapeFiller.timeTotal1, ShapeFiller.timeTotal2, ShapeFiller.timeTotal3)
+        print(F"clip.split: s-chk={ShapeFiller.tot_split - t1}, e-chk={ShapeFiller.tot_split2 - t2}, i-chk={ShapeFiller.tot_split3 - t3}, clip={ShapeFiller.timeTotal1:.2f}, is={ShapeFiller.timeTotal2:.2f}, int={ShapeFiller.timeTotal3:.2f}")
             
         return clipped_polylines
 
