@@ -818,7 +818,8 @@ def draw_3d(d):
                 any_none = True
                 break
         if not any_none:
-            proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
+            # 20, 105
+            proj_points = [(x[0]+105, x[1]+70, x[2]) for x in proj_points]
             polylines = cube_faces(proj_points)
 
             for face in polylines:
