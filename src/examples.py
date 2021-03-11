@@ -343,7 +343,7 @@ def complex_fill(d):
 def fill_test(d):
 
     points = []
-    for i in range(1, 11):
+    for i in range(2, 11):
         tl = (80,20+20*i)
         sq = d.make_rect(tl, 18, 18)
         sf = ShapeFiller([sq])
@@ -892,13 +892,17 @@ def mothers_day(d):
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
-d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+# d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
+# d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron03())
+d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-draw_3d(d)
+fill_test(d)
+# draw_3d(d)
 
 if False:
     mothers_day(d)

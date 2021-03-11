@@ -98,21 +98,30 @@ class PenType:
 
     def __init__(self, name, is_black, pen_width, stroke_width, bw_converter, rgb_converter):
         self.name = name
+        # Note - if we are on a black background you will have a black rectangle added (on a layer whose name starts with "x") so you
+        # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
+        # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
         self.is_black = is_black
         self.pen_width = pen_width
         self.stroke_width = stroke_width
         self.bw_converter = bw_converter
         self.rgb_converter = rgb_converter
 
+    # In all cases, a decent solid fill can be had for a gap up to about 0.4 * penwidth
+
     @staticmethod
-    # Fills
-    # * Moonlight: 0.2*width (0.12mm), and max GRBL speed of 1000
-    # * Metallic: 0.4*width (0.24mm), and max GRBL speed of 2000
-    def GellyRollOnBlack():
-        # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
-        # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
-        # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
+    def GellyRollMetallicOnBlack():
+        # While official number for line width is apparently 0.4mm, the relationship of Metallic fills to other pens in terms of the 
+        # spacing required indicates a wider line - more like the 0.6mm used here.
         return PenType('GellyRollOnBlack', True, 0.6, '0.45px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
+        
+    @staticmethod
+    def GellyRollMoonlightOnBlack():
+        return PenType('GellyRollOnBlack', True, 0.35, '0.25px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
+        
+    @staticmethod
+    def PigmaMicron03():
+        return PenType('PigmaMicron05', False, 0.35, '0.25px', BWConverters.AverageIntensity, CMYKConverters.PigmaMicron)
         
     @staticmethod
     def PigmaMicron05():
