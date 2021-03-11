@@ -27,18 +27,22 @@ def draw_riley(drawing):
 
     nslice = 40    
     
+    polylines = []
+    
     for i in range(0, nslice):    
         b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
         path = drawing.fill_in_paths(b.path_gen_f)
-        drawing.add_polyline(path)
+        polylines.append(path)
         
         b = CircleBlock((105, 105), 38, 0.06, (94, 102), 22, -0.04, 2 * nslice, i * 2 + 1)
         path = drawing.fill_in_paths(b.path_gen_f)
-        drawing.add_polyline(path)
+        polylines.append(path)
         
         b = CircleBlock((94, 102), 22, -0.04, (100, 100), 13, 0.01, 2 * nslice, i * 2)
         path = drawing.fill_in_paths(b.path_gen_f)
-        drawing.add_polyline(path)
+        polylines.append(path)
+
+    drawing.add_polylines(polylines)
 
 def draw_unknown_pleasures(drawing):
 
@@ -344,7 +348,7 @@ def fill_test(d):
 
     points = []
     for i in range(2, 11):
-        tl = (80,20+20*i)
+        tl = (100,20+20*i)
         sq = d.make_rect(tl, 18, 18)
         sf = ShapeFiller([sq])
         for path in sf.get_paths(i*d.pen_type.pen_width / 10):
@@ -413,7 +417,6 @@ def test_boxed_text(d):
 
 def speed_limit_test(d):
     mult = 0.4
-    layer = d.add_layer("1")
     bases = [Point(20, 20), Point(120,20), Point(20, 70), Point(120, 70), Point(20, 120), Point(120, 120), Point(20, 170), Point(120, 170)]
     ix_layer = 1
     for base in bases:
@@ -896,12 +899,15 @@ def mothers_day(d):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-fill_test(d)
+draw_riley(d)
+# speed_limit_test(d)
+# fill_test(d)
 # draw_3d(d)
 
 if False:
