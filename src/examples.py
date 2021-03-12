@@ -902,25 +902,18 @@ def draw_riley2(drawing):
 
     print("x")
     
-    for i in range(0, nslice):    
-        b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
-        #path = drawing.fill_in_paths(b.path_gen_f)
-        #polylines.append(path)
+    i = 5
         
-        if i == 5:
-            c = Point(55, 115)
-            b = CircleBlock(c, 38, 0.06, (c.x-11, c.y-3), 22, -0.04, 2 * nslice, i * 2 + 1)
-            path2 = drawing.fill_in_paths(b.path_gen_f)
-            path = []
-            for pt in path2:
-                path.append(c + (pt - c) * 4)
-            polylines.append(path2[::-1])
-        
-        b = CircleBlock((94, 102), 22, -0.04, (100, 100), 13, 0.01, 2 * nslice, i * 2)
-        #path = drawing.fill_in_paths(b.path_gen_f)
-        #polylines.append(path)
+    c = Point(55, 115)
+    b = CircleBlock(c, 38, 0.06, (c.x-11, c.y-3), 22, -0.04, 2 * nslice, i * 2 + 1)
+    path2 = drawing.fill_in_paths(b.path_gen_f)
+    path = []
+    for pt in path2:
+        path.append(c + (pt - c) * 4)
+    polylines.append(path2[::-1])
 
     print(len(polylines))
+    print(polylines)
     drawing.add_polylines(polylines)
 
 
