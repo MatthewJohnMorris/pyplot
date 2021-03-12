@@ -1165,8 +1165,29 @@ class ShapeFiller:
                         p_start = c_s if connection == "s" else c_e
                         p_end = c_e if connection == "s" else c_s
                         path_points = path_state.path
-                        path_points.append((p_start.x, y_for_scan))
-                        path_points.append((p_end.x, y_for_scan))
+                        
+                        # move what we actually plot inward by distance between rows:
+                        # * avoids rasterisation crossing the shape boundary
+                        # * avoids boundary being bolder than interior
+                        start_x = p_start.x
+                        end_x = p_end.x
+                        if start_x < end_x:
+                            start_x += row_width
+                            end_x -= row_width
+                            if start_x > end_x:
+                                avg_x = (start_x + end_x) / 2
+                                start_x = avg_x
+                                end_x = avg_x
+                        else:
+                            start_x -= row_width
+                            end_x += row_width
+                            if start_x < end_x:
+                                avg_x = (start_x + end_x) / 2
+                                start_x = avg_x
+                                end_x = avg_x
+                        
+                        path_points.append((start_x, y_for_scan))
+                        path_points.append((end_x, y_for_scan))
                         # keep track of which pointt we ended with for this scan line and section
                         path_state.c_prev = p_end
                         # we've found a connection so no need to look at other sections for previous scan line

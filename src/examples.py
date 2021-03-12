@@ -4,7 +4,9 @@
 # * pycairo (for text)
 # * svgwrite
 
+print("hi2")
 import cv2
+print("hi3")
 
 import csv
 
@@ -22,27 +24,6 @@ from pyplot import CircleBlock, PenType, Point, StandardDrawing, ShapeFiller
 from perlin import PerlinNoise
 from bezier import *
 from threed import *
-
-def draw_riley(drawing):    
-
-    nslice = 40    
-    
-    polylines = []
-    
-    for i in range(0, nslice):    
-        b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
-        path = drawing.fill_in_paths(b.path_gen_f)
-        polylines.append(path)
-        
-        b = CircleBlock((105, 105), 38, 0.06, (94, 102), 22, -0.04, 2 * nslice, i * 2 + 1)
-        path = drawing.fill_in_paths(b.path_gen_f)
-        polylines.append(path)
-        
-        b = CircleBlock((94, 102), 22, -0.04, (100, 100), 13, 0.01, 2 * nslice, i * 2)
-        path = drawing.fill_in_paths(b.path_gen_f)
-        polylines.append(path)
-
-    drawing.add_polylines(polylines)
 
 def draw_unknown_pleasures(drawing):
 
@@ -892,6 +873,57 @@ def mothers_day(d):
     
     d.add_circle(pos, 60)
 
+def draw_riley(drawing):    
+
+    nslice = 40    
+    
+    polylines = []
+    
+    for i in range(0, nslice):    
+        b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
+        path = drawing.fill_in_paths(b.path_gen_f)
+        polylines.append(path)
+        
+        b = CircleBlock((105, 105), 38, 0.06, (94, 102), 22, -0.04, 2 * nslice, i * 2 + 1)
+        path = drawing.fill_in_paths(b.path_gen_f)
+        polylines.append(path)
+        
+        b = CircleBlock((94, 102), 22, -0.04, (100, 100), 13, 0.01, 2 * nslice, i * 2)
+        path = drawing.fill_in_paths(b.path_gen_f)
+        polylines.append(path)
+
+    drawing.add_polylines(polylines)
+
+def draw_riley2(drawing):    
+
+    nslice = 40    
+    
+    polylines = []
+
+    print("x")
+    
+    for i in range(0, nslice):    
+        b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
+        #path = drawing.fill_in_paths(b.path_gen_f)
+        #polylines.append(path)
+        
+        if i == 5:
+            c = Point(55, 115)
+            b = CircleBlock(c, 38, 0.06, (c.x-11, c.y-3), 22, -0.04, 2 * nslice, i * 2 + 1)
+            path2 = drawing.fill_in_paths(b.path_gen_f)
+            path = []
+            for pt in path2:
+                path.append(c + (pt - c) * 4)
+            polylines.append(path2[::-1])
+        
+        b = CircleBlock((94, 102), 22, -0.04, (100, 100), 13, 0.01, 2 * nslice, i * 2)
+        #path = drawing.fill_in_paths(b.path_gen_f)
+        #polylines.append(path)
+
+    print(len(polylines))
+    drawing.add_polylines(polylines)
+
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -905,7 +937,7 @@ d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-draw_riley(d)
+draw_riley2(d)
 # speed_limit_test(d)
 # fill_test(d)
 # draw_3d(d)
