@@ -1065,6 +1065,18 @@ class ShapeFiller:
         self.max_x = max(limit.max_x, self.max_x)
         self.max_y = max(limit.max_y, self.max_y)
 
+    def norm_dot_product(v1, v2):
+        #print("v1", v1)
+        #print("v2", v2)
+        diff1 = v1[1] - v1[0]
+        diff2 = v2[1] - v2[0]
+        dist1 = diff1.dist()
+        dist2 = diff2.dist()
+        norm1 = diff1 / dist1
+        norm2 = diff2 / dist2
+        dot = norm1.x * norm2.x + norm1.y * norm2.y
+        return dot
+
     # "Clever" plotting of crossings
     # Aims to keep as many connected regions going as possible - think it's pretty much optimal from that standpoint
     # Could try to reorder to get optimal TSP type path between sections but won't really make much difference to time
@@ -1140,16 +1152,25 @@ class ShapeFiller:
                     # This path didn't have anything in the previous scan line so we can't connect to it
                     if prev_path_state.c_prev == None:
                         continue
+                        
                     # Try to connect to the previous scan line - can we reach either of our two crossing points by
                     # going around the shape that the previous line ended on, without y decreasing?
                     c_prev = prev_path_state.c_prev
                     connection = ""
-                    if ShapeFiller.is_on_continuation_of(shapes, c_s, c_prev):
+                    s_edge = ShapeFiller.continuation_of(shapes, c_s, c_prev)
+                    e_edge = None
+                    connect_info = None
+                    if not s_edge is None:
                         # We can reach c_s by continuing around the shape from c_prev
                         connection = "s"
-                    elif ShapeFiller.is_on_continuation_of(shapes, c_e, c_prev):
-                        # We can reach c_e by continuing around the shape from c_prev
-                        connection = "e"
+                        connect_info = (c_s, s_edge)
+                    else:
+                        e_edge = ShapeFiller.continuation_of(shapes, c_e, c_prev)
+                        if not e_edge is None:
+                            # We can reach c_e by continuing around the shape from c_prev
+                            connection = "e"
+                            connect_info = (c_e, e_edge)
+                            
                     # Successful connection
                     if connection != "":
                         # swap the section we've connected to, to move it over to our index
@@ -1166,23 +1187,55 @@ class ShapeFiller:
                         p_end = c_e if connection == "s" else c_s
                         path_points = path_state.path
                         
+                        # sooo. here's an idea - adjust the amount moved back to account for the angle between our scan line
+                        # and the edge that we are heading towards.
+                        # p_end is the relevant point - how can we find out what edge it's on
+                        # think we'll need to extent is_on_continuation_of
+                        # ok... connect_info is the one
+                        # try dot product of norm vectors between connect_info and our path
+                        # that's cos(theta) = c
+                        # divide by sin = sqrt(1 - c*c) to get the backoff
+                        # hmm I don't seem to have this quite right, but it's definitely the right kind of idea
+                        # i think it needs to differentiate between the starting and ending edge for angles
+                        # right now it's just the starting connection for both, which is wrong
+                        # this may need a rejig of all the logic since normally we don't look ahead for the edge hookups
+                        # I think that's the tricky bit. Where do we end the line we're drawing? We don't know until we know what edge it htis.
+                        #print("p_start", p_start)
+                        #print("p_end", p_end)
+                        pt_start = Point(p_start.x, y_for_scan)
+                        pt_end = Point(p_end.x, y_for_scan)
+                        #print("pt_start", pt_start)
+                        #print("pt_end", pt_end)
+                        shape_s = shapes[p_start.ix_shape]
+                        edge_s = (shape_s[p_start.ix_s], shape_s[p_start.ix_e])
+                        shape_e = shapes[p_end.ix_shape]
+                        edge_e = (shape_s[p_end.ix_s], shape_s[p_end.ix_e])
+                        c_start = ShapeFiller.norm_dot_product(edge_s, (pt_start, pt_end))
+                        c_end = ShapeFiller.norm_dot_product(edge_e, (pt_start, pt_end))
+                        s_start = math.sqrt(1 - c_start*c_start)
+                        s_end = math.sqrt(1 - c_end*c_end)
+                        backoff_start = row_width / s_start
+                        backoff_end = row_width / s_end
+                        
+                        # carry on from here....
+                        
                         # move what we actually plot inward by distance between rows:
                         # * avoids rasterisation crossing the shape boundary
                         # * avoids boundary being bolder than interior
                         start_x = p_start.x
                         end_x = p_end.x
                         if start_x < end_x:
-                            start_x += row_width
-                            end_x -= row_width
+                            start_x += backoff_start
+                            end_x -= backoff_end
                             if start_x > end_x:
-                                avg_x = (start_x + end_x) / 2
+                                avg_x = (p_start.x + p_end.x) / 2
                                 start_x = avg_x
                                 end_x = avg_x
                         else:
-                            start_x -= row_width
-                            end_x += row_width
+                            start_x -= backoff_start
+                            end_x += backoff_end
                             if start_x < end_x:
-                                avg_x = (start_x + end_x) / 2
+                                avg_x = (p_start.x + p_end.x) / 2
                                 start_x = avg_x
                                 end_x = avg_x
                         
@@ -1521,7 +1574,7 @@ class ShapeFiller:
         return None
    
     @staticmethod
-    def is_on_continuation_of(shapes, c, c_prev):
+    def continuation_of(shapes, c, c_prev):
         # "Can we reach c by continuing around the shape c_prev is on, without decreaing our y-value?"
         # 
         # Each crossing has x, shape, ix_s, ix_e
@@ -1532,7 +1585,7 @@ class ShapeFiller:
         
         # Must be the same shape!
         if c.ix_shape != c_prev.ix_shape:
-            return False
+            return None
           
         # What we are trying to find
         curr_edge = [c.ix_s, c.ix_e]
@@ -1546,7 +1599,7 @@ class ShapeFiller:
         # print(f"Previous is {[prev_ix1, prev_ix2]}: {shape[prev_ix1]}->{shape[prev_ix2]}")
         if prev_ix1 in curr_edge and prev_ix2 in curr_edge:
             # print("Search: on same edge")
-            return True
+            return curr_edge
         
         # We're not on the same edge as c_prev. But are we on a subsequent one? Figure out which direction
         # to start looking in - need y to be increasing. Note that y cannot be the same on both ends because
@@ -1573,11 +1626,11 @@ class ShapeFiller:
             # y has started decreasing - give up
             if y_next < y_curr:
                 # print("Search: not found")
-                return False
+                return None
             # we have reached our edge
             if ix in curr_edge and ix_next in curr_edge:
                 # print("Search: found")
-                return True
+                return curr_edge
             # keep looking
             y_curr = y_next
             ix = ix_next

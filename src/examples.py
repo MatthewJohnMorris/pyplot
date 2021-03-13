@@ -904,7 +904,7 @@ def draw_riley2(drawing):
     
     i = 5
         
-    c = Point(55, 115)
+    c = Point(55, 155)
     b = CircleBlock(c, 38, 0.06, (c.x-11, c.y-3), 22, -0.04, 2 * nslice, i * 2 + 1)
     path2 = drawing.fill_in_paths(b.path_gen_f)
     path = []
@@ -912,8 +912,13 @@ def draw_riley2(drawing):
         path.append(c + (pt - c) * 4)
     polylines.append(path2[::-1])
 
-    print(len(polylines))
-    print(polylines)
+    # TODO: sort out anonalous point
+    # * is it at the start or the end?
+    # * dump out the details
+    # * sort out what's going wrong
+
+    #print(len(polylines))
+    #print(polylines)
     drawing.add_polylines(polylines)
 
 
