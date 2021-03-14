@@ -5,7 +5,7 @@
 # * svgwrite
 
 print("hi2")
-import cv2
+# import cv2
 print("hi3")
 
 import csv
@@ -13,17 +13,25 @@ import csv
 import svgwrite
 from svgwrite.extensions import Inkscape
 
+print("hi4")
+
 from random import random, seed
 seed(10)
   
 import math
 
+print("hi4-prenumpy")
+
 import numpy
+
+print("hi4")
 
 from pyplot import CircleBlock, PenType, Point, StandardDrawing, ShapeFiller
 from perlin import PerlinNoise
 from bezier import *
 from threed import *
+
+print("hi4")
 
 def draw_unknown_pleasures(drawing):
 
@@ -276,11 +284,14 @@ def test_height(d):
 
     # x: 20 to 180 -> 160 gap, 5 
     # y: 20 to 260 -> 240 gap, 7
+    print("a")
     dotsize = 1
     sqsize = 3
-    for x in range(20, 200, 40):
-        for y in range(20, 280, 40):
-            d.add_dot((x, y), dotsize)
+    # y 10 restored
+    centres = [ (8,10), (8,286), (197,286), (197,10)]
+    d.add_polygon(centres)
+    # true centre = (102.5, 148)?
+    # round to (102, 148)
 
 def test_shape_filler(d):
 
@@ -932,13 +943,19 @@ def draw_riley2(drawing):
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
+# take (102, 148) as centre of A4 given where everything currently sits
+# effective area in each direction is (94, 138), e.g. (8,10) at top left
+# restriction is at max-y - could get a few mm more by shifting paper in neg-y direction, but doesn't seem worth it
+
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-draw_riley2(d)
+# draw_riley(d)
 # speed_limit_test(d)
 # fill_test(d)
 # draw_3d(d)
+# draw_tree(d)
+test_height(d)
 
 if False:
     mothers_day(d)
