@@ -943,9 +943,11 @@ def draw_riley2(drawing):
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 
-# take (102, 148) as centre of A4 given where everything currently sits
+# take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
 # restriction is at max-y - could get a few mm more by shifting paper in neg-y direction, but doesn't seem worth it
+paper_centre = Point(102.5, 148)
+paper_size = Point(192, 276)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
