@@ -657,7 +657,7 @@ class StandardDrawing:
         r = 0.5 # initial radius
         a = 0 # starting angle
         c_size = 0.5 # constant distance travelled: something like the nib width is probably best
-        r_per_circle = 1.35 * (pen_width / 0.6) # 2 and a bit times pen width seems to work well - can expand to 3*
+        r_per_circle = 3 * pen_width #  1.35 * (pen_width / 0.6) # 2 and a bit times pen width seems to work well - can expand to 3*
 
         # what to multiply [0,1] intensity by to see how far we "wiggle" - this is applied to half the distance travelled
         # we want wiggles to slightly overlap between rows
@@ -708,6 +708,7 @@ class StandardDrawing:
             intense = intensity_converter(pt[2], pt[1], pt[0])
             if self.pen_type.is_black:
                 intense = 1.0 - intense
+            intense = 1.0 - intense
                 
             shade = intense * mult * r_factor
 

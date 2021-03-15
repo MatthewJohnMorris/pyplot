@@ -890,16 +890,20 @@ def draw_riley(drawing):
     
     polylines = []
     
+    centre = Point(102.5, 148)
+    
+    scale = 1.8
+    
     for i in range(0, nslice):    
-        b = CircleBlock((100, 100), 50, 0, (105, 105), 38, 0.06, 2 * nslice, i * 2)
+        b = CircleBlock(centre, 50*scale, 0, centre + Point(5, 5)*scale, 38*scale, 0.06, 2 * nslice, i * 2)
         path = drawing.fill_in_paths(b.path_gen_f)
         polylines.append(path)
         
-        b = CircleBlock((105, 105), 38, 0.06, (94, 102), 22, -0.04, 2 * nslice, i * 2 + 1)
+        b = CircleBlock(centre + Point(5, 5)*scale, 38*scale, 0.06, centre + Point(-6, 2)*scale, 22*scale, -0.04, 2 * nslice, i * 2 + 1)
         path = drawing.fill_in_paths(b.path_gen_f)
         polylines.append(path)
         
-        b = CircleBlock((94, 102), 22, -0.04, (100, 100), 13, 0.01, 2 * nslice, i * 2)
+        b = CircleBlock(centre + Point(-6, 2)*scale, 22*scale, -0.04, centre, 13*scale, 0.01, 2 * nslice, i * 2)
         path = drawing.fill_in_paths(b.path_gen_f)
         polylines.append(path)
 
@@ -907,30 +911,35 @@ def draw_riley(drawing):
 
 def draw_riley2(drawing):    
 
-    nslice = 40    
-    
-    polylines = []
-
-    print("x")
-    
-    i = 5
-        
-    c = Point(55, 155)
-    b = CircleBlock(c, 38, 0.06, (c.x-11, c.y-3), 22, -0.04, 2 * nslice, i * 2 + 1)
-    path2 = drawing.fill_in_paths(b.path_gen_f)
-    path = []
-    for pt in path2:
-        path.append(c + (pt - c) * 4)
-    polylines.append(path2[::-1])
-
-    # TODO: sort out anonalous point
-    # * is it at the start or the end?
-    # * dump out the details
-    # * sort out what's going wrong
-
-    #print(len(polylines))
-    #print(polylines)
-    drawing.add_polylines(polylines)
+    paper_centre = Point(102.5, 148)
+    size = 90
+    sq_size = 14
+    n = 12
+    top_y = paper_centre[1] - (n/2) * sq_size
+    left_x = paper_centre[0] - (n/2) * sq_size
+    right_x = paper_centre[0] + (n/2) * sq_size
+    for r in range(0, n):
+        y = top_y + sq_size * r
+        x = left_x
+        print(x,y)
+        ix_x = 0
+        a = 0
+        x_width = sq_size
+        while x < right_x:
+            c = math.cos(a)
+            x_factor = 0.06 + 0.94 * abs(math.pow(abs(c), 2.5))
+            new_x = x + sq_size * x_factor
+            if new_x > right_x:
+                new_x = right_x
+            print(x, y, new_x, x_factor)
+            if (ix_x + r) % 2 == 1:
+                shape = [(x, y), (new_x, y), (new_x, y + sq_size), (x, y + sq_size)]
+                sf = ShapeFiller([shape])
+                paths = sf.get_paths(drawing.pen_type.pen_width * 0.4)
+                drawing.add_polylines(paths)
+            x = new_x
+            ix_x += 1
+            a += math.pi / 29.6
 
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
@@ -940,8 +949,8 @@ def draw_riley2(drawing):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -957,7 +966,9 @@ paper_size = Point(192, 276)
 # fill_test(d)
 # draw_3d(d)
 # draw_tree(d)
-test_height(d)
+# test_height(d)
+# draw_riley2(d)
+d.image_spiral_single(d.dwg, 'burroughs.jpg', paper_centre, 80)
 
 if False:
     mothers_day(d)
