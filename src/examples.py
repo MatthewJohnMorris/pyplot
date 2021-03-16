@@ -909,6 +909,17 @@ def draw_riley2(drawing):
             ix_x += 1
             a += math.pi / 29.6
 
+def draw_xor_circles(drawing):
+
+    paper_centre = Point(102.5, 148)
+    n = 10
+    shapes = []
+    for i in range(0, n):
+        shapes.append(d.make_circle(paper_centre, 5 + 25 * random()))
+    sf = ShapeFiller(shapes)
+    paths = sf.get_paths(drawing.pen_type.pen_width * 0.4)
+    drawing.add_polylines(paths)
+
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -929,10 +940,11 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
+draw_xor_circles(d)
 # draw_riley(d)
 # speed_limit_test(d)
 # fill_test(d)
-draw_3d(d)
+# draw_3d(d)
 # draw_tree(d)
 # test_height(d)
 # draw_riley2(d)

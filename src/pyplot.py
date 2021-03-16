@@ -1210,7 +1210,7 @@ class ShapeFiller:
                         shape_s = shapes[p_start.ix_shape]
                         edge_s = (shape_s[p_start.ix_s], shape_s[p_start.ix_e])
                         shape_e = shapes[p_end.ix_shape]
-                        edge_e = (shape_s[p_end.ix_s], shape_s[p_end.ix_e])
+                        edge_e = (shape_e[p_end.ix_s], shape_e[p_end.ix_e])
                         c_start = ShapeFiller.norm_dot_product(edge_s, (pt_start, pt_end))
                         c_end = ShapeFiller.norm_dot_product(edge_e, (pt_start, pt_end))
                         s_start = math.sqrt(1 - c_start*c_start)
