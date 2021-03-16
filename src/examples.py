@@ -695,13 +695,15 @@ def draw_shape_clips2(d):
         shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
         shape_polyline = [x for x in shape]
         shape_polyline.append(shape_polyline[0])
-        if i == 0:
+        if len(shapes) == 0:
             all_polylines.append(shape_polyline)
             shapes.append(shape)
         else:
             sf = ShapeFiller(shapes)
             clipped_polylines = sf.clip([shape_polyline], union=True)
             if(len(clipped_polylines) > 0):
+                # print(shape_polyline)
+                # print(clipped_polylines)
                 all_polylines.extend(clipped_polylines)
                 shapes.append(shape)
     d.add_polylines(all_polylines)
@@ -930,11 +932,11 @@ paper_size = Point(192, 276)
 # draw_riley(d)
 # speed_limit_test(d)
 # fill_test(d)
-# draw_3d(d)
+draw_3d(d)
 # draw_tree(d)
 # test_height(d)
 # draw_riley2(d)
-draw_shape_clips2(d)
+# draw_shape_clips2(d)
 
 if False:
     mothers_day(d)

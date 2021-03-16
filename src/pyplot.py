@@ -1377,14 +1377,14 @@ class ShapeFiller:
                 include = not self.is_inside(m, union)
                 if inverse:
                     include = not include
-                #print(f"s={s}, e={e}, m={m}, include={include}")
+                # print(f"s={s}, e={e}, m={m}, include={include}")
                     
                 if include:
                     # add to pending path
                     if len(path) == 0:
                         path.append(s)
                     path.append(e)
-                    #print(path)
+                    # print(path)
                 else:
                     # commit any pending path
                     if len(path) > 0:
@@ -1396,6 +1396,8 @@ class ShapeFiller:
             if len(path) > 0:
                 clipped_polylines.append(path)
                 path = []
+                
+        # clipped_polylines.extend(polylines)
                 
         tEnd2 = time.perf_counter()
         ShapeFiller.timeTotal2 += (tEnd2 - tEnd1)
@@ -1413,11 +1415,12 @@ class ShapeFiller:
         s = polyline[0]
         path = [s]
         for e in polyline[1:]:
-            #print("split_edge_endpoints", s, e)
-            path.extend(self.split_edge_endpoints(s, e))
+            split = self.split_edge_endpoints(s, e)
+            # print("split_edge_endpoints result", s, e, split)
+            path.extend(split)
             s = e
         #if len(polyline) != len(path):
-            #print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
+        #    print(f"splitting polyline length {len(polyline)}->{len(path)} starting at {polyline[0]}")
             
         return path
         
@@ -1452,6 +1455,11 @@ class ShapeFiller:
                 continue
         
             for ix_shape in range(0, len(self.unrotated_shapes)):
+
+                is_verbose = False # ix_shape == 3
+                
+                if is_verbose:
+                    print("current_edge:", edge)
             
                 ShapeFiller.tot_split += 1
                 shape = self.unrotated_shapes[ix_shape]
@@ -1459,13 +1467,16 @@ class ShapeFiller:
                 
                 # Minimise full intersection checks: whole shape bounding box
                 if edge_limits.max_x < shape_limits.min_x:
-                    #print("bail:min-x", edge_s, edge_e, shape_limits.min_x)
+                    if is_verbose:
+                        print("bail:min-x", edge_s, edge_e, shape_limits.min_x)
                     continue
                 if edge_limits.min_x > shape_limits.max_x:
-                    #print("bail:max-x", edge_s, edge_e, shape_limits.max_x)
+                    if is_verbose:
+                        print("bail:max-x", edge_s, edge_e, shape_limits.max_x)
                     continue
                 if edge_limits.max_y < shape_limits.min_y:
-                    #print("bail:min-y", edge_s, edge_e, shape_limits.min_y)
+                    if is_verbose:
+                        print("bail:min-y", edge_s, edge_e, shape_limits.min_y)
                     continue
                 if edge_limits.min_y > shape_limits.max_y:
                     #print(shape)
@@ -1473,7 +1484,8 @@ class ShapeFiller:
                     #print(edge_limits.max_y)
                     #print(shape_limits.min_y)
                     #print(shape_limits.max_y)
-                    #print("bail:max-y", edge_s, edge_e, shape_limits.max_y)
+                    if is_verbose:
+                        print("bail:max-y", edge_s, edge_e, shape_limits.max_y)
                     continue
                 
                 # Try each shape edge in turn
@@ -1515,7 +1527,7 @@ class ShapeFiller:
                         # We don't count intersections as endpoints.
                         # So don't count it as an interssction if we are very nearly at an endpoint
                         # You just end up with floating point errors giving us repeatedly dividing an edge by tiny amounts
-                        if abs(k) > 1e-6 and abs(k-1) > 1e-6:
+                        if abs(k) > 1e-8 and abs(k-1) > 1e-8:
                         
                             ShapeFiller.tot_split3 += 1
                             
@@ -1528,7 +1540,7 @@ class ShapeFiller:
                             edge = split_edges[i]
                             edge_s = edge[0]
                             edge_e = edge[1]
-                            edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), max(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[1], edge_e[1]))
+                            edge_limits = ShapeFiller.Limits(min(edge_s[0], edge_e[0]), min(edge_s[1], edge_e[1]), max(edge_s[0], edge_e[0]), max(edge_s[1], edge_e[1]))
 
                         tEnd3 = time.perf_counter()
                         ShapeFiller.timeTotal3 += (tEnd3 - tStart3)
