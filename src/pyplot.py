@@ -113,11 +113,11 @@ class PenType:
     def GellyRollMetallicOnBlack():
         # While official number for line width is apparently 0.4mm, the relationship of Metallic fills to other pens in terms of the 
         # spacing required indicates a wider line - more like the 0.6mm used here.
-        return PenType('GellyRollOnBlack', True, 0.6, '0.45px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
+        return PenType('GellyRollMetallicOnBlack', True, 0.6, '0.45px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
         
     @staticmethod
     def GellyRollMoonlightOnBlack():
-        return PenType('GellyRollOnBlack', True, 0.35, '0.25px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
+        return PenType('GellyRollMoonlightOnBlack', True, 0.35, '0.25px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
         
     @staticmethod
     def PigmaMicron03():

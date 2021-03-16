@@ -29,7 +29,7 @@ def test_circle_sense():
 
     # we have increasing y is down, increasing x is right
     # we want rotation to be +ve = clockwise
-    d = StandardDrawing(pen_type = PenType.GellyRollOnBlack())
+    d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
     c = d.make_circle((0,0), 1, n=4)
     assert(len(c) == 4)
     assert(c[0][0] == pytest.approx(0))

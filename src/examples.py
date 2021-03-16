@@ -686,39 +686,24 @@ def draw_shape_clips2(d):
 
     all_polylines = []
     shapes = []
-    shape0 = d.make_square(Point(20, 20), 20)
-    shape1 = d.make_square(Point(8, 8), 20)
-    shape2 = d.make_square(Point(8, 32), 20)
-    shape3 = d.make_square(Point(32, 32), 20)
-    shape4 = d.make_square(Point(32, 8), 20)
-    shape5 = d.make_square(Point(18, 18), 24)
-    shapes = [shape0, shape1, shape2, shape3, shape4, shape5]
-    shapes = [shape4, shape5]
-    shapeA = d.make_square(Point(30, 10), 40)
-    shapeB = d.make_square(Point(20, 20), 40)
-    shapes = [shapeA, shapeB]
-    clip_shapes = []
-    for shape in shapes:
-        print("shape",shape)
+    for i in range(0, 400):
+        x = 20 + random() * 25
+        y = 20 + random() * 25
+        size = 2.5 + 30 * random()
+        shape = d.make_square(Point(x, y), size)
+        a = random()*math.pi*2
+        shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
         shape_polyline = [x for x in shape]
         shape_polyline.append(shape_polyline[0])
-        print(shape_polyline)
-        if len(all_polylines) == 0:
+        if i == 0:
             all_polylines.append(shape_polyline)
+            shapes.append(shape)
         else:
-            # print(f"shapes={shapes}")
-            print("clip_shapes")
-            print(clip_shapes)
-            sf = ShapeFiller(clip_shapes)
-            print("pre-clip")
-            print(shape_polyline)
+            sf = ShapeFiller(shapes)
             clipped_polylines = sf.clip([shape_polyline], union=True)
-            print("clipped")
-            print(clipped_polylines)
-            #print(polylines)
-            all_polylines.extend(clipped_polylines)
-        print(all_polylines[-1])
-        clip_shapes.append(shape)
+            if(len(clipped_polylines) > 0):
+                all_polylines.extend(clipped_polylines)
+                shapes.append(shape)
     d.add_polylines(all_polylines)
 
 def draw_word_square(d):
@@ -752,15 +737,6 @@ def draw_tree(d):
         
     d.add_dot(pos, 10, r_start=9, stroke=svgwrite.rgb(64, 64, 64, '%'))
     d.add_dot(pos, 8, stroke=svgwrite.rgb(64, 64, 64, '%'))
-
-def cube_points(proj_points):
-
-    polylines = []
-    polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3], proj_points[0], proj_points[4], proj_points[5], proj_points[6], proj_points[7], proj_points[4]])
-    polylines.append([proj_points[1], proj_points[5]])
-    polylines.append([proj_points[2], proj_points[6]])
-    polylines.append([proj_points[3], proj_points[7]])
-    return polylines
 
 def cube_faces(proj_points):
 
@@ -958,7 +934,7 @@ paper_size = Point(192, 276)
 # draw_tree(d)
 # test_height(d)
 # draw_riley2(d)
-d.image_spiral_single(d.dwg, 'burroughs.jpg', paper_centre, 80)
+draw_shape_clips2(d)
 
 if False:
     mothers_day(d)
