@@ -912,12 +912,28 @@ def draw_riley2(drawing):
 def draw_xor_circles(drawing):
 
     paper_centre = Point(102.5, 148)
-    n = 10
+    n = 20
+    size = 7
     shapes = []
-    for i in range(0, n):
-        shapes.append(d.make_circle(paper_centre, 5 + 25 * random()))
+    for r in range(0, n):
+        x = paper_centre.x + (r - n/2)*size
+        print(x)
+        for c in range(0, n):
+            y = paper_centre.y + (c - n/2)*size
+            shapes.append(d.make_circle(Point(x,y), size/2))
+            if(random() > 0.5):
+                square = d.make_square(Point(x - size/2, y - size/2), size)
+                # print(square)
+                shapes.append(square)
     sf = ShapeFiller(shapes)
     paths = sf.get_paths(drawing.pen_type.pen_width * 0.4)
+    
+    for r in range(0, n):
+        for c in range(0, n):
+            x = paper_centre.x + (r - n/2)*size
+            y = paper_centre.y + (c - n/2)*size
+            # paths.append(d.make_square(Point(x - size/2, y - size/2), size))
+    
     drawing.add_polylines(paths)
 
 

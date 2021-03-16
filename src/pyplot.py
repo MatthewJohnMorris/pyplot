@@ -1074,6 +1074,9 @@ class ShapeFiller:
         dist1 = diff1.dist()
         dist2 = diff2.dist()
         norm1 = diff1 / dist1
+        if dist2 == 0:
+            print("v1", v1)
+            print("v2", v2)
         norm2 = diff2 / dist2
         dot = norm1.x * norm2.x + norm1.y * norm2.y
         return dot
@@ -1201,44 +1204,47 @@ class ShapeFiller:
                         # right now it's just the starting connection for both, which is wrong
                         # this may need a rejig of all the logic since normally we don't look ahead for the edge hookups
                         # I think that's the tricky bit. Where do we end the line we're drawing? We don't know until we know what edge it htis.
-                        #print("p_start", p_start)
-                        #print("p_end", p_end)
-                        pt_start = Point(p_start.x, y_for_scan)
-                        pt_end = Point(p_end.x, y_for_scan)
-                        #print("pt_start", pt_start)
-                        #print("pt_end", pt_end)
-                        shape_s = shapes[p_start.ix_shape]
-                        edge_s = (shape_s[p_start.ix_s], shape_s[p_start.ix_e])
-                        shape_e = shapes[p_end.ix_shape]
-                        edge_e = (shape_e[p_end.ix_s], shape_e[p_end.ix_e])
-                        c_start = ShapeFiller.norm_dot_product(edge_s, (pt_start, pt_end))
-                        c_end = ShapeFiller.norm_dot_product(edge_e, (pt_start, pt_end))
-                        s_start = math.sqrt(1 - c_start*c_start)
-                        s_end = math.sqrt(1 - c_end*c_end)
-                        backoff_start = row_width / s_start
-                        backoff_end = row_width / s_end
-                        
-                        # carry on from here....
-                        
-                        # move what we actually plot inward by distance between rows:
-                        # * avoids rasterisation crossing the shape boundary
-                        # * avoids boundary being bolder than interior
-                        start_x = p_start.x
-                        end_x = p_end.x
-                        if start_x < end_x:
-                            start_x += backoff_start
-                            end_x -= backoff_end
-                            if start_x > end_x:
-                                avg_x = (p_start.x + p_end.x) / 2
-                                start_x = avg_x
-                                end_x = avg_x
-                        else:
-                            start_x -= backoff_start
-                            end_x += backoff_end
+                        backoff_start = 0
+                        backoff_end = 0
+                        if p_start.x != p_end.x:
+                            #print("p_start", p_start)
+                            #print("p_end", p_end)
+                            pt_start = Point(p_start.x, y_for_scan)
+                            pt_end = Point(p_end.x, y_for_scan)
+                            #print("pt_start", pt_start)
+                            #print("pt_end", pt_end)
+                            shape_s = shapes[p_start.ix_shape]
+                            edge_s = (shape_s[p_start.ix_s], shape_s[p_start.ix_e])
+                            shape_e = shapes[p_end.ix_shape]
+                            edge_e = (shape_e[p_end.ix_s], shape_e[p_end.ix_e])
+                            c_start = ShapeFiller.norm_dot_product(edge_s, (pt_start, pt_end))
+                            c_end = ShapeFiller.norm_dot_product(edge_e, (pt_start, pt_end))
+                            s_start = math.sqrt(1 - c_start*c_start)
+                            s_end = math.sqrt(1 - c_end*c_end)
+                            backoff_start = row_width / s_start
+                            backoff_end = row_width / s_end
+                            
+                            # carry on from here....
+                            
+                            # move what we actually plot inward by distance between rows:
+                            # * avoids rasterisation crossing the shape boundary
+                            # * avoids boundary being bolder than interior
+                            start_x = p_start.x
+                            end_x = p_end.x
                             if start_x < end_x:
-                                avg_x = (p_start.x + p_end.x) / 2
-                                start_x = avg_x
-                                end_x = avg_x
+                                start_x += backoff_start
+                                end_x -= backoff_end
+                                if start_x > end_x:
+                                    avg_x = (p_start.x + p_end.x) / 2
+                                    start_x = avg_x
+                                    end_x = avg_x
+                            else:
+                                start_x -= backoff_start
+                                end_x += backoff_end
+                                if start_x < end_x:
+                                    avg_x = (p_start.x + p_end.x) / 2
+                                    start_x = avg_x
+                                    end_x = avg_x
                         
                         path_points.append((start_x, y_for_scan))
                         path_points.append((end_x, y_for_scan))
