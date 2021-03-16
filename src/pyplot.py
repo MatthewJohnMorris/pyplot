@@ -706,8 +706,8 @@ class StandardDrawing:
             
             # image is BGR - pass in RGB
             intense = intensity_converter(pt[2], pt[1], pt[0])
-            if self.pen_type.is_black:
-                intense = 1.0 - intense
+            #if self.pen_type.is_black:
+            #    intense = 1.0 - intense
             intense = 1.0 - intense
                 
             shade = intense * mult * r_factor

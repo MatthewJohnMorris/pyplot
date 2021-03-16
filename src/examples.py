@@ -4,34 +4,24 @@
 # * pycairo (for text)
 # * svgwrite
 
-print("hi2")
-# import cv2
-print("hi3")
+import cv2
 
 import csv
 
 import svgwrite
 from svgwrite.extensions import Inkscape
 
-print("hi4")
-
 from random import random, seed
 seed(10)
   
 import math
 
-print("hi4-prenumpy")
-
 import numpy
-
-print("hi4")
 
 from pyplot import CircleBlock, PenType, Point, StandardDrawing, ShapeFiller
 from perlin import PerlinNoise
 from bezier import *
 from threed import *
-
-print("hi4")
 
 def draw_unknown_pleasures(drawing):
 
