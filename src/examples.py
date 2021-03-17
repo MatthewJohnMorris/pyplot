@@ -913,23 +913,49 @@ def draw_xor_circles(drawing):
 
     paper_centre = Point(102.5, 148)
     n = 20
-    size = 8
+    size = 6
     all_paths = []
-    for r in range(0, n):
+    layer1 = d.add_layer("1-cyan")
+    layer1_paths = []
+    for r in range(0, n+1):
         x = paper_centre.x + (r - n/2)*size
         # print(x)
-        for c in range(0, n):
+        for c in range(0, n+1):
             shapes = []
             y = paper_centre.y + (c - n/2)*size
             shapes.append(d.make_circle(Point(x,y), size/2))
             if(random() > 0.5):
+                sf = ShapeFiller(shapes)
+                paths = sf.get_paths(drawing.pen_type.pen_width * 0.4)
+                layer1_paths.extend(paths)
                 square = d.make_square(Point(x - size/2, y - size/2), size)
                 shapes.append(square)
+                
             sf = ShapeFiller(shapes)
-            paths = sf.get_paths(drawing.pen_type.pen_width * 1)
+            paths = sf.get_paths(drawing.pen_type.pen_width * 0.4)
             all_paths.extend(paths)
     
     drawing.add_polylines(all_paths)
+    drawing.add_polylines(layer1_paths, container=layer1, stroke=svgwrite.rgb(0, 255, 255, '%'))
+
+def draw_big_a(drawing):
+
+    paper_centre = Point(102.5, 148)
+    fontsize = 96*8
+    family="Arial"
+    ext = d.text_bound("ﷺ", fontsize=fontsize, family=family)
+    text_place = Point(paper_centre.x - ext.width/2, paper_centre.y + ext.height/2)
+    letter_paths = d.make_text("ﷺ", text_place, fontsize=fontsize, family=family)
+    sf = ShapeFiller(letter_paths)
+    paths = []
+    for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
+        paths.append(path)
+        
+    box = d.make_rect(Point(120, 120), 30, 30)
+    sf2 = ShapeFiller([box])
+    # paths =sf2.clip(paths, inverse=True)
+    
+    d.add_polylines(paths)
 
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
@@ -939,8 +965,8 @@ def draw_xor_circles(drawing):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -951,7 +977,8 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-draw_xor_circles(d)
+draw_big_a(d)
+# draw_xor_circles(d)
 # draw_riley(d)
 # speed_limit_test(d)
 # fill_test(d)

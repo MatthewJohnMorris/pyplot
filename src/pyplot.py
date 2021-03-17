@@ -1191,22 +1191,22 @@ class ShapeFiller:
                         p_end = c_e if connection == "s" else c_s
                         path_points = path_state.path
                         
-                        # sooo. here's an idea - adjust the amount moved back to account for the angle between our scan line
-                        # and the edge that we are heading towards.
-                        # p_end is the relevant point - how can we find out what edge it's on
-                        # think we'll need to extent is_on_continuation_of
-                        # ok... connect_info is the one
+                        # This seemed to help for Riley-style pictures and a Staedtler 05 blank Pigment Liner
+                        # But now (including on other Pigment Liners as well as Sakura Pigma Microns) it's just 
+                        # giving gaps!
+                        
+                        # The idea was to back off from boundaries because we were getting overshoots. For now remove this,
+                        # if we get overshoots again we can try to correlate with the type of pen.
+                        #
                         # try dot product of norm vectors between connect_info and our path
                         # that's cos(theta) = c
                         # divide by sin = sqrt(1 - c*c) to get the backoff
-                        # hmm I don't seem to have this quite right, but it's definitely the right kind of idea
-                        # i think it needs to differentiate between the starting and ending edge for angles
-                        # right now it's just the starting connection for both, which is wrong
-                        # this may need a rejig of all the logic since normally we don't look ahead for the edge hookups
-                        # I think that's the tricky bit. Where do we end the line we're drawing? We don't know until we know what edge it htis.
+                        
                         backoff_start = 0
                         backoff_end = 0
-                        if p_start.x != p_end.x:
+                        start_x = p_start.x
+                        end_x = p_end.x
+                        if False: # p_start.x != p_end.x:
                             #print("p_start", p_start)
                             #print("p_end", p_end)
                             pt_start = Point(p_start.x, y_for_scan)
@@ -1229,8 +1229,6 @@ class ShapeFiller:
                             # move what we actually plot inward by distance between rows:
                             # * avoids rasterisation crossing the shape boundary
                             # * avoids boundary being bolder than interior
-                            start_x = p_start.x
-                            end_x = p_end.x
                             if start_x < end_x:
                                 start_x += backoff_start
                                 end_x -= backoff_end
