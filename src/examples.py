@@ -782,7 +782,7 @@ def draw_3d(d):
                 break
         if not any_none:
             # 20, 105
-            proj_points = [(x[0]+105, x[1]+70, x[2]) for x in proj_points]
+            proj_points = [(x[0]+20, x[1]+70, x[2]) for x in proj_points]
             polylines = cube_faces(proj_points)
 
             for face in polylines:
@@ -965,8 +965,9 @@ def draw_big_a(drawing):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -977,7 +978,7 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-draw_big_a(d)
+# draw_big_a(d)
 # draw_xor_circles(d)
 # draw_riley(d)
 # speed_limit_test(d)
@@ -987,6 +988,7 @@ draw_big_a(d)
 # test_height(d)
 # draw_riley2(d)
 # draw_shape_clips2(d)
+d.image_spiral_single(d.dwg, 'burroughs.jpg', paper_centre, 80)
 
 if False:
     mothers_day(d)
