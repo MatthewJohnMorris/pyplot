@@ -877,6 +877,23 @@ def draw_riley(drawing):
 
     drawing.add_polylines(polylines)
 
+def draw_riley_backoff_test(drawing):    
+
+    print("x")
+
+    nslice = 40    
+    
+    polylines = []
+    
+    centre = Point(22.5, 18)
+    
+    scale = 1
+    
+    for i in [3,4]: # range(3, 10): # 0, nslice):    
+        b = CircleBlock(centre + Point(5, 5)*scale, 38*scale, 0.06, centre + Point(-6, 2)*scale, 22*scale, -0.04, 2 * nslice, i * 2 + 1)
+        path = drawing.fill_in_paths(b.path_gen_f)
+        drawing.add_polyline(path[::-1])
+
 def draw_riley2(drawing):    
 
     paper_centre = Point(102.5, 148)
@@ -948,7 +965,7 @@ def draw_big_a(drawing):
     letter_paths = d.make_text("ﷺ", text_place, fontsize=fontsize, family=family)
     sf = ShapeFiller(letter_paths)
     paths = []
-    for path in sf.get_paths(4*d.pen_type.pen_width / 5, angle=math.pi/2):
+    for path in sf.get_paths(0.4*d.pen_type.pen_width, angle=math.pi/2):
         paths.append(path)
         
     box = d.make_rect(Point(120, 120), 30, 30)
@@ -966,8 +983,8 @@ def draw_big_a(drawing):
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
-d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
+d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -977,6 +994,9 @@ paper_size = Point(192, 276)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
+
+# draw_riley_backoff_test(d)
+draw_big_a(d)
 
 if False:
     draw_big_a(d)

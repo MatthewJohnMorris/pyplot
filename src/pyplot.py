@@ -1206,11 +1206,15 @@ class ShapeFiller:
                         # that's cos(theta) = c
                         # divide by sin = sqrt(1 - c*c) to get the backoff
                         
+                        # Lower -> increased chance of small gaps in fill, esp if shape is curved and moving away from line
+                        # Higher -> increased chance of overshoot past edges, esp on things like op art blocks at a narrow angle
+                        min_backoff_div = 0.15
+                        
                         backoff_start = 0
                         backoff_end = 0
                         start_x = p_start.x
                         end_x = p_end.x
-                        if False: # p_start.x != p_end.x:
+                        if p_start.x != p_end.x:
                             #print("p_start", p_start)
                             #print("p_end", p_end)
                             pt_start = Point(p_start.x, y_for_scan)
@@ -1223,8 +1227,8 @@ class ShapeFiller:
                             edge_e = (shape_e[p_end.ix_s], shape_e[p_end.ix_e])
                             c_start = ShapeFiller.norm_dot_product(edge_s, (pt_start, pt_end))
                             c_end = ShapeFiller.norm_dot_product(edge_e, (pt_start, pt_end))
-                            s_start = math.sqrt(1 - c_start*c_start)
-                            s_end = math.sqrt(1 - c_end*c_end)
+                            s_start = max(math.sqrt(1 - c_start*c_start), min_backoff_div)
+                            s_end = max(math.sqrt(1 - c_end*c_end), min_backoff_div)
                             backoff_start = row_width / s_start
                             backoff_end = row_width / s_end
                             
@@ -1241,6 +1245,7 @@ class ShapeFiller:
                                     start_x = avg_x
                                     end_x = avg_x
                             else:
+                                # start_x > end_x
                                 start_x -= backoff_start
                                 end_x += backoff_end
                                 if start_x < end_x:
