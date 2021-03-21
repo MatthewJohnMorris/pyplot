@@ -684,15 +684,17 @@ def draw_shape_clips(d):
 
 def draw_shape_clips2(d):
 
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 276)
     all_polylines = []
     shapes = []
-    for i in range(0, 400):
-        x = 20 + random() * 25
-        y = 20 + random() * 25
-        size = 2.5 + 30 * random()
-        shape = d.make_square(Point(x, y), size)
+    size = 10
+    for i in range(0, 1000):
+        cx = paper_centre.x + (random()-0.5) * (paper_size.x - size - 20)
+        cy = paper_centre.y + (random()-0.5) * (paper_size.y - size - 20)
+        shape = d.make_square(Point(cx-size/2, cy-size/2), size)
         a = random()*math.pi*2
-        shape = [StandardDrawing.rotate_about(pt, (x+size/2, y+size/2), a) for pt in shape]
+        shape = [StandardDrawing.rotate_about(pt, (cx, cy), a) for pt in shape]
         shape_polyline = [x for x in shape]
         shape_polyline.append(shape_polyline[0])
         if len(shapes) == 0:
@@ -974,6 +976,15 @@ def draw_big_a(drawing):
     
     d.add_polylines(paths)
 
+def maze_gen(drawing):
+
+    nr = 10
+    nc = 10
+    pos = (0, 0)
+    vertexes = set()
+    paths = []
+    
+
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -982,8 +993,8 @@ def draw_big_a(drawing):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
@@ -997,12 +1008,14 @@ paper_size = Point(192, 276)
 
 # draw_riley_backoff_test(d)
 draw_big_a(d)
+# draw_shape_clips2(d)
 
 if False:
     draw_big_a(d)
     draw_xor_circles(d)
     draw_riley(d)
     draw_riley2(d)
+    draw_riley_backoff_test(d)
     draw_shape_clips(d)
     draw_shape_clips2(d)
     mothers_day(d)
