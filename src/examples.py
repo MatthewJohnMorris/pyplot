@@ -57,6 +57,7 @@ def draw_unknown_pleasures(drawing):
                 y = min_y
             path.append((x, y))
         drawing.add_polyline(path)
+        drawing.add_polyline(path)
 
 def plot_perlin_drape_spiral(drawing, seed):  
 
@@ -330,7 +331,7 @@ def fill_test(d):
 
     points = []
     for i in range(2, 11):
-        tl = (100,20+20*i)
+        tl = (70,20+20*i)
         sq = d.make_rect(tl, 18, 18)
         sf = ShapeFiller([sq])
         for path in sf.get_paths(i*d.pen_type.pen_width / 10):
@@ -967,7 +968,7 @@ def draw_big_a(drawing):
     letter_paths = d.make_text("ﷺ", text_place, fontsize=fontsize, family=family)
     sf = ShapeFiller(letter_paths)
     paths = []
-    for path in sf.get_paths(0.4*d.pen_type.pen_width, angle=math.pi/2):
+    for path in sf.get_paths(0.4*d.pen_type.pen_width, angle=0): # math.pi/2):
         paths.append(path)
         
     box = d.make_rect(Point(120, 120), 30, 30)
@@ -984,6 +985,108 @@ def maze_gen(drawing):
     vertexes = set()
     paths = []
     
+def star_gen(drawing):
+
+    centre = Point(102.5, 148)
+    size = 80
+    inner = 0 # 15
+    points = [(size, 0), (size, 0.5), (size, 1), (size, 1.5)]
+    n = 5
+    ratio = 0.7
+    for i in range(0, n):
+        size = (size - inner) * ratio + inner
+        ix = 0
+        while(ix < len(points)):
+            a = points[ix]
+            b = points[ix+1] if ix+1 < len(points) else (points[0], 2)
+            new_angle = (a[1] + b[1]) / 2
+            new_elem = (size, new_angle)
+            points.insert(ix+1, new_elem)
+            ix += 2
+    print(points)
+    shape = []
+    sizes = []
+    for point in points:
+        r = point[0]
+        if r not in sizes:
+            sizes.append(r)
+        radians = math.pi * point[1]
+        c = math.cos(radians)
+        s = math.sin(radians)
+        shape.append(Point(centre.x + r*c, centre.y + r*s))
+    shapes = [shape]
+    sizes = sorted(sizes)[::-1]
+    shapes.extend([drawing.make_circle(centre, size) for size in sizes[4:]])
+    # shapes.extend([drawing.make_circle(centre, size) for size in sizes[0:3]])
+    # shapes.extend([drawing.make_circle(centre, size-1) for size in sizes[0:3]])
+    # shapes.extend([drawing.make_circle(centre, size) for size in sizes])
+    # shapes.extend([drawing.make_circle(centre, size-1) for size in sizes])
+    
+    r_inner = sizes[-1] - 1
+    while r_inner > 0:
+        shapes.append(drawing.make_circle(centre, r_inner))
+        r_inner -= 1.1
+    
+    sf = ShapeFiller(shapes)
+    paths = sf.get_paths(drawing.pen_type.pen_width * 0.4) # , angle=math.pi/2)
+    
+    drawing.add_polylines(paths)
+    # drawing.add_polylines([drawing.make_circle(centre, size) for size in sizes[0:3]])
+
+    for point in points:
+        r = point[0]
+        radians = math.pi * point[1]
+        c = math.cos(radians)
+        s = math.sin(radians)
+        dot_r = r / 20
+        centre_r = r + dot_r + 2
+        circle_centre = Point(centre.x + centre_r*c, centre.y + centre_r*s)
+        if r > 25:
+            drawing.add_dot(circle_centre, dot_r)
+            r2 = dot_r # points[0][0] / 20 * ratio * ratio * ratio
+            if r < points[0][0]:
+                centre2_r = points[0][0] + r2 + 2
+                circle_centre2 = Point(centre.x + centre2_r*c, centre.y + centre2_r*s)
+                drawing.add_dot(circle_centre2, r2)
+            if r < points[0][0] * ratio:
+                centre2_r = points[0][0] * ratio + r2 + 2
+                circle_centre2 = Point(centre.x + centre2_r*c, centre.y + centre2_r*s)
+                drawing.add_dot(circle_centre2, r2)
+            if r < points[0][0] * ratio * ratio:
+                centre2_r = points[0][0] * ratio * ratio + r2 + 2
+                circle_centre2 = Point(centre.x + centre2_r*c, centre.y + centre2_r*s)
+                drawing.add_dot(circle_centre2, r2)
+
+    
+def rgb_test(drawing):
+
+    centre = Point(102.5, 148)
+    a = 0
+    r = 15
+    layers = [drawing.add_layer("1-yellow"), drawing.add_layer("2-cyan"), drawing.add_layer("3-magenta")]
+    strokes = [svgwrite.rgb(255, 255, 0, '%'), svgwrite.rgb(0, 255, 255, '%'), svgwrite.rgb(255, 0, 255, '%')]
+    angles = [0, 1, 2]
+    for i in range(0, len(layers)):
+        layer = layers[i]
+        stroke = strokes[i]
+        a = angles[i] * math.pi * 2 / 3
+        c = centre + Point(math.cos(a), math.sin(a))*r*0.6
+        shape = drawing.make_circle(c, r)
+        sf = ShapeFiller([shape])
+        paths = sf.get_paths(drawing.pen_type.pen_width * 0.4) # , angle=math.pi/2)
+        drawing.add_polylines(paths, container=layer, stroke=stroke)
+    
+def circle_test(drawing):
+
+    centre = Point(60, 20)
+    shapes = []
+    shapes.append(drawing.make_circle(centre, 5))
+    shapes.append(drawing.make_circle(centre, 6.5))
+    sf = ShapeFiller(shapes)
+    paths = sf.get_paths(drawing.pen_type.pen_width * 0.4) # , angle=math.pi/2)
+    drawing.add_polylines(paths)
+
+        
 
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
@@ -991,11 +1094,12 @@ def maze_gen(drawing):
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 # d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
+# d = StandardDrawing(pen_type = PenType.RotringTikky05())
+# d = StandardDrawing(pen_type = PenType.RotringTikky03())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -1007,8 +1111,12 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # draw_riley_backoff_test(d)
-draw_big_a(d)
+# draw_big_a(d)
 # draw_shape_clips2(d)
+star_gen(d)
+# rgb_test(d)
+# fill_test(d)
+# circle_test(d)
 
 if False:
     draw_big_a(d)
@@ -1053,3 +1161,4 @@ if False:
 
 
 d.dwg.save()
+

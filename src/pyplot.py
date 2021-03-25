@@ -134,6 +134,16 @@ class PenType:
     @staticmethod
     def StaedtlerPigment01():
         return PenType('StaedtlerPigment01', False, 0.2, '0.07px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        
+    # Rotring Tikky effective width for fill is larger than quoted nib size
+    @staticmethod
+    def RotringTikky03():
+        return PenType('RotringTikky05', False, 0.4, '0.28px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        
+    # Rotring Tikky effective width for fill is larger than quoted nib size
+    @staticmethod
+    def RotringTikky05():
+        return PenType('RotringTikky05', False, 0.66, '0.46px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
 
 class StandardDrawing:
 
@@ -1300,9 +1310,10 @@ class ShapeFiller:
 
         # append closed loop for each shape = tidies things up at the boundaries
         for shape in shapes:
-            a = [s for s in shape]
-            a.append(a[0])
-            all_paths.append(a)
+            s = [x for x in shape]
+            # s.extend([x for x in shape])
+            # a.append(a[0])
+            all_paths.append(s)
             
         # now reverse the rotation
         returned_paths = []
