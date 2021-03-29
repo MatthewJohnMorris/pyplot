@@ -1195,13 +1195,13 @@ def lsystem_test(drawing):
 
     import lsystem
     # instructions = lsystem.test_lsystem_gosper(order=5)
-    instructions = lsystem.test_lsystem_hilbert(order=7)
-    print(instructions)
+    # instructions = lsystem.test_lsystem_hilbert(order=7)
+    instructions = lsystem.test_lsystem_arrowhead(order=8)
     paper_centre = Point(102.5, 148)
     pos = Point(0, 0)
     points = [pos]
     a = 0
-    size = 1
+    size = 0.5
     for instruction in instructions:
         if instruction[0] == "F":
             radians = a/360*2*math.pi

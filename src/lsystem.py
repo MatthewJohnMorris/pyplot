@@ -30,6 +30,13 @@ hilbert_map = {
     "+": (lambda turtle: turtle.turn(-90), None),
 }
 
+arrowhead_map = {
+    "A": (lambda turtle: turtle.forward(), "B-A-B"),
+    "B": (lambda turtle: turtle.forward(), "A+B+A"),
+    "-": (lambda turtle: turtle.turn(60), None),
+    "+": (lambda turtle: turtle.turn(-60), None),
+}
+
 def lsystem_process_token(target, order, token, lsystem_map):
 
     map_elem = lsystem_map[token]
@@ -45,10 +52,15 @@ def test_lsystem_gosper(order):
     lsystem_process_token(target, order, "A", gosper_map)
     return target.instructions
 
-
 def test_lsystem_hilbert(order):
 
     target = turtle()
     lsystem_process_token(target, order, "A", hilbert_map)
+    return target.instructions
+
+def test_lsystem_arrowhead(order):
+
+    target = turtle()
+    lsystem_process_token(target, order, "A", arrowhead_map)
     return target.instructions
 
