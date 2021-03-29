@@ -1194,23 +1194,10 @@ def quality_test(drawing):
 def lsystem_test(drawing):
 
     import lsystem
-    # instructions = lsystem.test_lsystem_gosper(order=5)
-    # instructions = lsystem.test_lsystem_hilbert(order=7)
-    instructions = lsystem.test_lsystem_arrowhead(order=8)
+    # points = lsystem.test_lsystem_gosper(order=5, size=1)
+    # points = lsystem.test_lsystem_hilbert(order=7, size=1)
+    points = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     paper_centre = Point(102.5, 148)
-    pos = Point(0, 0)
-    points = [pos]
-    a = 0
-    size = 0.5
-    for instruction in instructions:
-        if instruction[0] == "F":
-            radians = a/360*2*math.pi
-            pos = pos + Point(math.cos(radians), math.sin(radians)) * size
-            points.append(pos)
-        elif instruction[0] == "A":
-            a += instruction[1]
-        else:
-            raise Exception(f'Unknown code: {instruction[0]}')
     centre = Point(sum([p.x for p in points]), sum([p.y for p in points])) / len(points)
     adj = paper_centre - centre
     points = [p + adj for p in points]
