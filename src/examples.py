@@ -1197,6 +1197,8 @@ def lsystem_test(drawing):
     # points = lsystem.test_lsystem_gosper(order=5, size=1)
     # points = lsystem.test_lsystem_hilbert(order=7, size=1)
     points = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
+    
+    # centre the drawing on the paper
     paper_centre = Point(102.5, 148)
     centre = Point(sum([p.x for p in points]), sum([p.y for p in points])) / len(points)
     adj = paper_centre - centre
