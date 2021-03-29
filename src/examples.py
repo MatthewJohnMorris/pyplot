@@ -1194,7 +1194,8 @@ def quality_test(drawing):
 def lsystem_test(drawing):
 
     import lsystem
-    instructions = lsystem.test_lsystem(order=5)
+    # instructions = lsystem.test_lsystem_gosper(order=5)
+    instructions = lsystem.test_lsystem_hilbert(order=7)
     print(instructions)
     paper_centre = Point(102.5, 148)
     pos = Point(0, 0)
