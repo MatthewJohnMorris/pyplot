@@ -1086,8 +1086,134 @@ def circle_test(drawing):
     paths = sf.get_paths(drawing.pen_type.pen_width * 0.4) # , angle=math.pi/2)
     drawing.add_polylines(paths)
 
-        
+def make_spiral_kink_1(drawing, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
+    points = []
+    r = 0 if r_initial is None else r_initial # initial radius
+    a = 0 # starting angle
+    r_per_circle = 2 * drawing.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
+    c_size = 0.5 # constant distance travelled: something like the nib width is probably best
+    
+    # draw until we've hit the desired size
+    while r <= scale:
+    
+        # Archimedian spiral with constant length of path
+        r_floored = max(r, 0.5)
+        a_inc = c_size / r_floored
+        a += a_inc * direction
+        r += r_per_circle * a_inc / (2 * math.pi)
+        
+        # output location
+        s = math.sin(a)
+        c = math.cos(a)
+        pt = centre + Point(c, s) * r
+        
+        points.append(pt)
+        
+    return points
+        
+def add_spiral_kink_1(drawing, centre, scale, r_per_circle=None, r_initial=None, direction=1):
+        
+    drawing.add_polyline(make_spiral_kink_1(drawing, centre, scale, r_per_circle, r_initial, direction))
+    
+def add_spiral_kink(drawing):
+
+    centre = Point(102.5, 148)
+    scale = 80
+    factor = 2
+    
+    side = 2
+    h = side * 0.5 * math.sqrt(3)
+    
+    add_spiral_kink_1(drawing, centre + Point(0, 0), scale, r_per_circle = (factor*1.00) * drawing.pen_type.pen_width)
+    
+    centre2 = centre + Point(0,5)
+    all_polylines = [make_spiral_kink_1(drawing, centre2, scale*1.09, r_per_circle = (factor*1.09) * drawing.pen_type.pen_width)]
+
+    '''
+    shapes = []
+    for i in range(0,6):
+        a = math.pi * 2 * i / 6
+        shapes = []
+        shapes.append(drawing.make_circle(centre + Point(math.cos(a), math.sin(a)) * scale * (2/3), scale * (1/3), n=100))
+        sf = ShapeFiller(shapes)
+        polylines = sf.clip(all_polylines, union=True, inverse=True)
+        #for p in polylines:
+        #    drawing.add_polyline(p)
+        drawing.add_polylines(polylines)
+        # drawing.add_polylines(shapes)
+    shapes = []
+    shapes.append(drawing.make_circle(centre, scale * (1/3), n=100))
+    sf = ShapeFiller(shapes)
+    polylines = sf.clip(all_polylines, union=True, inverse=True)
+    drawing.add_polylines(polylines)
+    '''
+
+    shapes = []
+    sgap = 9
+    size = sgap
+    while size < scale*2: # math.sqrt(2):
+        shapes.append(drawing.make_square(centre - Point(size/2, size/2), size))
+        size += sgap
+    sf = ShapeFiller(shapes)
+    polylines = sf.clip(all_polylines, inverse=True)
+    shapes2 = [drawing.make_circle(centre, scale, n=100)]
+    sf2 = ShapeFiller(shapes2)
+    polylines = sf2.clip(polylines, inverse=True)
+    drawing.add_polylines(polylines)
+        
+    # add_spiral_kink_1(drawing, centre + Point(+side/2, h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
+    # add_spiral_kink_1(drawing, centre + Point(0, -2*h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
+    # add_spiral_kink_1(drawing, centre + Point(-disp, +disp), scale, r_per_circle = (factor/1.08) * drawing.pen_type.pen_width)
+
+def quality_test(drawing):
+
+    i_layer = 1
+    pos0 = Point(20, 20)
+    
+    for x in range(0, 105, 50):
+        for y in range(0, 205, 25):
+            pos = pos0 + Point(x,y)
+            points = []
+            for i in range(0, 20, 2):
+                points.append(pos + Point(0, i))
+                points.append(pos + Point(18,i))
+                points.append(pos + Point(18,i+1))
+                points.append(pos + Point(0,i+1))
+            points.append(pos + Point(0,20))
+            points.append(pos + Point(19,20))
+            points.append(pos + Point(19,0))
+            for i in range(0, 20, 2):
+                points.append(pos + Point(20+i, 0))
+                points.append(pos + Point(20+i, 20))
+                points.append(pos + Point(21+i, 20))
+                points.append(pos + Point(21+i, 0))
+            drawing.add_polyline(points, container=drawing.add_layer(f'{i_layer}-layer'))
+            i_layer += 1
+        
+def lsystem_test(drawing):
+
+    import lsystem
+    instructions = lsystem.test_lsystem(size=1, order=5)
+    print(instructions)
+    paper_centre = Point(102.5, 148)
+    pos = Point(0, 0)
+    points = [pos]
+    a = 0
+    for instruction in instructions:
+        if instruction[0] == "F":
+            radians = a/360*2*math.pi
+            pos = pos + Point(math.cos(radians), math.sin(radians)) * instruction[1]
+            points.append(pos)
+        elif instruction[0] == "A":
+            a += instruction[1]
+        else:
+            raise Exception(f'Unknown code: {instruction[0]}')
+    centre = Point(sum([p.x for p in points]), sum([p.y for p in points])) / len(points)
+    adj = paper_centre - centre
+    points = [p + adj for p in points]
+            
+    drawing.add_polyline(points)
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -1110,10 +1236,15 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
+# TRY moire WITH text OVERLAY
+
+lsystem_test(d)
+# quality_test(d)
+# add_spiral_kink(d)
 # draw_riley_backoff_test(d)
 # draw_big_a(d)
 # draw_shape_clips2(d)
-star_gen(d)
+# star_gen(d)
 # rgb_test(d)
 # fill_test(d)
 # circle_test(d)
