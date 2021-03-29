@@ -1194,16 +1194,17 @@ def quality_test(drawing):
 def lsystem_test(drawing):
 
     import lsystem
-    instructions = lsystem.test_lsystem(size=1, order=5)
+    instructions = lsystem.test_lsystem(order=5)
     print(instructions)
     paper_centre = Point(102.5, 148)
     pos = Point(0, 0)
     points = [pos]
     a = 0
+    size = 1
     for instruction in instructions:
         if instruction[0] == "F":
             radians = a/360*2*math.pi
-            pos = pos + Point(math.cos(radians), math.sin(radians)) * instruction[1]
+            pos = pos + Point(math.cos(radians), math.sin(radians)) * size
             points.append(pos)
         elif instruction[0] == "A":
             a += instruction[1]
