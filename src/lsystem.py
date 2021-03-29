@@ -12,32 +12,25 @@ class turtle:
     def turn(self, delta):
         self.instructions.append(("A", delta))
 
-def lsystem_process_token(turtle, order, replace_map, token) -> None:
-    """Draw the Gosper curve."""
-    if order == 0:
-        turtle.forward()
-        return
-        
-    ops = None
-    if token == "A":
-        ops = "A-B--B+A++AA+B-"
-    elif token == "B":
-        ops = "+A-BB--B-A++A+B"
-    if ops == None:
-        raise Exception(f"Unexpected token: '{token}'")
-        
-    for op in ops:
-        replace_map[op](turtle, order - 1, replace_map)
+gosper_map = {
+    "A": (lambda turtle: turtle.forward(), "A-B--B+A++AA+B-"),
+    "B": (lambda turtle: turtle.forward(), "+A-BB--B-A++A+B"),
+    "-": (lambda turtle: turtle.turn(60), None),
+    "+": (lambda turtle: turtle.turn(-60), None),
+}
+
+def lsystem_process_token(target, order, token, lsystem_map):
+
+    map_elem = lsystem_map[token]
+    if order == 0 or map_elem[1] is None:
+        map_elem[0](target)
+    else:
+        for new_token in map_elem[1]:
+            lsystem_process_token(target, order-1, new_token, lsystem_map)
 
 def test_lsystem(order):
-    t = turtle()
-    
-    lsystem_replace_map = {
-        "A": lambda turtle, o, replace_map: lsystem_process_token(turtle, o, replace_map, "A"),
-        "B": lambda turtle, o, replace_map: lsystem_process_token(turtle, o, replace_map, "B"),
-        "-": lambda turtle, o, replace_map: turtle.turn(60),
-        "+": lambda turtle, o, replace_map: turtle.turn(-60),
-    }
-    
-    lsystem_process_token(t, order, lsystem_replace_map, "A")
-    return t.instructions
+
+    target = turtle()
+    lsystem_process_token(target, order, "A", gosper_map)
+    return target.instructions
+
