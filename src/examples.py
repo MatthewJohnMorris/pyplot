@@ -126,7 +126,7 @@ def plot_perlin_spirals(drawing):
                 spiral_stroke = spiral_strokes[i_layer]
                 plot_perlin_spiral(drawing, (20*(i+1),20*(j+1)), 0.5, 6, 0.6, seed + i_layer, stroke=spiral_stroke, container=spiral_layer)
     
-def random_rects(drawing):
+def random_coloured_rects(drawing):
 
     inner_tl = (100, 100)
     inner_ext = (50, 20)
@@ -163,20 +163,6 @@ def burroughs_medal(d):
     # print("medal")
     d.image_spiral_single(d.add_layer('2'), 'burroughs.jpg', (100, 160), 25)
     text_in_circle(d)
-
-def test_dots(d):
-
-    for r in range(0, 8):
-        layer = d.add_layer(f'{r+1}')
-        for c in range(0, 8):
-            d.add_dot((44 + 12*c, 44 + 40 + 12*r), 1.5, container=layer)
-            
-def test_dots2(d):
-
-    for r in range(0, 8):
-        layer = d.add_layer(f'{r+1}')
-        for c in range(0, 8):
-            d.add_dot((10 + 4*c + 32 * 4, 10 + 4*r), 1.7, container=layer, r_start = 1.4)
             
 def xy_heart(r, a1):
 
@@ -799,6 +785,7 @@ def draw_3d(d):
     d.add_polylines(all_polylines)
 
 def mothers_day(d):
+
     all_polylines = []
     
     pos = Point(105, 105)
@@ -855,7 +842,7 @@ def mothers_day(d):
     
     d.add_circle(pos, 60)
 
-def draw_riley(drawing):    
+def draw_riley_blaze(drawing):    
 
     nslice = 40    
     
@@ -897,7 +884,7 @@ def draw_riley_backoff_test(drawing):
         path = drawing.fill_in_paths(b.path_gen_f)
         drawing.add_polyline(path[::-1])
 
-def draw_riley2(drawing):    
+def draw_riley_movement_in_squares(drawing):    
 
     paper_centre = Point(102.5, 148)
     size = 90
@@ -1258,27 +1245,26 @@ paper_size = Point(192, 276)
 # TRY moire WITH text OVERLAY
 
 # draw_snowflake(d)
-lsystem_test(d)
+# lsystem_test(d)
 # quality_test(d)
 # add_spiral_kink(d)
-# draw_riley_backoff_test(d)
-# draw_big_a(d)
-# draw_shape_clips2(d)
 # star_gen(d)
 # rgb_test(d)
-# fill_test(d)
 # circle_test(d)
+draw_shape_clips2(d)
 
 if False:
     draw_big_a(d)
     draw_xor_circles(d)
-    draw_riley(d)
-    draw_riley2(d)
+    draw_riley_blaze(d)
+    draw_riley_movement_in_squares(d)
     draw_riley_backoff_test(d)
+    
+    draw_3d(d)
     draw_shape_clips(d)
     draw_shape_clips2(d)
+    
     mothers_day(d)
-    draw_3d(d)
     draw_word_square(d)
     draw_tree(d)
     draw_false_prophets(d)
@@ -1292,11 +1278,9 @@ if False:
     burroughs_medal(d)
     test_height(d)
     test_hearts(d)
-    test_dots(d)
-    test_dots2(d)
     multi_burroughs(d)
     draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-    random_rects(d)
+    random_coloured_rects(d)
     plot_perlin_spirals(d)
     d.add_spiral((60, 60), 30)
     d.add_spiral((61.6666, 61.666), 30)
