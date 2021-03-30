@@ -1036,16 +1036,6 @@ def star_gen(drawing):
                 circle_centre2 = Point(centre.x + centre2_r*c, centre.y + centre2_r*s)
                 drawing.add_dot(circle_centre2, r2)
     
-def circle_test(drawing):
-
-    centre = Point(60, 20)
-    shapes = []
-    shapes.append(drawing.make_circle(centre, 5))
-    shapes.append(drawing.make_circle(centre, 6.5))
-    sf = ShapeFiller(shapes)
-    paths = sf.get_paths(drawing.pen_type.pen_width * 0.4) # , angle=math.pi/2)
-    drawing.add_polylines(paths)
-
 def make_spiral_kink_1(drawing, centre, scale, r_per_circle=None, r_initial=None, direction=1):
 
     points = []
@@ -1076,7 +1066,7 @@ def add_spiral_kink_1(drawing, centre, scale, r_per_circle=None, r_initial=None,
         
     drawing.add_polyline(make_spiral_kink_1(drawing, centre, scale, r_per_circle, r_initial, direction))
     
-def add_spiral_kink(drawing):
+def spiral_moire(drawing):
 
     centre = Point(102.5, 148)
     scale = 80
@@ -1244,27 +1234,27 @@ paper_size = Point(192, 276)
 
 # TRY moire WITH text OVERLAY
 
-# draw_snowflake(d)
-# lsystem_test(d)
-# quality_test(d)
-# add_spiral_kink(d)
-# star_gen(d)
-# rgb_test(d)
-# circle_test(d)
-draw_shape_clips2(d)
+spiral_moire(d)
 
 if False:
-    draw_big_a(d)
-    draw_xor_circles(d)
+    draw_snowflake(d)
+    mothers_day(d)
+    star_gen(d)
+
     draw_riley_blaze(d)
     draw_riley_movement_in_squares(d)
     draw_riley_backoff_test(d)
+    
+    lsystem_test(d)
+    quality_test(d)
+    
+    draw_big_a(d)
+    draw_xor_circles(d)
     
     draw_3d(d)
     draw_shape_clips(d)
     draw_shape_clips2(d)
     
-    mothers_day(d)
     draw_word_square(d)
     draw_tree(d)
     draw_false_prophets(d)
