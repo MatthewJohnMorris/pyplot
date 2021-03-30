@@ -257,7 +257,7 @@ def valentine(d):
     d.add_dot((100, 140), 71, container=layer13, stroke=svgwrite.rgb(255, 255, 0, '%'), r_start=70)
 
 
-def test_height(d):
+def test_drawing_extent(d):
 
     # x: 20 to 180 -> 160 gap, 5 
     # y: 20 to 260 -> 240 gap, 7
@@ -1036,36 +1036,6 @@ def star_gen(drawing):
                 circle_centre2 = Point(centre.x + centre2_r*c, centre.y + centre2_r*s)
                 drawing.add_dot(circle_centre2, r2)
     
-def make_spiral_kink_1(drawing, centre, scale, r_per_circle=None, r_initial=None, direction=1):
-
-    points = []
-    r = 0 if r_initial is None else r_initial # initial radius
-    a = 0 # starting angle
-    r_per_circle = 2 * drawing.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
-    c_size = 0.5 # constant distance travelled: something like the nib width is probably best
-    
-    # draw until we've hit the desired size
-    while r <= scale:
-    
-        # Archimedian spiral with constant length of path
-        r_floored = max(r, 0.5)
-        a_inc = c_size / r_floored
-        a += a_inc * direction
-        r += r_per_circle * a_inc / (2 * math.pi)
-        
-        # output location
-        s = math.sin(a)
-        c = math.cos(a)
-        pt = centre + Point(c, s) * r
-        
-        points.append(pt)
-        
-    return points
-        
-def add_spiral_kink_1(drawing, centre, scale, r_per_circle=None, r_initial=None, direction=1):
-        
-    drawing.add_polyline(make_spiral_kink_1(drawing, centre, scale, r_per_circle, r_initial, direction))
-    
 def spiral_moire(drawing):
 
     centre = Point(102.5, 148)
@@ -1075,10 +1045,10 @@ def spiral_moire(drawing):
     side = 2
     h = side * 0.5 * math.sqrt(3)
     
-    add_spiral_kink_1(drawing, centre + Point(0, 0), scale, r_per_circle = (factor*1.00) * drawing.pen_type.pen_width)
+    drawing.add_spiral(centre + Point(0, 0), scale, r_per_circle = (factor*1.00) * drawing.pen_type.pen_width)
     
     centre2 = centre + Point(0,5)
-    all_polylines = [make_spiral_kink_1(drawing, centre2, scale*1.09, r_per_circle = (factor*1.09) * drawing.pen_type.pen_width)]
+    all_polylines = [drawing.make_spiral(centre2, scale*1.09, r_per_circle = (factor*1.09) * drawing.pen_type.pen_width)]
 
     '''
     shapes = []
@@ -1112,9 +1082,9 @@ def spiral_moire(drawing):
     polylines = sf2.clip(polylines, inverse=True)
     drawing.add_polylines(polylines)
         
-    # add_spiral_kink_1(drawing, centre + Point(+side/2, h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
-    # add_spiral_kink_1(drawing, centre + Point(0, -2*h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
-    # add_spiral_kink_1(drawing, centre + Point(-disp, +disp), scale, r_per_circle = (factor/1.08) * drawing.pen_type.pen_width)
+    # drawing.add_spiral(centre + Point(+side/2, h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
+    # drawing.add_spiral(centre + Point(0, -2*h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
+    # drawing.add_spiral(centre + Point(-disp, +disp), scale, r_per_circle = (factor/1.08) * drawing.pen_type.pen_width)
 
 # Use this for a bunch of test areas on pen quality
 def quality_test(drawing):
@@ -1234,56 +1204,61 @@ paper_size = Point(192, 276)
 
 # TRY moire WITH text OVERLAY
 
-spiral_moire(d)
 
 if False:
+    # works in progress
+    image_sketch(d)
+
+    # stuff that looks nice
+    valentine(d)
     draw_snowflake(d)
     mothers_day(d)
     star_gen(d)
+    spiral_moire(d)
+    draw_xor_circles(d)
+    draw_3d(d)
+    draw_tree(d)
+    draw_false_prophets(d)
+    multi_burroughs(d)
+    burroughs_medal(d)
+    plot_perlin_spirals(d)
+    draw_unknown_pleasures(d)
+    random_coloured_rects(d)
+    test_shape_filler(d)
+    plot_perlin_drape_spiral(d, 6)
+    plot_perlin_drape_spiral(d, 8)
 
+    # op art
     draw_riley_blaze(d)
     draw_riley_movement_in_squares(d)
     draw_riley_backoff_test(d)
-    
-    lsystem_test(d)
-    quality_test(d)
-    
+
+    # text
     draw_big_a(d)
-    draw_xor_circles(d)
-    
-    draw_3d(d)
-    draw_shape_clips(d)
-    draw_shape_clips2(d)
-    
     draw_word_square(d)
-    draw_tree(d)
-    draw_false_prophets(d)
     test_text_and_shape(d)
-    image_sketch(d)
-    speed_limit_test(d)
     test_boxed_text(d)
-    fill_test(d)
-    test_shape_filler(d)
-    valentine(d)
-    burroughs_medal(d)
-    test_height(d)
-    test_hearts(d)
-    multi_burroughs(d)
     draw_text_by_letter_and_whole_for_comparison(d, family='CNC Vector') # , s="a l l w o r k a n d n o p l a y m a k e s jackadullboy")
-    random_coloured_rects(d)
-    plot_perlin_spirals(d)
+    d.add_spiral_text((100.75, 100.75), 60)
+
+    # spiral plotting
     d.add_spiral((60, 60), 30)
     d.add_spiral((61.6666, 61.666), 30)
-    d.add_spiral_text((100.75, 100.75), 60)
-    draw_unknown_pleasures(d)
     d.image_spiral_single(d.dwg, 'testCard_F.jpg', (100, 100), 40)
     d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
     d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80)
     # d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
-    plot_surface(d)
-    plot_perlin_drape_spiral(d, 6)
-    plot_perlin_drape_spiral(d, 8)
 
+    # testing stuff
+    lsystem_test(d)
+    quality_test(d)
+    draw_shape_clips(d)
+    draw_shape_clips2(d)
+    speed_limit_test(d)
+    fill_test(d)
+    test_drawing_extent(d)
+    test_hearts(d)
+    plot_surface(d)
 
 d.dwg.save()
 
