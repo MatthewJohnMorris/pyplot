@@ -90,6 +90,12 @@ barnsley_fern_map = {
     "+": (lambda turtle: turtle.turn(+25), None),
 }
 
+koch_snowflake_map = {
+    "F": (lambda turtle: turtle.forward(), "F+F--F+F"),
+    "-": (lambda turtle: turtle.turn(-60), None),
+    "+": (lambda turtle: turtle.turn(+60), None),
+}
+
 def lsystem_process_token(target, order, token, lsystem_map):
 
     map_elem = lsystem_map[token]
@@ -126,5 +132,15 @@ def test_lsystem_tree(order, size):
 def test_lsystem_barnsley_fern(order, size):
 
     target = turtle()
-    lsystem_process_token(target, order, "X", barnsley_fern_map)
+    for token in "----X":
+        lsystem_process_token(target, order, token, barnsley_fern_map)
     return target.render(size)
+
+def test_lsystem_koch_snowflake(order, size):
+
+    target = turtle()
+    for token in "F--F--F":
+        lsystem_process_token(target, order, token, koch_snowflake_map)
+    # print(target.instructions)
+    return target.render(size)
+

@@ -977,14 +977,6 @@ def draw_big_a(drawing):
     
     d.add_polylines(paths)
 
-def maze_gen(drawing):
-
-    nr = 10
-    nc = 10
-    pos = (0, 0)
-    vertexes = set()
-    paths = []
-    
 def star_gen(drawing):
 
     centre = Point(102.5, 148)
@@ -1056,25 +1048,6 @@ def star_gen(drawing):
                 centre2_r = points[0][0] * ratio * ratio + r2 + 2
                 circle_centre2 = Point(centre.x + centre2_r*c, centre.y + centre2_r*s)
                 drawing.add_dot(circle_centre2, r2)
-
-    
-def rgb_test(drawing):
-
-    centre = Point(102.5, 148)
-    a = 0
-    r = 15
-    layers = [drawing.add_layer("1-yellow"), drawing.add_layer("2-cyan"), drawing.add_layer("3-magenta")]
-    strokes = [svgwrite.rgb(255, 255, 0, '%'), svgwrite.rgb(0, 255, 255, '%'), svgwrite.rgb(255, 0, 255, '%')]
-    angles = [0, 1, 2]
-    for i in range(0, len(layers)):
-        layer = layers[i]
-        stroke = strokes[i]
-        a = angles[i] * math.pi * 2 / 3
-        c = centre + Point(math.cos(a), math.sin(a))*r*0.6
-        shape = drawing.make_circle(c, r)
-        sf = ShapeFiller([shape])
-        paths = sf.get_paths(drawing.pen_type.pen_width * 0.4) # , angle=math.pi/2)
-        drawing.add_polylines(paths, container=layer, stroke=stroke)
     
 def circle_test(drawing):
 
@@ -1166,6 +1139,7 @@ def add_spiral_kink(drawing):
     # add_spiral_kink_1(drawing, centre + Point(0, -2*h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
     # add_spiral_kink_1(drawing, centre + Point(-disp, +disp), scale, r_per_circle = (factor/1.08) * drawing.pen_type.pen_width)
 
+# Use this for a bunch of test areas on pen quality
 def quality_test(drawing):
 
     i_layer = 1
@@ -1190,6 +1164,47 @@ def quality_test(drawing):
                 points.append(pos + Point(21+i, 0))
             drawing.add_polyline(points, container=drawing.add_layer(f'{i_layer}-layer'))
             i_layer += 1
+
+def draw_snowflake(drawing):
+
+    import lsystem
+    factor = 2.1
+    all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
+    all_lines2= lsystem.test_lsystem_koch_snowflake(order=4, size=0.5*factor)
+    all_lines3 = lsystem.test_lsystem_koch_snowflake(order=3, size=0.5*factor*factor)
+    all_lines4 = lsystem.test_lsystem_koch_snowflake(order=2, size=0.5*factor*factor*factor)
+    all_lines5 = lsystem.test_lsystem_koch_snowflake(order=1, size=0.5*factor*factor*factor*factor)
+
+    def centre_on(polylines, new_centre):
+        n = 0
+        sumx = 0
+        sumy = 0
+        for line in polylines:
+            for point in line[:-1]:
+                n += 1
+                sumx += point.x
+                sumy += point.y
+        centre = Point(sumx / n, sumy / n)
+        adj = paper_centre - centre
+        return [[p + adj for p in line] for line in polylines]
+    
+    # centre the drawing on the paper
+    paper_centre = Point(102.5, 148)
+    drawing.add_polylines(centre_on(all_lines, paper_centre))
+    drawing.add_polylines(centre_on(all_lines2, paper_centre))
+    drawing.add_polylines(centre_on(all_lines3, paper_centre))
+    drawing.add_polylines(centre_on(all_lines4, paper_centre))
+    drawing.add_polylines(centre_on(all_lines5, paper_centre))
+
+    sf = ShapeFiller(centre_on(all_lines5, paper_centre))
+    fill = sf.get_paths(2*d.pen_type.pen_width / 5)
+    drawing.add_polylines(fill, container=drawing.add_layer("2-gold"), stroke=svgwrite.rgb(255, 255, 0, '%'))
+
+    shapes = centre_on(all_lines3, paper_centre)
+    shapes.extend(centre_on(all_lines4, paper_centre))
+    sf = ShapeFiller(shapes)
+    fill = sf.get_paths(2*d.pen_type.pen_width / 5)
+    drawing.add_polylines(fill, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(0, 255, 255, '%'))
         
 def lsystem_test(drawing):
 
@@ -1200,21 +1215,24 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
     all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
+    # all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
+
+    def centre_on(polylines, new_centre):
+        n = 0
+        sumx = 0
+        sumy = 0
+        for line in polylines:
+            for point in line[:-1]:
+                n += 1
+                sumx += point.x
+                sumy += point.y
+        centre = Point(sumx / n, sumy / n)
+        adj = paper_centre - centre
+        return [[p + adj for p in line] for line in polylines]
     
     # centre the drawing on the paper
     paper_centre = Point(102.5, 148)
-    n = 0
-    sumx = 0
-    sumy = 0
-    for line in all_lines:
-        for point in line:
-            n += 1
-            sumx += point.x
-            sumy += point.y
-    centre = Point(sumx / n, sumy / n)
-    adj = paper_centre - centre
-    all_lines = [[p + adj for p in line] for line in all_lines]
-    drawing.add_polylines(all_lines)
+    drawing.add_polylines(centre_on(all_lines, paper_centre))
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -1239,6 +1257,7 @@ paper_size = Point(192, 276)
 
 # TRY moire WITH text OVERLAY
 
+# draw_snowflake(d)
 lsystem_test(d)
 # quality_test(d)
 # add_spiral_kink(d)
