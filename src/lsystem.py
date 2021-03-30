@@ -81,6 +81,15 @@ tree_map = {
     "+": (lambda turtle: turtle.turn(+45), None),
 }
 
+barnsley_fern_map = {
+    "X": (lambda turtle: turtle.nop(), "F+[[X]-X]-F[-FX]+X"),
+    "F": (lambda turtle: turtle.forward(), "FF"),
+    "[": (lambda turtle: turtle.push(), None),
+    "]": (lambda turtle: turtle.pop(), None),
+    "-": (lambda turtle: turtle.turn(-25), None),
+    "+": (lambda turtle: turtle.turn(+25), None),
+}
+
 def lsystem_process_token(target, order, token, lsystem_map):
 
     map_elem = lsystem_map[token]
@@ -108,9 +117,14 @@ def test_lsystem_arrowhead(order, size):
     lsystem_process_token(target, order, "A", arrowhead_map)
     return target.render(size)
 
-
 def test_lsystem_tree(order, size):
 
     target = turtle()
     lsystem_process_token(target, order, "0", tree_map)
+    return target.render(size)
+
+def test_lsystem_barnsley_fern(order, size):
+
+    target = turtle()
+    lsystem_process_token(target, order, "X", barnsley_fern_map)
     return target.render(size)

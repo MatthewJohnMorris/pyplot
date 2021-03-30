@@ -1198,7 +1198,8 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
-    all_lines = lsystem.test_lsystem_tree(order=7, size=1)
+    # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
+    all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
     
     # centre the drawing on the paper
     paper_centre = Point(102.5, 148)
