@@ -1154,7 +1154,7 @@ def draw_snowflake(drawing):
     drawing.add_polylines(fill, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(0, 255, 255, '%'))
         
 def lsystem_test(drawing):
-    # http://paulbourke.net/fractals/lsys/
+    # A good source for new ideas: http://paulbourke.net/fractals/lsys/
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
