@@ -1194,17 +1194,26 @@ def quality_test(drawing):
 def lsystem_test(drawing):
 
     import lsystem
-    # points = lsystem.test_lsystem_gosper(order=5, size=1)
-    # points = lsystem.test_lsystem_hilbert(order=7, size=1)
-    points = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
+    # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
+    # all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
+    # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
+    # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
+    all_lines = lsystem.test_lsystem_tree(order=7, size=1)
     
     # centre the drawing on the paper
     paper_centre = Point(102.5, 148)
-    centre = Point(sum([p.x for p in points]), sum([p.y for p in points])) / len(points)
+    n = 0
+    sumx = 0
+    sumy = 0
+    for line in all_lines:
+        for point in line:
+            n += 1
+            sumx += point.x
+            sumy += point.y
+    centre = Point(sumx / n, sumy / n)
     adj = paper_centre - centre
-    points = [p + adj for p in points]
-            
-    drawing.add_polyline(points)
+    all_lines = [[p + adj for p in line] for line in all_lines]
+    drawing.add_polylines(all_lines)
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle

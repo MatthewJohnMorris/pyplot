@@ -12,25 +12,43 @@ class turtle:
         self = self
     
     def forward(self):
-        self.instructions.append(("F"))
+        self.instructions.append(["F"])
 
     def turn(self, delta):
-        self.instructions.append(("A", delta))
+        self.instructions.append(["A", delta])
+        
+    def push(self):
+        self.instructions.append(["PUSH"])
+        
+    def pop(self):
+        self.instructions.append(["POP"])
         
     def render(self, size):
+        stack = []
         pos = Point(0,0)
-        points = [pos]
+        all_lines = []
+        current_line = [pos]
         a = 0
         for instruction in self.instructions:
             if instruction[0] == "F":
                 radians = a/360*2*math.pi
                 pos = pos + Point(math.cos(radians), math.sin(radians)) * size
-                points.append(pos)
+                current_line.append(pos)
             elif instruction[0] == "A":
                 a += instruction[1]
+            elif instruction[0] == "PUSH":
+                stack.append((pos, a))
+            elif instruction[0] == "POP":
+                if len(current_line) > 1:
+                    all_lines.append(current_line)
+                (pos, a) = stack.pop()
+                current_line = [pos]
             else:
+                print(self.instructions)
                 raise Exception(f'Unknown code: {instruction[0]}')
-        return points
+        if len(current_line) > 1:
+            all_lines.append(current_line)
+        return all_lines
 
 gosper_map = {
     "A": (lambda turtle: turtle.forward(), "A-B--B+A++AA+B-"),
@@ -52,6 +70,15 @@ arrowhead_map = {
     "B": (lambda turtle: turtle.forward(), "A+B+A"),
     "-": (lambda turtle: turtle.turn(60), None),
     "+": (lambda turtle: turtle.turn(-60), None),
+}
+
+tree_map = {
+    "0": (lambda turtle: turtle.forward(), "1[+0]-0"),
+    "1": (lambda turtle: turtle.forward(), "11"),
+    "[": (lambda turtle: turtle.push(), None),
+    "]": (lambda turtle: turtle.pop(), None),
+    "-": (lambda turtle: turtle.turn(-45), None),
+    "+": (lambda turtle: turtle.turn(+45), None),
 }
 
 def lsystem_process_token(target, order, token, lsystem_map):
@@ -81,3 +108,9 @@ def test_lsystem_arrowhead(order, size):
     lsystem_process_token(target, order, "A", arrowhead_map)
     return target.render(size)
 
+
+def test_lsystem_tree(order, size):
+
+    target = turtle()
+    lsystem_process_token(target, order, "0", tree_map)
+    return target.render(size)
