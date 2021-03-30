@@ -1209,7 +1209,7 @@ if False:
     # works in progress
     image_sketch(d)
 
-    # stuff that looks nice
+    # realised ideas I want to keep
     valentine(d)
     draw_snowflake(d)
     mothers_day(d)
