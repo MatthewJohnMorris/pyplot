@@ -96,6 +96,13 @@ koch_snowflake_map = {
     "+": (lambda turtle: turtle.turn(+60), None),
 }
 
+pentaplexity_map = {
+    "F": (lambda turtle: turtle.forward(), "F++F++F|F-F++F"),
+    "-": (lambda turtle: turtle.turn(-36), None),
+    "+": (lambda turtle: turtle.turn(+36), None),
+    "|": (lambda turtle: turtle.turn(+180), None),
+}
+
 def lsystem_process_token(target, order, token, lsystem_map):
 
     map_elem = lsystem_map[token]
@@ -141,6 +148,14 @@ def test_lsystem_koch_snowflake(order, size):
     target = turtle()
     for token in "F--F--F":
         lsystem_process_token(target, order, token, koch_snowflake_map)
+    # print(target.instructions)
+    return target.render(size)
+
+def test_lsystem_pentaplexity(order, size):
+
+    target = turtle()
+    for token in "F++F++F++F++F":
+        lsystem_process_token(target, order, token, pentaplexity_map)
     # print(target.instructions)
     return target.render(size)
 

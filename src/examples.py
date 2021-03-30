@@ -1154,6 +1154,7 @@ def draw_snowflake(drawing):
     drawing.add_polylines(fill, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(0, 255, 255, '%'))
         
 def lsystem_test(drawing):
+    # http://paulbourke.net/fractals/lsys/
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
@@ -1161,8 +1162,9 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
-    all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
+    # all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
     # all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
+    all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
 
     def centre_on(polylines, new_centre):
         n = 0
@@ -1203,6 +1205,7 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # TRY moire WITH text OVERLAY
+lsystem_test(d)
 
 
 if False:
