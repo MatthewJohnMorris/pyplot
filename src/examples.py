@@ -1164,7 +1164,8 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
     # all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
     # all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
-    all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
+    # all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
+    all_lines = lsystem.test_lsystem_example(order=7, size=4)
 
     def centre_on(polylines, new_centre):
         n = 0

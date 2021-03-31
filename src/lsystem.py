@@ -159,3 +159,22 @@ def test_lsystem_pentaplexity(order, size):
     # print(target.instructions)
     return target.render(size)
 
+def test_lsystem_example(order, size):
+
+    example_map = {
+        "F": (lambda turtle: turtle.forward(), "XF+XLLF"),
+        "L": (lambda turtle: turtle.nop(), "XLGX"),
+        "J": (lambda turtle: turtle.nop(), "[X-]JE"),
+        "X": (lambda turtle: turtle.nop(), "F"),
+        "E": (lambda turtle: turtle.nop(), "[[JXX]XG]"),
+        "G": (lambda turtle: turtle.nop(), "G"),
+        "-": (lambda turtle: turtle.turn(-83), None),
+        "+": (lambda turtle: turtle.turn(+83), None),
+        "[": (lambda turtle: turtle.push(), None),
+        "]": (lambda turtle: turtle.pop(), None),
+    }
+    target = turtle()
+    for token in "LL":
+        lsystem_process_token(target, order, token, example_map)
+    # print(target.instructions)
+    return target.render(size)
