@@ -1158,7 +1158,7 @@ def lsystem_test(drawing):
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
-    # all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
+    all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
@@ -1169,7 +1169,7 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_bot_example2(order=5, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example4(order=7, size=1.3, start_a=90)
-    all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
+    # all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
 
     def centre_on(polylines, new_centre):
         n = 0
@@ -1210,6 +1210,8 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # TRY moire WITH text OVERLAY
+
+lsystem_test(d)
 
 if False:
     # works in progress
