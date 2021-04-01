@@ -916,7 +916,7 @@ def draw_riley_movement_in_squares(drawing):
             ix_x += 1
             a += math.pi / 29.6
 
-def draw_xor_circles(drawing):
+def draw_xor_circles_othello(drawing):
 
     paper_centre = Point(102.5, 148)
     n = 20
@@ -1153,50 +1153,6 @@ def draw_snowflake(drawing):
     fill = sf.get_paths(2*d.pen_type.pen_width / 5)
     drawing.add_polylines(fill, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(0, 255, 255, '%'))
 
-def draw_snowflake2(drawing):
-
-    import lsystem
-
-    def centre_on(polylines, new_centre):
-        n = 0
-        sumx = 0
-        sumy = 0
-        for line in polylines:
-            for point in line[:-1]:
-                n += 1
-                sumx += point.x
-                sumy += point.y
-        centre = Point(sumx / n, sumy / n)
-        adj = new_centre - centre
-        return [[p + adj for p in line] for line in polylines]
-    
-    # centre the drawing on the paper
-    paper_centre = Point(102.5, 148)
-    
-    factor = 2.1
-
-    all_polylines = []
-    shapes = []
-    for i in range(0, 50):
-        centre = paper_centre + Point(random()*120-60, random()*120-60)
-        print(centre)
-        all_lines = lsystem.test_lsystem_koch_snowflake(order=4, size=0.5)
-        shape_polyline = centre_on(all_lines, centre)[0]
-        shape = shape_polyline
-        if len(shapes) == 0:
-            all_polylines.append(shape_polyline)
-            shapes.append(shape)
-        else:
-            sf = ShapeFiller(shapes)
-            clipped_polylines = sf.clip([shape_polyline], union=True)
-            if(len(clipped_polylines) > 0):
-                # print(shape_polyline)
-                # print(clipped_polylines)
-                all_polylines.extend(clipped_polylines)
-                shapes.append(shape)
-                
-    drawing.add_polylines(all_polylines)
-
 def lsystem_test(drawing):
     # A good source for new ideas: http://paulbourke.net/fractals/lsys/
 
@@ -1254,8 +1210,6 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # TRY moire WITH text OVERLAY
-lsystem_test(d)
-# draw_snowflake2(d)
 
 if False:
     # works in progress
@@ -1267,7 +1221,7 @@ if False:
     mothers_day(d)
     star_gen(d)
     spiral_moire(d)
-    draw_xor_circles(d)
+    draw_xor_circles_othello(d)
     draw_3d(d)
     draw_tree(d)
     draw_false_prophets(d)
@@ -1284,6 +1238,9 @@ if False:
     draw_riley_blaze(d)
     draw_riley_movement_in_squares(d)
     draw_riley_backoff_test(d)
+    
+    # lsystems
+    lsystem_test(d)
 
     # text
     draw_big_a(d)

@@ -82,7 +82,7 @@ class lsystem_map():
             for new_token in map_elem[1]:
                 self.process_token(target, order-1, new_token)
             
-    def process(self, order, size, start, start_a):
+    def process(self, order, size, start, start_a=0):
         target = turtle()
         for token in start:
             self.process_token(target, order, token)
@@ -183,24 +183,3 @@ def test_lsystem_fass(order, size, start_a=0):
         .add_entry("F", lambda turtle: turtle.forward(), "F") \
         .add_entry("X", lambda turtle: turtle.forward(), "X+F+X--F--X+F+X") \
         .process(order, size, "FX++FX++FX++FX", start_a=start_a)
-
-def test_lsystem_fassA(order, size, start_a=0):
-
-    example_map = {
-        "F": (lambda turtle: turtle.forward(), "F"),
-        "X": (lambda turtle: turtle.forward(), "X+F+X--F--X+F+X"),
-        "-": (lambda turtle: turtle.turn(-45), None),
-        "+": (lambda turtle: turtle.turn(+45), None),
-        "[": (lambda turtle: turtle.push(), None),
-        "]": (lambda turtle: turtle.pop(), None),
-    }
-    target = turtle()
-    for token in "FX++FX++FX++FX":
-        lsystem_process_token(target, order, token, example_map)
-    # print(target.instructions)
-    return target.render(size, start_a = start_a)
-
- 
-
- 
-
