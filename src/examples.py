@@ -1152,7 +1152,51 @@ def draw_snowflake(drawing):
     sf = ShapeFiller(shapes)
     fill = sf.get_paths(2*d.pen_type.pen_width / 5)
     drawing.add_polylines(fill, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(0, 255, 255, '%'))
-        
+
+def draw_snowflake2(drawing):
+
+    import lsystem
+
+    def centre_on(polylines, new_centre):
+        n = 0
+        sumx = 0
+        sumy = 0
+        for line in polylines:
+            for point in line[:-1]:
+                n += 1
+                sumx += point.x
+                sumy += point.y
+        centre = Point(sumx / n, sumy / n)
+        adj = new_centre - centre
+        return [[p + adj for p in line] for line in polylines]
+    
+    # centre the drawing on the paper
+    paper_centre = Point(102.5, 148)
+    
+    factor = 2.1
+
+    all_polylines = []
+    shapes = []
+    for i in range(0, 50):
+        centre = paper_centre + Point(random()*120-60, random()*120-60)
+        print(centre)
+        all_lines = lsystem.test_lsystem_koch_snowflake(order=4, size=0.5)
+        shape_polyline = centre_on(all_lines, centre)[0]
+        shape = shape_polyline
+        if len(shapes) == 0:
+            all_polylines.append(shape_polyline)
+            shapes.append(shape)
+        else:
+            sf = ShapeFiller(shapes)
+            clipped_polylines = sf.clip([shape_polyline], union=True)
+            if(len(clipped_polylines) > 0):
+                # print(shape_polyline)
+                # print(clipped_polylines)
+                all_polylines.extend(clipped_polylines)
+                shapes.append(shape)
+                
+    drawing.add_polylines(all_polylines)
+
 def lsystem_test(drawing):
     # A good source for new ideas: http://paulbourke.net/fractals/lsys/
 
@@ -1165,7 +1209,11 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
     # all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
     # all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
-    all_lines = lsystem.test_lsystem_example(order=7, size=4)
+    # all_lines = lsystem.test_lsystem_bot_example(order=7, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example2(order=5, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example4(order=7, size=1.3, start_a=90)
+    all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
 
     def centre_on(polylines, new_centre):
         n = 0
@@ -1207,7 +1255,7 @@ paper_size = Point(192, 276)
 
 # TRY moire WITH text OVERLAY
 lsystem_test(d)
-
+# draw_snowflake2(d)
 
 if False:
     # works in progress

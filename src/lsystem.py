@@ -23,12 +23,12 @@ class turtle:
     def pop(self):
         self.instructions.append(["POP"])
         
-    def render(self, size):
+    def render(self, size, start_a = 0):
         stack = []
         pos = Point(0,0)
         all_lines = []
         current_line = [pos]
-        a = 0
+        a = start_a
         for instruction in self.instructions:
             if instruction[0] == "F":
                 radians = a/360*2*math.pi
@@ -50,59 +50,6 @@ class turtle:
             all_lines.append(current_line)
         return all_lines
 
-gosper_map = {
-    "A": (lambda turtle: turtle.forward(), "A-B--B+A++AA+B-"),
-    "B": (lambda turtle: turtle.forward(), "+A-BB--B-A++A+B"),
-    "-": (lambda turtle: turtle.turn(60), None),
-    "+": (lambda turtle: turtle.turn(-60), None),
-}
-
-hilbert_map = {
-    "A": (lambda turtle: turtle.nop(), "+BF-AFA-FB+"),
-    "B": (lambda turtle: turtle.nop(), "-AF+BFB+FA-"),
-    "F": (lambda turtle: turtle.forward(), None),
-    "-": (lambda turtle: turtle.turn(90), None),
-    "+": (lambda turtle: turtle.turn(-90), None),
-}
-
-arrowhead_map = {
-    "A": (lambda turtle: turtle.forward(), "B-A-B"),
-    "B": (lambda turtle: turtle.forward(), "A+B+A"),
-    "-": (lambda turtle: turtle.turn(60), None),
-    "+": (lambda turtle: turtle.turn(-60), None),
-}
-
-tree_map = {
-    "0": (lambda turtle: turtle.forward(), "1[+0]-0"),
-    "1": (lambda turtle: turtle.forward(), "11"),
-    "[": (lambda turtle: turtle.push(), None),
-    "]": (lambda turtle: turtle.pop(), None),
-    "-": (lambda turtle: turtle.turn(-45), None),
-    "+": (lambda turtle: turtle.turn(+45), None),
-}
-
-barnsley_fern_map = {
-    "X": (lambda turtle: turtle.nop(), "F+[[X]-X]-F[-FX]+X"),
-    "F": (lambda turtle: turtle.forward(), "FF"),
-    "[": (lambda turtle: turtle.push(), None),
-    "]": (lambda turtle: turtle.pop(), None),
-    "-": (lambda turtle: turtle.turn(-25), None),
-    "+": (lambda turtle: turtle.turn(+25), None),
-}
-
-koch_snowflake_map = {
-    "F": (lambda turtle: turtle.forward(), "F+F--F+F"),
-    "-": (lambda turtle: turtle.turn(-60), None),
-    "+": (lambda turtle: turtle.turn(+60), None),
-}
-
-pentaplexity_map = {
-    "F": (lambda turtle: turtle.forward(), "F++F++F|F-F++F"),
-    "-": (lambda turtle: turtle.turn(-36), None),
-    "+": (lambda turtle: turtle.turn(+36), None),
-    "|": (lambda turtle: turtle.turn(+180), None),
-}
-
 def lsystem_process_token(target, order, token, lsystem_map):
 
     map_elem = lsystem_map[token]
@@ -112,69 +59,148 @@ def lsystem_process_token(target, order, token, lsystem_map):
         for new_token in map_elem[1]:
             lsystem_process_token(target, order-1, new_token, lsystem_map)
 
+class lsystem_map():
+
+    def __init__(self, angle):
+        self.token_map = {
+            "-": (lambda turtle: turtle.turn(-angle), None),
+            "+": (lambda turtle: turtle.turn(+angle), None),
+            "[": (lambda turtle: turtle.push(), None),
+            "]": (lambda turtle: turtle.pop(), None),
+            }
+            
+    def add_entry(self, token, turtle_op, image=None):
+        self.token_map[token] = (turtle_op, image)
+        return self
+        
+    def process_token(self, target, order, token):
+
+        map_elem = self.token_map[token]
+        if order == 0 or map_elem[1] is None:
+            map_elem[0](target)
+        else:
+            for new_token in map_elem[1]:
+                self.process_token(target, order-1, new_token)
+            
+    def process(self, order, size, start, start_a):
+        target = turtle()
+        for token in start:
+            self.process_token(target, order, token)
+        return target.render(size, start_a=start_a)
+
 def test_lsystem_gosper(order, size):
 
-    target = turtle()
-    lsystem_process_token(target, order, "A", gosper_map)
-    return target.render(size)
+    return lsystem_map(-60) \
+        .add_entry("A", lambda turtle: turtle.forward(), "A-B--B+A++AA+B-") \
+        .add_entry("B", lambda turtle: turtle.forward(), "+A-BB--B-A++A+B") \
+        .process(order, size, "A")
 
 def test_lsystem_hilbert(order, size):
 
-    target = turtle()
-    lsystem_process_token(target, order, "A", hilbert_map)
-    return target.render(size)
+    return lsystem_map(-90) \
+        .add_entry("F", lambda turtle: turtle.forward()) \
+        .add_entry("A", lambda turtle: turtle.nop(), "+BF-AFA-FB+") \
+        .add_entry("B", lambda turtle: turtle.nop(), "-AF+BFB+FA-") \
+        .process(order, size, "A")
 
 def test_lsystem_arrowhead(order, size):
 
-    target = turtle()
-    lsystem_process_token(target, order, "A", arrowhead_map)
-    return target.render(size)
+    return lsystem_map(-60) \
+        .add_entry("A", lambda turtle: turtle.forward(), "B-A-B") \
+        .add_entry("B", lambda turtle: turtle.forward(), "A+B+A") \
+        .process(order, size, "A")
 
 def test_lsystem_tree(order, size):
 
-    target = turtle()
-    lsystem_process_token(target, order, "0", tree_map)
-    return target.render(size)
+    return lsystem_map(45) \
+        .add_entry("0", lambda turtle: turtle.forward(), "1[+0]-0") \
+        .add_entry("1", lambda turtle: turtle.forward(), "11") \
+        .process(order, size, "0")
 
 def test_lsystem_barnsley_fern(order, size):
 
-    target = turtle()
-    for token in "----X":
-        lsystem_process_token(target, order, token, barnsley_fern_map)
-    return target.render(size)
+    return lsystem_map(25) \
+        .add_entry("F", lambda turtle: turtle.forward(), "FF") \
+        .add_entry("X", lambda turtle: turtle.nop(), "F+[[X]-X]-F[-FX]+X") \
+        .process(order, size, "----X")
 
 def test_lsystem_koch_snowflake(order, size):
 
-    target = turtle()
-    for token in "F--F--F":
-        lsystem_process_token(target, order, token, koch_snowflake_map)
-    # print(target.instructions)
-    return target.render(size)
+    return lsystem_map(60) \
+        .add_entry("F", lambda turtle: turtle.forward(), "F+F--F+F") \
+        .process(order, size, "F--F--F")
 
 def test_lsystem_pentaplexity(order, size):
 
-    target = turtle()
-    for token in "F++F++F++F++F":
-        lsystem_process_token(target, order, token, pentaplexity_map)
-    # print(target.instructions)
-    return target.render(size)
+    return lsystem_map(36) \
+        .add_entry("F", lambda turtle: turtle.forward(), "F++F++F|F-F++F") \
+        .add_entry("|", lambda turtle: turtle.turn(+180)) \
+        .process(order, size, "F++F++F++F++F")
 
-def test_lsystem_example(order, size):
+def test_lsystem_bot_example(order, size, start_a=0):
+
+    return lsystem_map(83) \
+        .add_entry("F", lambda turtle: turtle.forward(), "XF+XLLF") \
+        .add_entry("L", lambda turtle: turtle.nop(), "XLGX")        \
+        .add_entry("J", lambda turtle: turtle.nop(), "[X-]JE")      \
+        .add_entry("X", lambda turtle: turtle.nop(), "F")           \
+        .add_entry("E", lambda turtle: turtle.nop(), "[[JXX]XG]")   \
+        .add_entry("G", lambda turtle: turtle.nop(), "G")           \
+        .process(order, size, "LL", start_a=start_a)
+
+def test_lsystem_bot_example2(order, size, start_a=0):
+
+    # Jul 5, 2020
+    return lsystem_map(16) \
+        .add_entry("F", lambda turtle: turtle.forward(), "FSSF--+") \
+        .add_entry("S", lambda turtle: turtle.nop(), "-FFF-F+")        \
+        .process(order, size, "FSF", start_a=start_a)
+
+def test_lsystem_bot_example3(order, size, start_a=0):
+
+    return lsystem_map(89) \
+        .add_entry("F", lambda turtle: turtle.forward(), "N") \
+        .add_entry("G", lambda turtle: turtle.nop(), "DGMGD-F") \
+        .add_entry("M", lambda turtle: turtle.nop(), "FFMGZ-") \
+        .add_entry("Z", lambda turtle: turtle.nop(), "MMG") \
+        .add_entry("D", lambda turtle: turtle.nop(), "ZN-") \
+        .add_entry("N", lambda turtle: turtle.nop(), "N") \
+        .process(order, size, "MDMM", start_a=start_a)
+
+def test_lsystem_bot_example4(order, size, start_a=0):
+
+    return lsystem_map(24) \
+        .add_entry("F", lambda turtle: turtle.forward(), "O-FGR") \
+        .add_entry("O", lambda turtle: turtle.nop(), "+FFFFR+G") \
+        .add_entry("G", lambda turtle: turtle.nop(), "F") \
+        .add_entry("R", lambda turtle: turtle.nop(), "F") \
+        .add_entry("H", lambda turtle: turtle.nop(), "[]") \
+        .process(order, size, "OO", start_a=start_a)
+
+def test_lsystem_fass(order, size, start_a=0):
+
+    return lsystem_map(45) \
+        .add_entry("F", lambda turtle: turtle.forward(), "F") \
+        .add_entry("X", lambda turtle: turtle.forward(), "X+F+X--F--X+F+X") \
+        .process(order, size, "FX++FX++FX++FX", start_a=start_a)
+
+def test_lsystem_fassA(order, size, start_a=0):
 
     example_map = {
-        "F": (lambda turtle: turtle.forward(), "XF+XLLF"),
-        "L": (lambda turtle: turtle.nop(), "XLGX"),
-        "J": (lambda turtle: turtle.nop(), "[X-]JE"),
-        "X": (lambda turtle: turtle.nop(), "F"),
-        "E": (lambda turtle: turtle.nop(), "[[JXX]XG]"),
-        "G": (lambda turtle: turtle.nop(), "G"),
-        "-": (lambda turtle: turtle.turn(-83), None),
-        "+": (lambda turtle: turtle.turn(+83), None),
+        "F": (lambda turtle: turtle.forward(), "F"),
+        "X": (lambda turtle: turtle.forward(), "X+F+X--F--X+F+X"),
+        "-": (lambda turtle: turtle.turn(-45), None),
+        "+": (lambda turtle: turtle.turn(+45), None),
         "[": (lambda turtle: turtle.push(), None),
         "]": (lambda turtle: turtle.pop(), None),
     }
     target = turtle()
-    for token in "LL":
+    for token in "FX++FX++FX++FX":
         lsystem_process_token(target, order, token, example_map)
     # print(target.instructions)
-    return target.render(size)
+    return target.render(size, start_a = start_a)
+
+ 
+
+ 
+
