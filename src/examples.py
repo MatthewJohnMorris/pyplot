@@ -149,10 +149,8 @@ def multi_burroughs(drawing):
     layer3 = drawing.add_layer('3')
     drawing.image_spiral_single(layer3, 'burroughs.jpg', (100, 200), 30, svgwrite.rgb(0, 255, 0, '%'))
 
-def text_in_circle(drawing):
+def text_in_circle(drawing, centre, radius=30):
 
-    centre = (100,160)
-    radius = 30
     layer = drawing.add_layer('1')
     for angle in range(0, 360, 30):
         drawing.add_spiral_letter("X", 24, centre, radius, angle=angle*math.pi/180, family='CNC Vector', container=layer)
@@ -162,7 +160,12 @@ def text_in_circle(drawing):
 def burroughs_medal(d):
     # print("medal")
     d.image_spiral_single(d.add_layer('2'), 'burroughs.jpg', (100, 160), 25)
-    text_in_circle(d)
+    text_in_circle(d, (100,160))
+            
+def wakefield_medal(d):
+    # print("medal")
+    d.image_spiral_single(d.add_layer('2'), 'wakefield2.jpg', (100, 90), 60)
+    # text_in_circle(d, (100,90), radius=65)
             
 def xy_heart(r, a1):
 
@@ -1211,7 +1214,8 @@ paper_size = Point(192, 276)
 
 # TRY moire WITH text OVERLAY
 
-lsystem_test(d)
+# burroughs_medal(d)
+d.image_spiral_cmyk('muppets.jpeg', (100, 170), 20)
 
 if False:
     # works in progress

@@ -716,10 +716,17 @@ class StandardDrawing:
             ix = int(img_centre[0] + img_size * (new_point.y - centre[1]) / scale)
             iy = int(img_centre[1] + img_size * (new_point.x - centre[0]) / scale)
             
-            pt = image[ix, iy]
-            
+            # capture a range of points to help with aliasing
+            dist = c_size / scale * img_size
+            if dist < 0.3:
+                pt = image[ix, iy]
+            else:
+                avg_range = int(dist)+1
+                pt = self.average_over(image, ix, iy, avg_range)
+           
             # image is BGR - pass in RGB
             intense = intensity_converter(pt[2], pt[1], pt[0])
+            
             #if self.pen_type.is_black:
             #    intense = 1.0 - intense
             intense = 1.0 - intense
@@ -730,6 +737,23 @@ class StandardDrawing:
             StandardDrawing.add_wiggle(points, new_point, shade)
 
         return points
+
+    def average_over(self, image, ix, iy, n):
+        (h,w,c) = image.shape
+        tots = [0, 0, 0]
+        count = 0
+        for dx in range(-n, n+1):
+            if ix+dx < 0 or ix+dx >= h:
+                continue
+            for dy in range(-n, n+1):
+                if iy+dy < 0 or iy+dy >= w:
+                    continue
+                count += 1
+                pt = image[ix+dx, iy+dy]
+                tots[0] += pt[0]
+                tots[1] += pt[1]
+                tots[2] += pt[2]
+        return [x / count for x in tots]
 
     def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
 
