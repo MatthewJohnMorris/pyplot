@@ -646,7 +646,7 @@ class StandardDrawing:
         points.append(p2)
         points.append(new_point)
 
-    def make_image_spiral_single(self, file, centre, scale, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
+    def make_image_spiral_single(self, file, centre, scale, r_factor_func = None, colour = False, cmy_index=0, x_scale=1, invert=False):
 
         centre = Point.From(centre)
 
@@ -726,6 +726,8 @@ class StandardDrawing:
            
             # image is BGR - pass in RGB to our RGB converter method, so swap R and B (0 and 2)
             wiggle_amount = intensity_converter(pt[2], pt[1], pt[0])
+            if invert:
+                wiggle_amount = 1 - wiggle_amount
                 
             shade = wiggle_amount * mult * r_factor
 
@@ -751,9 +753,9 @@ class StandardDrawing:
                 tots[2] += pt[2]
         return [x / count for x in tots]
 
-    def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0, x_scale=1):
+    def image_spiral_single(self, container, file, centre, scale, stroke = None, r_factor_func = None, colour = False, cmy_index=0, x_scale=1, invert=False):
 
-        points = self.make_image_spiral_single(file, centre, scale, r_factor_func, colour, cmy_index, x_scale)
+        points = self.make_image_spiral_single(file, centre, scale, r_factor_func, colour, cmy_index, x_scale, invert=invert)
     
         self.add_polyline(points, stroke=stroke, container=container)
 

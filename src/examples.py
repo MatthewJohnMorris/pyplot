@@ -870,6 +870,16 @@ def draw_riley_blaze(drawing):
 
     drawing.add_polylines(polylines)
 
+def draw_riley_blaze2(drawing):    
+
+    nslice = 40    
+    
+    polylines = []
+    
+    centre = Point(102.5, 148)
+
+    drawing.image_spiral_single(d.dwg, 'wakefield2.jpg', centre, 40, invert=True)
+    
 def draw_riley_backoff_test(drawing):    
 
     print("x")
@@ -1213,8 +1223,7 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # TRY moire WITH text OVERLAY
-
-star_gen(d)
+draw_riley_blaze2(d)
 
 if False:
     # works in progress
