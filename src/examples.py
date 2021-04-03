@@ -1214,10 +1214,7 @@ paper_size = Point(192, 276)
 
 # TRY moire WITH text OVERLAY
 
-# burroughs_medal(d)
-# d.image_spiral_cmyk('muppets.jpeg', paper_centre, 80)
-# d.image_spiral_cmyk('test_wheel.jpg', paper_centre, 20)
-d.image_spiral_single(d.dwg, 'burroughs.jpg', paper_centre, 40)
+star_gen(d)
 
 if False:
     # works in progress
@@ -1229,7 +1226,6 @@ if False:
     mothers_day(d)
     star_gen(d)
     spiral_moire(d)
-    draw_xor_circles_othello(d)
     draw_3d(d)
     draw_tree(d)
     draw_false_prophets(d)
@@ -1246,6 +1242,7 @@ if False:
     draw_riley_blaze(d)
     draw_riley_movement_in_squares(d)
     draw_riley_backoff_test(d)
+    draw_xor_circles_othello(d)
     
     # lsystems
     lsystem_test(d)
@@ -1265,6 +1262,8 @@ if False:
     d.image_spiral_single(d.dwg, 'bear2.jpg', (100, 140), 20)
     d.image_spiral_single(d.dwg, 'burroughs.jpg', (100, 100), 80)
     # d.image_spiral_cmyk('testCard_F.jpg', (100, 120), 40)
+    # d.image_spiral_cmyk('test_wheel.jpg', paper_centre, 20)
+    # d.image_spiral_cmyk('muppets.jpeg', paper_centre, 80)
 
     # testing stuff
     lsystem_test(d)

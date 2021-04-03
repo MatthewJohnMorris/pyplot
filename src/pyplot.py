@@ -1332,7 +1332,7 @@ class ShapeFiller:
         for shape in shapes:
             s = [x for x in shape]
             # s.extend([x for x in shape])
-            # a.append(a[0])
+            s.append(shape[0])
             all_paths.append(s)
             
         # now reverse the rotation
