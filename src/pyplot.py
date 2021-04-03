@@ -30,7 +30,7 @@ class BWConverters:
         gc = g / RGB_SCALE
         bc = b / RGB_SCALE
         # white = no wiggle (0), black = maximum wiggle (1)
-        return (rc + gc + bc) / 3
+        return 1 - (rc + gc + bc) / 3
 
     @staticmethod
     def InverseAverageIntensity(r, g, b):
@@ -724,14 +724,10 @@ class StandardDrawing:
                 avg_range = int(dist)+1
                 pt = self.average_over(image, ix, iy, avg_range)
            
-            # image is BGR - pass in RGB
-            intense = intensity_converter(pt[2], pt[1], pt[0])
-            
-            #if self.pen_type.is_black:
-            #    intense = 1.0 - intense
-            intense = 1.0 - intense
+            # image is BGR - pass in RGB to our RGB converter method, so swap R and B (0 and 2)
+            wiggle_amount = intensity_converter(pt[2], pt[1], pt[0])
                 
-            shade = intense * mult * r_factor
+            shade = wiggle_amount * mult * r_factor
 
             # "wiggle" on our way from "prev" to "new" with a width propertional to the intensity
             StandardDrawing.add_wiggle(points, new_point, shade)

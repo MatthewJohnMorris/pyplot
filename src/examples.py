@@ -1196,9 +1196,9 @@ def lsystem_test(drawing):
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 # d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 # d = StandardDrawing(pen_type = PenType.RotringTikky05())
 # d = StandardDrawing(pen_type = PenType.RotringTikky03())
@@ -1215,7 +1215,9 @@ paper_size = Point(192, 276)
 # TRY moire WITH text OVERLAY
 
 # burroughs_medal(d)
-d.image_spiral_cmyk('muppets.jpeg', (100, 170), 20)
+# d.image_spiral_cmyk('muppets.jpeg', paper_centre, 80)
+# d.image_spiral_cmyk('test_wheel.jpg', paper_centre, 20)
+d.image_spiral_single(d.dwg, 'burroughs.jpg', paper_centre, 40)
 
 if False:
     # works in progress
