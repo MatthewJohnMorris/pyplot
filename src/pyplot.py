@@ -633,13 +633,13 @@ class StandardDrawing:
         self.add_polyline(points, stroke, container)
 
     @staticmethod
-    def add_wiggle(points, new_point, line_mult):    
+    def add_wiggle(points, new_point, line_mult, x_scale=1):    
 
         prev = points[-1]
         half = (new_point - prev) * 0.5
         mid = prev + half
         size = line_mult / 2
-        half_r = Point(-half.y, half.x) * size
+        half_r = Point(-half.y * x_scale, half.x) * size
         p1 = mid + half_r
         p2 = mid - half_r
         points.append(p1)
@@ -732,7 +732,7 @@ class StandardDrawing:
             shade = wiggle_amount * mult * r_factor
 
             # "wiggle" on our way from "prev" to "new" with a width propertional to the intensity
-            StandardDrawing.add_wiggle(points, new_point, shade)
+            StandardDrawing.add_wiggle(points, new_point, shade, x_scale=x_scale)
 
         return points
 

@@ -870,16 +870,6 @@ def draw_riley_blaze(drawing):
 
     drawing.add_polylines(polylines)
 
-def draw_riley_blaze2(drawing):    
-
-    nslice = 40    
-    
-    polylines = []
-    
-    centre = Point(102.5, 148)
-
-    drawing.image_spiral_single(d.dwg, 'wakefield2.jpg', centre, 40, invert=True)
-    
 def draw_riley_backoff_test(drawing):    
 
     print("x")
@@ -1201,6 +1191,43 @@ def lsystem_test(drawing):
     paper_centre = Point(102.5, 148)
     drawing.add_polylines(centre_on(all_lines, paper_centre))
 
+def draw_wakefield(drawing):    
+    
+    import lsystem
+
+    nslice = 40    
+    
+    polylines = []
+    
+    paper_centre = Point(102.5, 148)
+    
+    rect_size = Point(192, 276)
+    clip_2 = drawing.make_rect(paper_centre - rect_size / 2, rect_size.x, rect_size.y)
+    clip_shape = drawing.make_circle(paper_centre, 44, x_scale=0.8)
+    sf = ShapeFiller([clip_shape, clip_2])
+
+    drawing.image_spiral_single(d.dwg, 'wakefield2.jpg', paper_centre, 40, x_scale=0.8)
+
+    all_lines = lsystem.test_lsystem_hilbert(order=8, size=1)
+    def centre_on(polylines, new_centre):
+        n = 0
+        sumx = 0
+        sumy = 0
+        for line in polylines:
+            for point in line[:-1]:
+                n += 1
+                sumx += point.x
+                sumy += point.y
+        centre = Point(sumx / n, sumy / n)
+        adj = paper_centre - centre
+        return [[p + adj for p in line] for line in polylines]
+    all_lines = centre_on(all_lines, paper_centre)
+    all_lines = sf.clip(all_lines, inverse=True)
+    
+    # centre the drawing on the paper
+    # drawing.add_polylines(all_lines)
+  
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -1223,7 +1250,7 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # TRY moire WITH text OVERLAY
-draw_riley_blaze2(d)
+draw_wakefield(d)
 
 if False:
     # works in progress
