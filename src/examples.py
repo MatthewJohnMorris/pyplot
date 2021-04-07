@@ -1231,8 +1231,8 @@ def draw_wakefield(drawing):
 def draw_truchet(drawing):
 
     paper_centre = Point(102.5, 148)
-    paper_size = Point(192, 276)
-    tile_c = 30
+    paper_size = Point(192, 276) - Point(10, 10)
+    tile_c = 20
     tile_size = paper_size.x / tile_c
     tile_r = int(paper_size.y / tile_size)
     tile_topleft_00 = paper_centre - Point(tile_c, tile_r) * (tile_size/2)
@@ -1241,25 +1241,50 @@ def draw_truchet(drawing):
     n = int(sections / 4)
     print(n)
     polylines = []
+    
+    nlines = 8
+    tile_paths0 = []
+    for i in range(0, nlines+1):
+        path = [Point(tile_size * i / nlines, 0), Point(tile_size * i / nlines, tile_size)]
+        tile_paths0.append(path)
+        
+    paths = [[] for i in range(0, nlines)]
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        for j in range(0, nlines):
+            paths[j].append(Point(math.cos(a), math.sin(a)) * tile_size * (j+1)/nlines)
+            
+    clip_path = [x for x in paths[nlines-1]]
+    clip_path.append(Point(0,0))
+    sf = ShapeFiller([clip_path])
+
+    paths2 = [[] for i in range(0, nlines)]
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        for j in range(0, nlines):
+            paths2[j].append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * tile_size * (j+1)/nlines)
+    paths2 = sf.clip(paths2)
+    tile_paths1 = paths
+    tile_paths1.extend(paths2)
+    
     for r in range(0, tile_r):
         for c in range(0, tile_c):
             tile_topleft = tile_topleft_00 + Point(c, r) * tile_size
             
-            path1 = []
-            path2 = []
             indic = random() < 0.5
-            for i in range(0, n+1):
-                a = math.pi * i / (2*n)
-                if indic:
-                    path1.append(tile_topleft + Point(math.cos(a), math.sin(a)) * tile_size / 2)
-                    path2.append(tile_topleft + Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * tile_size / 2)
-                else:
-                    path1.append(tile_topleft + Point(tile_size, 0) + Point(-math.cos(a), math.sin(a)) * tile_size / 2)
-                    path2.append(tile_topleft + Point(0, tile_size) + Point(math.cos(a), -math.sin(a)) * tile_size / 2)
-            polylines.append(path1)
-            polylines.append(path2)
+            t = tile_paths0 if indic else tile_paths1
+            a = math.pi * int(random()*4) / 2
+            c = math.cos(a)
+            s = math.sin(a)
+            t1 = [[p - Point(tile_size, tile_size) / 2 for p in path] for path in t]
+            t2 = [[Point(p.x * c + p.y * s, p.y * c - p.x * s) for p in path] for path in t1]
+            t3 = [[p + Point(tile_size, tile_size) / 2 for p in path] for path in t2]
+            tile_paths = [[tile_topleft + x for x in path] for path in t3]
+                        
+            polylines.extend(tile_paths)
             # drawing.add_square(tile_topleft, tile_size)
-            
+         
+    print(f"draw_truchet: adding {len(polylines)} polylines")         
     drawing.add_polylines(polylines)
 
 
