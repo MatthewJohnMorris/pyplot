@@ -1260,6 +1260,30 @@ def truchet_leger_tiles(drawing, tile_size):
 
     return [tile_paths0, tile_paths1]
   
+def slash_tiles(frawing, tile_size):
+
+    path = []
+    path.append(Point(0,0))
+    path.append(Point(tile_size, tile_size))
+    return [[path]]
+  
+def slash_tiles2(drawing, tile_size):
+
+    tile0 = [[Point(tile_size/2,0), Point(0,tile_size/2)], [Point(tile_size/2,tile_size), Point(tile_size,tile_size/2)]]
+    
+    tile1 = [[Point(tile_size/2,0), Point(tile_size/2, tile_size)], [Point(0,tile_size/2), Point(tile_size,tile_size/2)]]
+    
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+    path = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path.append(Point(math.cos(a), math.sin(a)) * tile_size / 2)
+    tile2 = [path]
+    
+    return [tile0, tile1, tile2]
+      
 def draw_truchet(drawing):
 
     paper_centre = Point(102.5, 148)
@@ -1271,6 +1295,8 @@ def draw_truchet(drawing):
     polylines = []
 
     all_tile_paths = truchet_leger_tiles(drawing, tile_size)
+    all_tile_paths = slash_tiles(drawing, tile_size)
+    # all_tile_paths = slash_tiles2(drawing, tile_size)
     
     for r in range(0, tile_r):
         for c in range(0, tile_c):
