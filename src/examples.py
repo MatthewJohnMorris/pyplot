@@ -1227,21 +1227,12 @@ def draw_wakefield(drawing):
     background_layer = drawing.add_layer("2-hilbert")
     drawing.add_polylines(all_lines, container=background_layer)
   
-  
-def draw_truchet(drawing):
+def truchet_leger_tiles(drawing, tile_size):  
 
-    paper_centre = Point(102.5, 148)
-    paper_size = Point(192, 276) - Point(10, 10)
-    tile_c = 20
-    tile_size = paper_size.x / tile_c
-    tile_r = int(paper_size.y / tile_size)
-    tile_topleft_00 = paper_centre - Point(tile_c, tile_r) * (tile_size/2)
     circumference = tile_size * math.pi * 2
     sections = circumference / drawing.pen_type.pen_width
     n = int(sections / 4)
-    print(n)
-    polylines = []
-    
+
     nlines = 5
     tile_paths0 = []
     for i in range(0, nlines+1):
@@ -1266,13 +1257,27 @@ def draw_truchet(drawing):
     paths2 = sf.clip(paths2)
     tile_paths1 = paths
     tile_paths1.extend(paths2)
+
+    return [tile_paths0, tile_paths1]
+  
+def draw_truchet(drawing):
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 276) - Point(10, 10)
+    tile_c = 20
+    tile_size = paper_size.x / tile_c
+    tile_r = int(paper_size.y / tile_size)
+    tile_topleft_00 = paper_centre - Point(tile_c, tile_r) * (tile_size/2)
+    polylines = []
+
+    all_tile_paths = truchet_leger_tiles(drawing, tile_size)
     
     for r in range(0, tile_r):
         for c in range(0, tile_c):
             tile_topleft = tile_topleft_00 + Point(c, r) * tile_size
             
-            indic = random() < 0.5
-            t = tile_paths0 if indic else tile_paths1
+            t = all_tile_paths[int(random() * len(all_tile_paths))]
+            
             r_rot = int(random()*4)
             c = 1
             s = 0
