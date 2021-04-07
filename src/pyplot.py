@@ -132,8 +132,12 @@ class PenType:
         return PenType('StaedtlerPigment05', False, 0.5, '0.35px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
         
     @staticmethod
+    def StaedtlerPigment03():
+        return PenType('StaedtlerPigment01', False, 0.3, '0.21px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        
+    @staticmethod
     def StaedtlerPigment01():
-        return PenType('StaedtlerPigment01', False, 0.2, '0.07px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        return PenType('StaedtlerPigment01', False, 0.1, '0.07px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
         
     # Rotring Tikky effective width for fill is larger than quoted nib size
     @staticmethod
@@ -199,7 +203,30 @@ class StandardDrawing:
         polylines = StandardDrawing.sort_polylines(polylines)
         container = self.default_container(container)
         stroke = self.default_stroke(stroke)
+        
+        joined_polylines = []
+        joined_polyline = []
         for polyline in polylines:
+            if len(joined_polyline) > 0:
+                start = polyline[0]
+                end = joined_polyline[-1]
+                xdiff = abs(start.x - end.x)
+                ydiff = abs(start.y - end.y)
+                diff = max(xdiff, ydiff)
+                if diff < 1e-6:
+                    joined_polyline.extend(polyline[1:])
+                else:
+                    joined_polylines.append(joined_polyline)
+                    joined_polyline = polyline
+            else:
+                joined_polyline = polyline
+        if len(joined_polyline) > 0:
+            joined_polylines.append(joined_polyline)
+        print(len(polylines))
+        print(len(joined_polylines))
+            
+        # joined_polylines = [p for p in polylines]
+        for polyline in joined_polylines:
             container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         
     def add_layer(self, label):

@@ -1224,9 +1224,44 @@ def draw_wakefield(drawing):
     all_lines = centre_on(all_lines, paper_centre)
     all_lines = sf.clip(all_lines, inverse=True)
     
-    # centre the drawing on the paper
-    # drawing.add_polylines(all_lines)
+    background_layer = drawing.add_layer("2-hilbert")
+    drawing.add_polylines(all_lines, container=background_layer)
   
+  
+def draw_truchet(drawing):
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 276)
+    tile_c = 30
+    tile_size = paper_size.x / tile_c
+    tile_r = int(paper_size.y / tile_size)
+    tile_topleft_00 = paper_centre - Point(tile_c, tile_r) * (tile_size/2)
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+    print(n)
+    polylines = []
+    for r in range(0, tile_r):
+        for c in range(0, tile_c):
+            tile_topleft = tile_topleft_00 + Point(c, r) * tile_size
+            
+            path1 = []
+            path2 = []
+            indic = random() < 0.5
+            for i in range(0, n+1):
+                a = math.pi * i / (2*n)
+                if indic:
+                    path1.append(tile_topleft + Point(math.cos(a), math.sin(a)) * tile_size / 2)
+                    path2.append(tile_topleft + Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * tile_size / 2)
+                else:
+                    path1.append(tile_topleft + Point(tile_size, 0) + Point(-math.cos(a), math.sin(a)) * tile_size / 2)
+                    path2.append(tile_topleft + Point(0, tile_size) + Point(math.cos(a), -math.sin(a)) * tile_size / 2)
+            polylines.append(path1)
+            polylines.append(path2)
+            # drawing.add_square(tile_topleft, tile_size)
+            
+    drawing.add_polylines(polylines)
+
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -1236,6 +1271,7 @@ def draw_wakefield(drawing):
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment03())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 # d = StandardDrawing(pen_type = PenType.RotringTikky05())
 # d = StandardDrawing(pen_type = PenType.RotringTikky03())
@@ -1249,12 +1285,12 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-# TRY moire WITH text OVERLAY
-draw_wakefield(d)
+draw_truchet(d)
 
 if False:
     # works in progress
     image_sketch(d)
+    draw_wakefield(d)
 
     # realised ideas I want to keep
     valentine(d)
