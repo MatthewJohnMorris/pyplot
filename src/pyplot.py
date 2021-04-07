@@ -200,6 +200,7 @@ class StandardDrawing:
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         
     def add_polylines(self, polylines, stroke=None, container=None):
+    
         polylines = StandardDrawing.sort_polylines(polylines)
         container = self.default_container(container)
         stroke = self.default_stroke(stroke)

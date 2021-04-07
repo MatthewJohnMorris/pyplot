@@ -1273,9 +1273,18 @@ def draw_truchet(drawing):
             
             indic = random() < 0.5
             t = tile_paths0 if indic else tile_paths1
-            a = math.pi * int(random()*4) / 2
-            c = math.cos(a)
-            s = math.sin(a)
+            r_rot = int(random()*4)
+            c = 1
+            s = 0
+            if r_rot == 1:
+                c = 0
+                s = 1
+            elif r_rot == 2:
+                c = -1
+                s = 0
+            elif r_rot == 3:
+                c = 0
+                s = -1
             t1 = [[p - Point(tile_size, tile_size) / 2 for p in path] for path in t]
             t2 = [[Point(p.x * c + p.y * s, p.y * c - p.x * s) for p in path] for path in t1]
             t3 = [[p + Point(tile_size, tile_size) / 2 for p in path] for path in t2]
