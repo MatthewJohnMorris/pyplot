@@ -199,12 +199,44 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         
-    def add_polylines(self, polylines, stroke=None, container=None):
+    def add_polylines(self, polylines, stroke=None, container=None, prejoin=False):
+
+        if prejoin:
+            tStart = time.perf_counter()
+            joined_polylines = []
+            for polyline in polylines:
+                is_joined = False
+                for i in range(0, len(joined_polylines)):
+                    # joined_polyline = joined_polylines[i]
+                    if joined_polylines[i][0] == polyline[0]:
+                        joined_polylines[i] = joined_polylines[i][::-1]
+                        joined_polylines[i].extend(polyline)
+                        is_joined = True
+                    elif joined_polylines[i][-1] == polyline[0]:
+                        joined_polylines[i].extend(polyline)
+                        is_joined = True
+                    elif joined_polylines[i][0] == polyline[-1]:
+                        joined_polylines[i] = joined_polylines[i][::-1]
+                        joined_polylines[i].extend(polyline[::-1])
+                        is_joined = True
+                    elif joined_polylines[i][-1] == polyline[-1]:
+                        joined_polylines[i].extend(polyline[::-1])
+                        is_joined = True
+                    if is_joined:
+                        break
+                if not is_joined:
+                    joined_polylines.append(polyline)
+            print(f"Joining: from {len(polylines)} to {len(joined_polylines)}")
+            tEnd = time.perf_counter()
+            print(F"Joining: {tEnd - tStart:.2f}s")
+        else:
+            joined_polylines = polylines
     
-        polylines = StandardDrawing.sort_polylines(polylines)
+        polylines = StandardDrawing.sort_polylines(joined_polylines)
         container = self.default_container(container)
         stroke = self.default_stroke(stroke)
-        
+
+        # final joining sesh
         joined_polylines = []
         joined_polyline = []
         for polyline in polylines:
@@ -226,7 +258,6 @@ class StandardDrawing:
         print(len(polylines))
         print(len(joined_polylines))
             
-        # joined_polylines = [p for p in polylines]
         for polyline in joined_polylines:
             container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         

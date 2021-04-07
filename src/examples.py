@@ -1242,7 +1242,7 @@ def draw_truchet(drawing):
     print(n)
     polylines = []
     
-    nlines = 8
+    nlines = 5
     tile_paths0 = []
     for i in range(0, nlines+1):
         path = [Point(tile_size * i / nlines, 0), Point(tile_size * i / nlines, tile_size)]
@@ -1294,7 +1294,7 @@ def draw_truchet(drawing):
             # drawing.add_square(tile_topleft, tile_size)
          
     print(f"draw_truchet: adding {len(polylines)} polylines")         
-    drawing.add_polylines(polylines)
+    drawing.add_polylines(polylines, prejoin=True)
 
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
