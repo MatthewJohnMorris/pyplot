@@ -128,6 +128,10 @@ class PenType:
         return PenType('PigmaMicron05', False, 0.45, '0.33px', BWConverters.AverageIntensity, CMYKConverters.PigmaMicron)
         
     @staticmethod
+    def StaedtlerPigment08():
+        return PenType('StaedtlerPigment08', False, 0.8, '0.56px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        
+    @staticmethod
     def StaedtlerPigment05():
         return PenType('StaedtlerPigment05', False, 0.5, '0.35px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
         

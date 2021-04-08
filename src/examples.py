@@ -1230,11 +1230,12 @@ def draw_wakefield(drawing):
     
 def draw_truchet(drawing):
 
-    # func = truchet.truchet_leger_tiles
-    # func = truchet.slash_tiles
-    # func = truchet.slash_tiles2
-    # func = truchet.semi_tiles
-    func = truchet.semi_track_tiles
+    # func = truchet.createtiles_truchet
+    func = truchet.createtiles_truchet_roundonly
+    # func = truchet.createtiles_slash
+    # func = truchet.createtiles_tri
+    # func = truchet.createtiles_semi
+    # func = truchet.createtiles_semi_track
     
     truchet.draw_truchet_for_tiles(drawing, func)
     
@@ -1251,7 +1252,8 @@ def draw_truchet2(drawing):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
+d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment03())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 # d = StandardDrawing(pen_type = PenType.RotringTikky05())

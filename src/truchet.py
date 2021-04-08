@@ -1,19 +1,31 @@
 from random import random, seed
 import math
 
-from pyplot import Point
-  
-def truchet_leger_tiles(drawing, tile_size):  
+from pyplot import Point, ShapeFiller
+
+def createtiles_truchet(drawing, tile_size, nlines=None):  
 
     circumference = tile_size * math.pi * 2
     sections = circumference / drawing.pen_type.pen_width
     n = int(sections / 4)
 
-    nlines = 5
+    nlines = 5 if nlines is None else nlines
+
     tile_paths0 = []
     for i in range(0, nlines+1):
         path = [Point(tile_size * i / nlines, 0), Point(tile_size * i / nlines, tile_size)]
         tile_paths0.append(path)
+
+    tiles_roundonly = createtiles_truchet_roundonly(drawing, tile_size, nlines)
+    return [tile_paths0, tiles_roundonly[0]]
+
+def createtiles_truchet_roundonly(drawing, tile_size, nlines=None):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+    
+    nlines = 3 if nlines is None else nlines
         
     paths = [[] for i in range(0, nlines)]
     for i in range(0, n+1):
@@ -34,9 +46,26 @@ def truchet_leger_tiles(drawing, tile_size):
     tile_paths1 = paths
     tile_paths1.extend(paths2)
 
-    return [tile_paths0, tile_paths1]
+    return [tile_paths1]
+    
+def createtiles_slash(frawing, tile_size):
 
-def semi_tiles(drawing, tile_size):  
+    path = []
+    path.append(Point(0,0))
+    path.append(Point(tile_size, tile_size))
+    return [[path]]
+  
+def createtiles_tri(drawing, tile_size):
+
+    delta = drawing.pen_type.pen_width * 0.75
+    diag = math.sqrt(2)
+    shape = [Point(delta,delta), Point(delta,tile_size-delta), Point(tile_size-delta,delta)]
+    sf = ShapeFiller([shape])
+    tile = sf.get_paths(row_width = drawing.pen_type.pen_width * 0.4)
+    
+    return [tile]
+
+def createtiles_semi(drawing, tile_size):  
 
     circumference = tile_size * math.pi * 2
     sections = circumference / drawing.pen_type.pen_width
@@ -51,7 +80,7 @@ def semi_tiles(drawing, tile_size):
             
     return [[path0, path1]]
 
-def semi_track_tiles(drawing, tile_size):  
+def createtiles_semi_track(drawing, tile_size):  
 
     circumference = tile_size * math.pi * 2
     sections = circumference / drawing.pen_type.pen_width
@@ -70,30 +99,6 @@ def semi_track_tiles(drawing, tile_size):
         path11.append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * (tile_size / 2 + track_size / 2))
             
     return [[path00, path01, path10, path11]]  
-
-def slash_tiles(frawing, tile_size):
-
-    path = []
-    path.append(Point(0,0))
-    path.append(Point(tile_size, tile_size))
-    return [[path]]
-  
-def slash_tiles2(drawing, tile_size):
-
-    tile0 = [[Point(tile_size/2,0), Point(0,tile_size/2)], [Point(tile_size/2,tile_size), Point(tile_size,tile_size/2)]]
-    
-    tile1 = [[Point(tile_size/2,0), Point(tile_size/2, tile_size)], [Point(0,tile_size/2), Point(tile_size,tile_size/2)]]
-    
-    circumference = tile_size * math.pi * 2
-    sections = circumference / drawing.pen_type.pen_width
-    n = int(sections / 4)
-    path = []
-    for i in range(0, n+1):
-        a = math.pi * i / (2*n)
-        path.append(Point(math.cos(a), math.sin(a)) * tile_size / 2)
-    tile2 = [path]
-    
-    return [tile0, tile1, tile2]
 
 def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None):
 
