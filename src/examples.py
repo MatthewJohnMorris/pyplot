@@ -1259,7 +1259,42 @@ def truchet_leger_tiles(drawing, tile_size):
     tile_paths1.extend(paths2)
 
     return [tile_paths0, tile_paths1]
-  
+
+def semi_tiles(drawing, tile_size):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+        
+    path0 = []
+    path1 = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path0.append(Point(math.cos(a), math.sin(a)) * tile_size / 2)
+        path1.append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * tile_size / 2)
+            
+    return [[path0, path1]]
+
+def semi_track_tiles(drawing, tile_size):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+    track_size = tile_size / 3
+        
+    path00 = []
+    path01 = []
+    path10 = []
+    path11 = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path00.append(Point(math.cos(a), math.sin(a)) * (tile_size / 2 - track_size / 2))
+        path01.append(Point(math.cos(a), math.sin(a)) * (tile_size / 2 + track_size / 2))
+        path10.append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * (tile_size / 2 - track_size / 2))
+        path11.append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * (tile_size / 2 + track_size / 2))
+            
+    return [[path00, path01, path10, path11]]  
+
 def slash_tiles(frawing, tile_size):
 
     path = []
@@ -1284,6 +1319,29 @@ def slash_tiles2(drawing, tile_size):
     
     return [tile0, tile1, tile2]
       
+def spoke_tiles(drawing, tile_size):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4) * 2
+    track_size = tile_size / 6
+
+    path0 = []
+    path1 = []
+    for i in range(0, n+1, 2):
+        a = math.pi * i / (2*n)
+        path0.append(Point(math.cos(a), math.sin(a)) * (tile_size / 2 - track_size / 2))
+        path0.append(Point(math.cos(a), math.sin(a)) * (tile_size / 2 + track_size / 2))
+        path1.append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * (tile_size / 2 - track_size / 2))
+        path1.append(Point(tile_size, tile_size) - Point(math.cos(a), math.sin(a)) * (tile_size / 2 + track_size / 2))
+        a2 = math.pi * (i+1) / (2*n)
+        path0.append(Point(math.cos(a2), math.sin(a2)) * (tile_size / 2 + track_size / 2))
+        path0.append(Point(math.cos(a2), math.sin(a2)) * (tile_size / 2 - track_size / 2))
+        path1.append(Point(tile_size, tile_size) - Point(math.cos(a2), math.sin(a2)) * (tile_size / 2 + track_size / 2))
+        path1.append(Point(tile_size, tile_size) - Point(math.cos(a2), math.sin(a2)) * (tile_size / 2 - track_size / 2))
+            
+    return [[path0, path1]]  
+
 def draw_truchet(drawing):
 
     paper_centre = Point(102.5, 148)
@@ -1294,9 +1352,12 @@ def draw_truchet(drawing):
     tile_topleft_00 = paper_centre - Point(tile_c, tile_r) * (tile_size/2)
     polylines = []
 
-    all_tile_paths = truchet_leger_tiles(drawing, tile_size)
-    all_tile_paths = slash_tiles(drawing, tile_size)
+    # all_tile_paths = truchet_leger_tiles(drawing, tile_size)
+    # all_tile_paths = slash_tiles(drawing, tile_size)
     # all_tile_paths = slash_tiles2(drawing, tile_size)
+    # all_tile_paths = semi_tiles(drawing, tile_size)
+    # all_tile_paths = semi_track_tiles(drawing, tile_size)
+    all_tile_paths = spoke_tiles(drawing, tile_size)
     
     for r in range(0, tile_r):
         for c in range(0, tile_c):
