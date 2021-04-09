@@ -1245,6 +1245,79 @@ def draw_truchet2(drawing):
     truchet.draw_truchet_for_tiles(drawing, semi_track_tiles, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
     truchet.draw_truchet_for_tiles(drawing, semi_track_tiles, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
 
+def spirograph_test(drawing):
+
+    def gcd(a,b):
+        """Compute the greatest common divisor of a and b"""
+        while b > 0:
+            a, b = b, a % b
+        return a
+        
+    def lcm(a, b):
+        """Compute the lowest common multiple of a and b"""
+        return a * b / gcd(a, b)
+        
+    paper_centre = Point(102.5, 148)
+    a1 = 0
+    r1 = 80
+    a2 = 0
+    r2 = 28
+    a_inc = drawing.pen_type.pen_width / r1
+    path = []
+    # need enough incr so both have whole # of rotations
+    n1 = lcm(r1, r2) / r1
+    circ1 = math.pi * 2 / a_inc
+    limit = int(n1 * circ1) + 1
+    print(n1, circ1, limit)
+    for i in range(0, limit):
+        a1 += a_inc
+        a2 += a_inc * r1 / r2
+        p = paper_centre + Point(math.cos(a1), math.sin(a1)) * (r1-r2) + Point(math.cos(-a2), math.sin(-a2)) * r2
+        path.append(p)
+        
+    drawing.add_polyline(path)
+
+def spirograph_test2(drawing):
+
+    def gcd(a,b):
+        """Compute the greatest common divisor of a and b"""
+        while b > 0:
+            a, b = b, a % b
+        return a
+        
+    def lcm(a, b):
+        """Compute the lowest common multiple of a and b"""
+        return a * b / gcd(a, b)
+        
+    paper_centre = Point(102.5, 148)
+    a1 = 0
+    r1 = 80
+    a2 = 0
+    r2 = 35
+    a3 = 0
+    r3 = 8
+    a4 = 0
+    r4 = 0
+    for r1 in range(r1, r1+1): # range(21, 82, 14):
+        a_inc = drawing.pen_type.pen_width / r1
+        path = []
+        # need enough incr so both have whole # of rotations
+        x3 = max(r3, 1)
+        x4 = max(r4, 1)
+        n1 = lcm(lcm(lcm(r1, r2), x3), x4) / r1
+        circ1 = math.pi * 2 / a_inc
+        limit = int(n1 * circ1) + 10
+        print(n1, circ1, limit)
+        for i in range(0, limit):
+            a1 += a_inc
+            a2 += a_inc * r1 / r2
+            a3 += a_inc * r1 / x3
+            a4 += a_inc * r1 / x4
+            p = paper_centre + Point(math.cos(a1), math.sin(a1)) * (r1-r2+r3-r4) + Point(math.cos(-a2), math.sin(-a2)) * (r2-r3+r4) + Point(math.cos(a3), math.sin(a3)) * (r3-r4) + Point(math.cos(-a4), math.sin(-a4)) * r4
+            path.append(p)
+            
+        drawing.add_polyline(path)
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -1268,8 +1341,8 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 
-draw_truchet(d)
-# draw_truchet2(d)
+# spirograph_test(d)
+spirograph_test2(d)
 
 if False:
     # works in progress
@@ -1300,8 +1373,10 @@ if False:
     draw_riley_backoff_test(d)
     draw_xor_circles_othello(d)
     
-    # lsystems
+    # lsystems and tiling
     lsystem_test(d)
+    draw_truchet(d)
+    draw_truchet2(d)
 
     # text
     draw_big_a(d)
