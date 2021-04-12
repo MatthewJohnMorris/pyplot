@@ -320,12 +320,14 @@ def complex_fill(d):
 def fill_test(d):
 
     points = []
-    for i in range(2, 11):
-        tl = (70,20+20*i)
-        sq = d.make_rect(tl, 18, 18)
-        sf = ShapeFiller([sq])
-        for path in sf.get_paths(i*d.pen_type.pen_width / 10):
-            d.add_polyline(path)
+    for j in range(0, 8):
+        layer = d.add_layer(f'{j+1}-layer')
+        for i in range(2, 11):
+            tl = (20+20*j,20+20*i)
+            sq = d.make_rect(tl, 18, 18)
+            sf = ShapeFiller([sq])
+            for path in sf.get_paths(i*d.pen_type.pen_width / 10):
+                d.add_polyline(path, container=layer)
 
 def plot_surface(drawing):
 
@@ -1241,9 +1243,9 @@ def draw_truchet(drawing):
     
 def draw_truchet2(drawing):
 
-    truchet.draw_truchet_for_tiles(drawing, semi_track_tiles, container=drawing.add_layer("1-yellow"), stroke=svgwrite.rgb(0, 255, 255, '%'))
-    truchet.draw_truchet_for_tiles(drawing, semi_track_tiles, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
-    truchet.draw_truchet_for_tiles(drawing, semi_track_tiles, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
+    truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("1-yellow"), stroke=svgwrite.rgb(0, 255, 255, '%'))
+    truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
+    truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
 
 def spirograph_test(drawing):
 
@@ -1297,7 +1299,7 @@ def spirograph_test2(drawing):
     a3 = 0
     r3 = 8
     a4 = 0
-    r4 = 0
+    r4 = 3
     for r1 in range(r1, r1+1): # range(21, 82, 14):
         a_inc = drawing.pen_type.pen_width / r1
         path = []
@@ -1318,6 +1320,38 @@ def spirograph_test2(drawing):
             
         drawing.add_polyline(path)
 
+def spirograph_test3(drawing, radii):
+
+    def gcd(a,b):
+        """Compute the greatest common divisor of a and b"""
+        while b > 0:
+            a, b = b, a % b
+        return a
+        
+    def lcm(a, b):
+        """Compute the lowest common multiple of a and b"""
+        return a * b / gcd(a, b)
+        
+    paper_centre = Point(102.5, 148)
+    angles = [0 for _ in radii]
+    xs = [max(1,r) for r in radii]
+    angle_incs = [drawing.pen_type.pen_width / r for r in radii]
+    
+    path = []
+    # need enough incr so both have whole # of rotations
+    overall_lcm = lcm(x1, x2)
+    for x in xs[2:]:
+        overall_lcm = lcm(overall_lcm, x)
+    circ1 = math.pi * 2 / min(angle_incs)
+    limit = int(overall_lcm * circ1) + 10
+    print(overall_lcm, circ1, limit)
+    for i in range(0, limit):
+        angles = [(_1 + _2) for (_1, _2) in zip(angles, angle_incs)]
+        p = paper_centre + Point(math.cos(a1), math.sin(a1)) * (r1-r2+r3-r4) + Point(math.cos(-a2), math.sin(-a2)) * (r2-r3+r4) + Point(math.cos(a3), math.sin(a3)) * (r3-r4) + Point(math.cos(-a4), math.sin(-a4)) * r4
+        path.append(p)
+        
+    drawing.add_polyline(path)
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -1325,12 +1359,13 @@ def spirograph_test2(drawing):
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment03())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
 # d = StandardDrawing(pen_type = PenType.RotringTikky05())
 # d = StandardDrawing(pen_type = PenType.RotringTikky03())
+d = StandardDrawing(pen_type = PenType.PilotG207())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -1342,7 +1377,8 @@ paper_size = Point(192, 276)
 # cProfile.run('draw_3d(d)')
 
 # spirograph_test(d)
-spirograph_test2(d)
+# spirograph_test2(d)
+draw_truchet(d)
 
 if False:
     # works in progress

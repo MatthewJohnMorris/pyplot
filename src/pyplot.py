@@ -152,6 +152,10 @@ class PenType:
     @staticmethod
     def RotringTikky05():
         return PenType('RotringTikky05', False, 0.66, '0.46px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        
+    @staticmethod
+    def PilotG207():
+        return PenType('PilotG207', False, 0.4, '0.28px', BWConverters.AverageIntensity, CMYKConverters.PigmaMicron)
 
 class StandardDrawing:
 
