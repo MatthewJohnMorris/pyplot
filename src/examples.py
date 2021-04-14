@@ -1364,16 +1364,19 @@ def apol(drawing):
     all_circles = [c for c in g.genCircles]
 
     gaskets = [g]
-    foam_limit = 5
+    foam_limit = 10
     
     while len(gaskets) > 0:
         g = gaskets.pop()
         foam_circles = [c for c in g.genCircles[1:] if abs(c.r.real) > foam_limit]
+        a = math.pi # random() * math.pi * 2
         for c in foam_circles:
-            g = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c.m.real, c.m.imag), abs(c.r))
-            g.generate(20)
-            all_circles.extend([c for c in g.genCircles])
-            gaskets.append(g)
+            centre = Point(c.m.real, c.m.imag)
+            g2 = ApollonianGasket(1, 1, 1, centre, abs(c.r))
+            g2.generate(20)
+            g2.rotate(centre, a)
+            all_circles.extend([c1 for c1 in g2.genCircles])
+            gaskets.append(g2)
 
     polylines = []
     for c in all_circles:

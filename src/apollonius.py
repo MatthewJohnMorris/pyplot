@@ -23,6 +23,7 @@
 
 
 from cmath import *
+import math
 import random
 
 class Circle(object):
@@ -65,6 +66,17 @@ class Circle(object):
      
         self.r *= rScale
         self.m = new_centre + (self.m - old_centre) * rScale
+        
+    def rotate (self, centre, angle):
+    
+        x = self.m.real
+        y = self.m.imag
+        dx = x - centre.x
+        dy = y - centre.y
+        c = math.cos(angle)
+        s = math.sin(angle)
+        rot = (centre.x + dx * c + dy * s, centre.y + dy * c - dx * s)
+        return Circle(rot[0], rot[1], self.r)
 
 def outerTangentCircle( circle1, circle2, circle3 ):
     """
@@ -213,3 +225,8 @@ class ApollonianGasket(object):
         @type depth: int
         """
         self.recurse(self.start, 0, depth)
+        
+    def rotate (self, centre, angle):
+        
+        self.genCircles = [c.rotate(centre, angle) for c in self.genCircles]
+        
