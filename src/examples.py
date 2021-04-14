@@ -1358,63 +1358,29 @@ def apol(drawing):
     # From https://github.com/lsandig/apollon/blob/master/apollon.py
     # Sort out how this works and ditch the baggage
     paper_centre = Point(102.5, 148)
-    g = ApollonianGasket(1, 1/0.5, 1/0.5, paper_centre, 80)
-    c2 = g.genCircles[1]
-    c2a = g.genCircles[2]
-    c2b = g.genCircles[3]
+    g = ApollonianGasket(1, 1, 1, paper_centre, 80)
     g.generate(20)
 
-    g2 = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c2.m.real, c2.m.imag), c2.r)
-    c3 = g2.genCircles[1]
-    g2.generate(20)
+    all_circles = [c for c in g.genCircles]
 
-    g2a = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c2a.m.real, c2a.m.imag), c2a.r)
-    g2a.generate(20)
-
-    g2b = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c2b.m.real, c2b.m.imag), c2b.r)
-    g2b.generate(20)
-
-    g3 = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c3.m.real, c3.m.imag), c3.r)
-    c4 = g3.genCircles[1]
-    g3.generate(20)
-
-    g4 = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c4.m.real, c4.m.imag), c4.r)
-    c5 = g4.genCircles[1]
-    g4.generate(20)
-
-    g5 = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c5.m.real, c5.m.imag), c5.r)
-    c6 = g5.genCircles[1]
-    g5.generate(20)
+    gaskets = [g]
+    foam_limit = 5
     
+    while len(gaskets) > 0:
+        g = gaskets.pop()
+        foam_circles = [c for c in g.genCircles[1:] if abs(c.r.real) > foam_limit]
+        for c in foam_circles:
+            g = ApollonianGasket(1, 1/0.5, 1/0.5, Point(c.m.real, c.m.imag), abs(c.r))
+            g.generate(20)
+            all_circles.extend([c for c in g.genCircles])
+            gaskets.append(g)
+
     polylines = []
-    for c in g.genCircles:
+    for c in all_circles:
         polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
         polyline.append(polyline[0])
         polylines.append(polyline)
-    for c in g2.genCircles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
-    for c in g2a.genCircles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
-    for c in g2b.genCircles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
-    for c in g3.genCircles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
-    for c in g4.genCircles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
-    for c in g5.genCircles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
+    print(len(polylines))
             
     drawing.add_polylines(polylines)
 
