@@ -23,6 +23,7 @@ from perlin import PerlinNoise
 from bezier import *
 from threed import *
 import truchet
+from apollonius import ApollonianGasket
 
 def draw_unknown_pleasures(drawing):
 
@@ -1351,6 +1352,24 @@ def spirograph_test3(drawing, radii):
         path.append(p)
         
     drawing.add_polyline(path)
+    
+def apol(drawing):
+
+    # From https://github.com/lsandig/apollon/blob/master/apollon.py
+    # Sort out how this works and ditch the baggage
+    r = 0.03
+    g = ApollonianGasket(r, r*0.9, r*0.8)
+    g.generate(9)
+    
+    (dx, dy) = (40 + 1/r, 40 + 1/r)
+
+    polylines = []
+    for c in g.genCircles:
+        polyline = drawing.make_circle(Point(c.m.real+dx, c.m.imag+dy), abs(c.r.real))
+        polyline.append(polyline[0])
+        polylines.append(polyline)
+            
+    drawing.add_polylines(polylines)
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -1378,7 +1397,8 @@ paper_size = Point(192, 276)
 
 # spirograph_test(d)
 # spirograph_test2(d)
-draw_truchet(d)
+# draw_truchet(d)
+apol(d)
 
 if False:
     # works in progress

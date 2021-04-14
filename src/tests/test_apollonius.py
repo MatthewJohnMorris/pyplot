@@ -1,20 +1,14 @@
 import pytest
 
-from apollonius import *
+from apollonius import ApollonianGasket
 
 def test_simple():
 
-    c1, c2, c3 = Circle(0, 0, 1), Circle(4, 0, 1), Circle(2, 4, 2)
+    r = 0.05
+    g = ApollonianGasket(r, r, r)
+    g.generate(4)
     
-    cA = apollonius_solve(c1, c2, c3, 1, 1, 1)
+    (dx, dy) = (20 + 1/r, 20 + 1/r)
     
-    assert cA.x == 2.0
-    assert cA.y == 2.1
-    assert cA.r == 3.9
-    
-    cB = apollonius_solve(c1, c2, c3, -1, -1, -1)
-    
-    assert cB.x == pytest.approx(2.0)
-    assert cB.y == pytest.approx(0.8333333333)
-    assert cB.r == pytest.approx(1.1666666667)
-
+    for c in g.genCircles:
+        print(c.m.real+dx, c.m.imag+dy, abs(c.r.real))

@@ -1,51 +1,176 @@
-from collections import namedtuple
-import math
- 
-Circle = namedtuple('Circle', 'x, y, r')
- 
-def apollonius_solve(c1, c2, c3, s1, s2, s3):
-    '''
-    >>> solveApollonius((0, 0, 1), (4, 0, 1), (2, 4, 2), 1,1,1)
-    Circle(x=2.0, y=2.1, r=3.9)
-    >>> solveApollonius((0, 0, 1), (4, 0, 1), (2, 4, 2), -1,-1,-1)
-    Circle(x=2.0, y=0.8333333333333333, r=1.1666666666666667) 
-    '''
-    x1, y1, r1 = c1
-    x2, y2, r2 = c2
-    x3, y3, r3 = c3
- 
-    v11 = 2*x2 - 2*x1
-    v12 = 2*y2 - 2*y1
-    v13 = x1*x1 - x2*x2 + y1*y1 - y2*y2 - r1*r1 + r2*r2
-    v14 = 2*s2*r2 - 2*s1*r1
- 
-    v21 = 2*x3 - 2*x2
-    v22 = 2*y3 - 2*y2
-    v23 = x2*x2 - x3*x3 + y2*y2 - y3*y3 - r2*r2 + r3*r3
-    v24 = 2*s3*r3 - 2*s2*r2
- 
-    w12 = v12/v11
-    w13 = v13/v11
-    w14 = v14/v11
- 
-    w22 = v22/v21-w12
-    w23 = v23/v21-w13
-    w24 = v24/v21-w14
- 
-    P = -w23/w22
-    Q = w24/w22
-    M = -w12*P-w13
-    N = w14 - w12*Q
- 
-    a = N*N + Q*Q - 1
-    b = 2*M*N - 2*N*x1 + 2*P*Q - 2*Q*y1 + 2*s1*r1
-    c = x1*x1 + M*M - 2*M*x1 + P*P + y1*y1 - 2*P*y1 - r1*r1
- 
-    # Find a root of a quadratic equation. This requires the circle centers not to be e.g. colinear
-    D = b*b-4*a*c
-    rs = (-b-math.sqrt(D))/(2*a)
- 
-    xs = M+N*rs
-    ys = P+Q*rs
- 
-    return Circle(xs, ys, rs)
+from cmath import *
+import random
+
+class Circle(object):
+    """
+    A circle represented by center point as complex number and radius.
+    """
+    def __init__ ( self, mx, my, r ):
+        """
+        @param mx: x center coordinate
+        @type mx: int or float
+        @param my: y center coordinate
+        @type my: int or float
+        @param r: radius
+        @type r: int or float
+        """
+        self.r = r
+        self.m = (mx +my*1j)
+
+    def __repr__ ( self ):
+        """
+        Pretty printing
+        """
+        return "Circle( self, %s, %s, %s )" % (self.m.real, self.m.imag, self.r)
+
+    def __str__ ( self ):
+        """
+        Pretty printing
+        """
+        return "Circle x:%.3f y:%.3f r:%.3f [cur:%.3f]" % (self.m.real, self.m.imag, self.r.real, self.curvature().real)
+
+    def curvature (self):
+        """
+        Get circle's curvature.
+        @rtype: float
+        @return: Curvature of the circle.
+        """
+        return 1/self.r
+
+def outerTangentCircle( circle1, circle2, circle3 ):
+    """
+    Takes three externally tangent circles and calculates the fourth one enclosing them.
+    @param circle1: first circle
+    @param circle2: second circle
+    @param circle3: third circle
+    @type circle1: L{Circle}
+    @type circle2: L{Circle}
+    @type circle3: L{Circle}
+    @return: The enclosing circle
+    @rtype: L{Circle}
+    """
+    cur1 = circle1.curvature()
+    cur2 = circle2.curvature()
+    cur3 = circle3.curvature()
+    m1 = circle1.m
+    m2 = circle2.m
+    m3 = circle3.m
+    cur4 = -2 * sqrt( cur1*cur2 + cur2*cur3 + cur1 * cur3 ) + cur1 + cur2 + cur3
+    m4 = ( -2 * sqrt( cur1*m1*cur2*m2 + cur2*m2*cur3*m3 + cur1*m1*cur3*m3 ) + cur1*m1 + cur2*m2 + cur3*m3 ) /  cur4
+    circle4 = Circle( m4.real, m4.imag, 1/cur4 )
+    
+    return circle4
+    
+
+def tangentCirclesFromRadii( r2, r3, r4 ):
+    """
+    Takes three radii and calculates the corresponding externally
+    tangent circles as well as a fourth one enclosing them. The enclosing
+    circle is the first one.
+    @param r2, r3, r4: Radii of the circles to calculate
+    @type r2: int or float
+    @type r3: int or float
+    @type r4: int or float
+    @return: The four circles, where the first one is the enclosing one.
+    @rtype: (L{Circle}, L{Circle}, L{Circle}, L{Circle})
+    """
+    circle2 = Circle( 0, 0, r2 )
+    circle3 = Circle( r2 + r3, 0, r3 )
+    m4x = (r2*r2 + r2*r4 + r2*r3 - r3*r4) / (r2 + r3)
+    m4y = sqrt( (r2 + r4) * (r2 + r4) - m4x*m4x )
+    circle4 = Circle( m4x, m4y, r4 )
+    circle1 = outerTangentCircle( circle2, circle3, circle4 )
+    return ( circle1, circle2, circle3, circle4 )
+
+def secondSolution( fixed, c1, c2, c3 ):
+    """
+    If given four tangent circles, calculate the other one that is tangent
+    to the last three.
+    
+    @param fixed: The fixed circle touches the other three, but not
+    the one to be calculated.
+    
+    @param c1, c2, c3: Three circles to which the other tangent circle
+    is to be calculated.
+    @type fixed: L{Circle}
+    @type c1: L{Circle}
+    @type c2: L{Circle}
+    @type c3: L{Circle}
+    @return: The circle.
+    @rtype: L{Circle}
+    """
+    
+    curf = fixed.curvature()
+    cur1 = c1.curvature()
+    cur2 = c2.curvature()
+    cur3 = c3.curvature()
+
+    curn = 2 * (cur1 + cur2 + cur3) - curf
+    mn = (2 * (cur1*c1.m + cur2*c2.m + cur3*c3.m) - curf*fixed.m ) / curn
+    return Circle( mn.real, mn.imag, 1/curn )
+
+class ApollonianGasket(object):
+    """
+    Container for an Apollonian Gasket.
+    """
+    def __init__(self, c1, c2, c3):
+        """
+        Creates a basic apollonian Gasket with four circles.  
+        @param c1, c2, c3: The curvatures of the three inner circles of the
+        starting set (i.e. depth 0 of the recursion). The fourth,
+        enclosing circle will be calculated from them.
+        @type c1: int or float
+        @type c2: int or float
+        @type c3: int or float
+        """
+        self.start = tangentCirclesFromRadii( 1/c1, 1/c2, 1/c3 )
+        self.genCircles = list(self.start)
+
+    def recurse(self, circles, depth, maxDepth):
+        """Recursively calculate the smaller circles of the AG up to the
+        given depth. Note that for depth n we get 2*3^{n+1} circles.
+        @param maxDepth: Maximal depth of the recursion.
+        @type maxDepth: int
+        @param circles: 4-Tuple of circles for which the second
+        solutions are calculated
+        @type circles: (L{Circle}, L{Circle}, L{Circle}, L{Circle})
+        @param depth: Current depth
+        @type depth: int
+        """
+        if( depth == maxDepth ):
+            return
+        (c1, c2, c3, c4) = circles
+        if( depth == 0 ):
+            # First recursive step, this is the only time we need to
+            # calculate 4 new circles.
+            del self.genCircles[4:]
+            cspecial = secondSolution( c1, c2, c3, c4 )
+            self.genCircles.append( cspecial )
+            self.recurse( (cspecial, c2, c3, c4), 1, maxDepth )
+
+        r_limit = 0.25
+
+        cn2 = secondSolution( c2, c1, c3, c4 )
+        if cn2.r.real > r_limit:
+            self.genCircles.append( cn2 )
+        cn3 = secondSolution( c3, c1, c2, c4 )
+        if cn3.r.real > r_limit:
+            self.genCircles.append( cn3 )
+        cn4 = secondSolution( c4, c1, c2, c3 )
+        if cn4.r.real > r_limit:
+            self.genCircles.append( cn4 )               
+
+        if cn2.r.real > r_limit:
+            self.recurse( (cn2, c1, c3, c4), depth+1, maxDepth )
+        if cn3.r.real > r_limit:
+            self.recurse( (cn3, c1, c2, c4), depth+1, maxDepth )
+        if cn4.r.real > r_limit:
+            self.recurse( (cn4, c1, c2, c3), depth+1, maxDepth )
+
+    def generate(self, depth):
+        """
+        Wrapper for the recurse function. Generate the AG,
+        @param depth: Recursion depth of the Gasket
+        @type depth: int
+        """
+        self.recurse(self.start, 0, depth)
