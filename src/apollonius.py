@@ -1,3 +1,27 @@
+#!/usr/bin/python3
+
+# Generate Apollonian Gaskets -- the math part.
+
+# Copyright (c) 2014 Ludger Sandig
+# This file is part of apollon.
+
+# Apollon is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Apollon is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Apollon.  If not, see <http://www.gnu.org/licenses/>.
+
+# THE ABOVE IS COPIED VERBATIM FROM ORIGINAL FILE - SOME LIBERTIES HAVE BEEN TAKEN WITH THE CODE ITSELF
+# Alterations are Copyright (c) 2021 Matt Morris
+
+
 from cmath import *
 import random
 
@@ -36,6 +60,11 @@ class Circle(object):
         @return: Curvature of the circle.
         """
         return 1/self.r
+        
+    def shiftAndScale (self, old_centre, new_centre, rScale):
+     
+        self.r *= rScale
+        self.m = new_centre + (self.m - old_centre) * rScale
 
 def outerTangentCircle( circle1, circle2, circle3 ):
     """
@@ -62,7 +91,7 @@ def outerTangentCircle( circle1, circle2, circle3 ):
     return circle4
     
 
-def tangentCirclesFromRadii( r2, r3, r4 ):
+def tangentCirclesFromRadii( r2, r3, r4, centre, bounding_radius ):
     """
     Takes three radii and calculates the corresponding externally
     tangent circles as well as a fourth one enclosing them. The enclosing
@@ -80,6 +109,16 @@ def tangentCirclesFromRadii( r2, r3, r4 ):
     m4y = sqrt( (r2 + r4) * (r2 + r4) - m4x*m4x )
     circle4 = Circle( m4x, m4y, r4 )
     circle1 = outerTangentCircle( circle2, circle3, circle4 )
+    
+    # Rebase to our chosen centre and overall scale
+    centre = centre[0] + centre[1]*1j
+    scale = abs(bounding_radius / circle1.r.real)
+    old_middle = circle1.m
+    circle1.shiftAndScale(old_middle, centre, scale)
+    circle2.shiftAndScale(old_middle, centre, scale)
+    circle3.shiftAndScale(old_middle, centre, scale)
+    circle4.shiftAndScale(old_middle, centre, scale)
+    
     return ( circle1, circle2, circle3, circle4 )
 
 def secondSolution( fixed, c1, c2, c3 ):
@@ -113,7 +152,7 @@ class ApollonianGasket(object):
     """
     Container for an Apollonian Gasket.
     """
-    def __init__(self, c1, c2, c3):
+    def __init__(self, c1, c2, c3, centre, bounding_radius):
         """
         Creates a basic apollonian Gasket with four circles.  
         @param c1, c2, c3: The curvatures of the three inner circles of the
@@ -123,7 +162,7 @@ class ApollonianGasket(object):
         @type c2: int or float
         @type c3: int or float
         """
-        self.start = tangentCirclesFromRadii( 1/c1, 1/c2, 1/c3 )
+        self.start = tangentCirclesFromRadii( 1/c1, 1/c2, 1/c3, centre, bounding_radius )
         self.genCircles = list(self.start)
 
     def recurse(self, circles, depth, maxDepth):
@@ -148,7 +187,7 @@ class ApollonianGasket(object):
             self.genCircles.append( cspecial )
             self.recurse( (cspecial, c2, c3, c4), 1, maxDepth )
 
-        r_limit = 0.25
+        r_limit = 0.4
 
         cn2 = secondSolution( c2, c1, c3, c4 )
         if cn2.r.real > r_limit:
