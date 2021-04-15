@@ -14,6 +14,7 @@ from random import random, seed
 # seed random number generator
 seed(10)
 
+import inspect
 import math
 import time
 
@@ -197,6 +198,10 @@ class StandardDrawing:
         except ValueError:
             return False
 
+    @staticmethod
+    def log(s):
+        print(f'{inspect.stack()[1].function}: {s}')
+        
     def default_fontsize(self, fontsize):
         if fontsize is None:
             return "8"
@@ -206,8 +211,10 @@ class StandardDrawing:
         container = self.default_container(container)
         stroke = self.default_stroke(stroke)
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
-        
+
     def add_polylines(self, polylines, stroke=None, container=None, prejoin=False):
+
+        StandardDrawing.log(f'polylines: {len(polylines)}')
 
         if prejoin:
             tStart = time.perf_counter()
@@ -234,9 +241,9 @@ class StandardDrawing:
                         break
                 if not is_joined:
                     joined_polylines.append(polyline)
-            print(f"Joining: from {len(polylines)} to {len(joined_polylines)}")
+            StandardDrawing.log(f"Joining: from {len(polylines)} to {len(joined_polylines)}")
             tEnd = time.perf_counter()
-            print(F"Joining: {tEnd - tStart:.2f}s")
+            StandardDrawing.log(f"Joining: {tEnd - tStart:.2f}s")
         else:
             joined_polylines = polylines
     
@@ -263,8 +270,8 @@ class StandardDrawing:
                 joined_polyline = polyline
         if len(joined_polyline) > 0:
             joined_polylines.append(joined_polyline)
-        print(len(polylines))
-        print(len(joined_polylines))
+            
+        StandardDrawing.log(f'add_polylines: Final joining: went from {len(polylines)} to {len(joined_polylines)}')
             
         for polyline in joined_polylines:
             container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
@@ -1087,8 +1094,8 @@ class StandardDrawing:
             del unsorted[min_ix:min_ix+1]
     
         tEnd = time.perf_counter()
-        print(F"sort-tot for {len(polylines)} polylines={tEnd - tStart:.2f}s")
-        print(F"Estimated Comparisons: {n} vs {k*(k+1)/2}")
+        StandardDrawing.log(F"sort-tot for {len(polylines)} polylines={tEnd - tStart:.2f}s")
+        StandardDrawing.log(F"Estimated Comparisons: {n} vs {k*(k+1)/2}")
 
         return sorted
 

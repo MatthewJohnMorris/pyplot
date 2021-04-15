@@ -1358,24 +1358,27 @@ def apol(drawing):
     # From https://github.com/lsandig/apollon/blob/master/apollon.py
     # Sort out how this works and ditch the baggage
     paper_centre = Point(102.5, 148)
-    g = ApollonianGasket(1, 1, 1, paper_centre, 80)
+    overall_radius = 80
+    g = ApollonianGasket(1, 1, 1, paper_centre, overall_radius)
+    
     g.generate(20)
 
     all_circles = [c for c in g.genCircles]
 
     gaskets = [g]
-    foam_limit = 10
+    foam_limit = 4
     
     while len(gaskets) > 0:
         g = gaskets.pop()
         foam_circles = [c for c in g.genCircles[1:] if abs(c.r.real) > foam_limit]
-        a = math.pi # random() * math.pi * 2
+        a = 0 # math.pi # random() * math.pi * 2
         for c in foam_circles:
+            current_ratio = 1 + (1 - (abs(c.r) / overall_radius))
             centre = Point(c.m.real, c.m.imag)
-            g2 = ApollonianGasket(1, 1, 1, centre, abs(c.r))
+            g2 = ApollonianGasket(current_ratio, current_ratio, 1, centre, abs(c.r))
             g2.generate(20)
             g2.rotate(centre, a)
-            all_circles.extend([c1 for c1 in g2.genCircles])
+            all_circles.extend([c1 for c1 in g2.genCircles[1:]])
             gaskets.append(g2)
 
     polylines = []
@@ -1383,9 +1386,8 @@ def apol(drawing):
         polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
         polyline.append(polyline[0])
         polylines.append(polyline)
-    print(len(polylines))
             
-    drawing.add_polylines(polylines)
+    drawing.add_polylines(polylines, prejoin=True)
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle

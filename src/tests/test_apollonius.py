@@ -5,7 +5,7 @@ from apollonius import ApollonianGasket
 def test_simple():
 
     r = 0.05
-    g = ApollonianGasket(r, r, r)
+    g = ApollonianGasket(r, r, r, (100, 100), 80)
     g.generate(4)
     
     (dx, dy) = (20 + 1/r, 20 + 1/r)
