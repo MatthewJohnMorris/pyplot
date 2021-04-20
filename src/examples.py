@@ -1260,33 +1260,33 @@ def spirograph_test(drawing):
         return a * b / gcd(a, b)
         
     paper_centre = Point(102.5, 148)
-    a1 = 0
-    r1 = 80
-    a2 = 0
-    r2 = 35
-    a3 = 0
-    r3 = 8
-    a4 = 0
-    r4 = 3
-    for r1 in range(r1, r1+1): # range(21, 82, 14):
-        a_inc = drawing.pen_type.pen_width / r1
-        path = []
-        # need enough incr so both have whole # of rotations
-        x3 = max(r3, 1)
-        x4 = max(r4, 1)
-        n1 = lcm(lcm(lcm(r1, r2), x3), x4) / r1
-        circ1 = math.pi * 2 / a_inc
-        limit = int(n1 * circ1) + 10
-        print(n1, circ1, limit)
-        for i in range(0, limit):
-            a1 += a_inc
-            a2 += a_inc * r1 / r2
-            a3 += a_inc * r1 / x3
-            a4 += a_inc * r1 / x4
-            p = paper_centre + Point(math.cos(a1), math.sin(a1)) * (r1-r2+r3-r4) + Point(math.cos(-a2), math.sin(-a2)) * (r2-r3+r4) + Point(math.cos(a3), math.sin(a3)) * (r3-r4) + Point(math.cos(-a4), math.sin(-a4)) * r4
-            path.append(p)
+    a = [0, 0, 0, 0]
+    r = [80, 35, 8, 3]
+    s = [1, -1, 1, -1]
+    a_inc = drawing.pen_type.pen_width / r[0]
+    path = []
+    # need enough incr so both have whole # of rotations
+    x = [max(rx, 1) for rx in r]
+    n1 = lcm(lcm(lcm(x[0], x[1]), x[2]), x[3]) / r[0]
+    circ1 = math.pi * 2 / a_inc
+    limit = int(n1 * circ1) + 10
+    print(n1, circ1, limit)
+    for i in range(0, limit):
+        a[0] += s[0] * a_inc * r[0] / x[0]
+        a[1] += s[1] * a_inc * r[0] / x[1]
+        a[2] += s[2] * a_inc * r[0] / x[2]
+        a[3] += s[3] * a_inc * r[0] / x[3]
+        p = paper_centre
+        for j in range(0,4):
+            pt = Point(math.cos(a[j]), math.sin(a[j]))
+            mult = 0
+            for k in range(j, 4):
+                mult += r[k]*s[k]
+            pt = pt * mult * s[j]
+            p = p + pt
+        path.append(p)
             
-        drawing.add_polyline(path)
+    drawing.add_polyline(path)
 
 def apollonian_foam(drawing):
 
@@ -1366,10 +1366,7 @@ paper_size = Point(192, 276)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-plot_perlin_drape_spiral(d, 115, centre=Point(50, 50), r_base=25)
-plot_perlin_drape_spiral(d, 107, centre=Point(50, 150), r_base=25)
-plot_perlin_drape_spiral(d, 118, centre=Point(150, 50), r_base=25)
-plot_perlin_drape_spiral(d, 113, centre=Point(150, 150), r_base=25)
+spirograph_test(d)
 
 if False:
     # works in progress
