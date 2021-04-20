@@ -61,13 +61,11 @@ def draw_unknown_pleasures(drawing):
         drawing.add_polyline(path)
         drawing.add_polyline(path)
 
-def plot_perlin_drape_spiral(drawing, seed):  
+def plot_perlin_drape_spiral(drawing, seed, centre=(100,70), r_base=50):  
 
-    centre = (100, 70)
-    r_base = 50
     circ = 2 * math.pi * r_base
     n = int(circ) + 1
-    ni = 120
+    ni = int(r_base / (drawing.pen_type.pen_width * 1.5))
     target = n * ni
     iscale = r_base / ni * 2
     points = []
@@ -957,12 +955,13 @@ def draw_big_a(drawing):
     paper_centre = Point(102.5, 148)
     fontsize = 96*8
     family="Arial"
-    ext = d.text_bound("ﷺ", fontsize=fontsize, family=family)
+    text = "ﷺ"
+    ext = d.text_bound(text, fontsize=fontsize, family=family)
     text_place = Point(paper_centre.x - ext.width/2, paper_centre.y + ext.height/2)
-    letter_paths = d.make_text("ﷺ", text_place, fontsize=fontsize, family=family)
+    letter_paths = d.make_text(text, text_place, fontsize=fontsize, family=family)
     sf = ShapeFiller(letter_paths)
     paths = []
-    for path in sf.get_paths(0.4*d.pen_type.pen_width, angle=0): # math.pi/2):
+    for path in sf.get_paths(10*0.4*d.pen_type.pen_width, angle=math.pi/2): # math.pi/2):
         paths.append(path)
         
     box = d.make_rect(Point(120, 120), 30, 30)
@@ -1264,38 +1263,6 @@ def spirograph_test(drawing):
     a1 = 0
     r1 = 80
     a2 = 0
-    r2 = 28
-    a_inc = drawing.pen_type.pen_width / r1
-    path = []
-    # need enough incr so both have whole # of rotations
-    n1 = lcm(r1, r2) / r1
-    circ1 = math.pi * 2 / a_inc
-    limit = int(n1 * circ1) + 1
-    print(n1, circ1, limit)
-    for i in range(0, limit):
-        a1 += a_inc
-        a2 += a_inc * r1 / r2
-        p = paper_centre + Point(math.cos(a1), math.sin(a1)) * (r1-r2) + Point(math.cos(-a2), math.sin(-a2)) * r2
-        path.append(p)
-        
-    drawing.add_polyline(path)
-
-def spirograph_test2(drawing):
-
-    def gcd(a,b):
-        """Compute the greatest common divisor of a and b"""
-        while b > 0:
-            a, b = b, a % b
-        return a
-        
-    def lcm(a, b):
-        """Compute the lowest common multiple of a and b"""
-        return a * b / gcd(a, b)
-        
-    paper_centre = Point(102.5, 148)
-    a1 = 0
-    r1 = 80
-    a2 = 0
     r2 = 35
     a3 = 0
     r3 = 8
@@ -1321,39 +1288,7 @@ def spirograph_test2(drawing):
             
         drawing.add_polyline(path)
 
-def spirograph_test3(drawing, radii):
-
-    def gcd(a,b):
-        """Compute the greatest common divisor of a and b"""
-        while b > 0:
-            a, b = b, a % b
-        return a
-        
-    def lcm(a, b):
-        """Compute the lowest common multiple of a and b"""
-        return a * b / gcd(a, b)
-        
-    paper_centre = Point(102.5, 148)
-    angles = [0 for _ in radii]
-    xs = [max(1,r) for r in radii]
-    angle_incs = [drawing.pen_type.pen_width / r for r in radii]
-    
-    path = []
-    # need enough incr so both have whole # of rotations
-    overall_lcm = lcm(x1, x2)
-    for x in xs[2:]:
-        overall_lcm = lcm(overall_lcm, x)
-    circ1 = math.pi * 2 / min(angle_incs)
-    limit = int(overall_lcm * circ1) + 10
-    print(overall_lcm, circ1, limit)
-    for i in range(0, limit):
-        angles = [(_1 + _2) for (_1, _2) in zip(angles, angle_incs)]
-        p = paper_centre + Point(math.cos(a1), math.sin(a1)) * (r1-r2+r3-r4) + Point(math.cos(-a2), math.sin(-a2)) * (r2-r3+r4) + Point(math.cos(a3), math.sin(a3)) * (r3-r4) + Point(math.cos(-a4), math.sin(-a4)) * r4
-        path.append(p)
-        
-    drawing.add_polyline(path)
-    
-def apol(drawing):
+def apollonian_foam(drawing):
 
     # From https://github.com/lsandig/apollon/blob/master/apollon.py
     # Sort out how this works and ditch the baggage
@@ -1389,20 +1324,39 @@ def apol(drawing):
             
     drawing.add_polylines(polylines, prejoin=True)
 
+def test_line_colour(d):
+
+    base_pos = Point(20, 20)
+    size = 14
+    gap = 16
+    diff = d.pen_type.pen_width * 0.9
+    layers = [d.add_layer(f"{i+1}") for i in range(0,10)]
+    for i in range(0, 10):
+        for j in range(i, 10):
+            sq_pos = base_pos + Point(i*gap, j*gap)
+            k = 0
+            while diff * k < size:
+                ix_layer = i if k % 2 == 0 else j
+                layer = layers[ix_layer]
+                pos = sq_pos + Point(diff*k, 0)
+                d.add_polyline([pos, pos + Point(0, size)], container=layer)
+                k += 1
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 # d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment03())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment01())
+# d = StandardDrawing(pen_type = PenType.StaedtlerPigment005())
 # d = StandardDrawing(pen_type = PenType.RotringTikky05())
 # d = StandardDrawing(pen_type = PenType.RotringTikky03())
-d = StandardDrawing(pen_type = PenType.PilotG207())
+# d = StandardDrawing(pen_type = PenType.PilotG207())
 
 # take (102.5, 148) as centre of A4 given where everything currently sits
 # effective area in each direction is (94, 138), e.g. (8,10) at top left
@@ -1412,11 +1366,10 @@ paper_size = Point(192, 276)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-
-# spirograph_test(d)
-# spirograph_test2(d)
-# draw_truchet(d)
-apol(d)
+plot_perlin_drape_spiral(d, 115, centre=Point(50, 50), r_base=25)
+plot_perlin_drape_spiral(d, 107, centre=Point(50, 150), r_base=25)
+plot_perlin_drape_spiral(d, 118, centre=Point(150, 50), r_base=25)
+plot_perlin_drape_spiral(d, 113, centre=Point(150, 150), r_base=25)
 
 if False:
     # works in progress
@@ -1424,6 +1377,7 @@ if False:
     draw_wakefield(d)
 
     # realised ideas I want to keep
+    apollonian_foam(d)
     valentine(d)
     draw_snowflake(d)
     mothers_day(d)
@@ -1447,10 +1401,11 @@ if False:
     draw_riley_backoff_test(d)
     draw_xor_circles_othello(d)
     
-    # lsystems and tiling
+    # lsystems, tiling, spirograph
     lsystem_test(d)
     draw_truchet(d)
     draw_truchet2(d)
+    spirograph_test(d)
 
     # text
     draw_big_a(d)
@@ -1471,7 +1426,6 @@ if False:
     # d.image_spiral_cmyk('muppets.jpeg', paper_centre, 80)
 
     # testing stuff
-    lsystem_test(d)
     quality_test(d)
     draw_shape_clips(d)
     draw_shape_clips2(d)
@@ -1480,6 +1434,7 @@ if False:
     test_drawing_extent(d)
     test_hearts(d)
     plot_surface(d)
+    test_line_colour(d)
 
 d.dwg.save()
 

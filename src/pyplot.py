@@ -140,9 +140,15 @@ class PenType:
     def StaedtlerPigment03():
         return PenType('StaedtlerPigment01', False, 0.3, '0.21px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
         
+    # Use a relatively wide fill gap. This pen will rip up paper if you use it too aggressively.
     @staticmethod
     def StaedtlerPigment01():
-        return PenType('StaedtlerPigment01', False, 0.1, '0.07px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        return PenType('StaedtlerPigment01', False, 0.2, '0.14px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
+        
+    # Use a relatively wide fill gap. This pen will rip up paper if you use it too aggressively.
+    @staticmethod
+    def StaedtlerPigment005():
+        return PenType('StaedtlerPigment01', False, 0.2, '0.14px', BWConverters.AverageIntensity, CMYKConverters.Unadjusted)
         
     # Rotring Tikky effective width for fill is larger than quoted nib size
     @staticmethod
