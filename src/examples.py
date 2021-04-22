@@ -702,6 +702,79 @@ def draw_shape_clips2(d):
                 shapes.append(shape)
     d.add_polylines(all_polylines)
 
+def draw_shape_clips3(d):
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 276)
+    all_shape_polylines = []
+    all_fill_polyline_lists = []
+    shapes = []
+    max_size = 30
+    for i in range(0, 200):
+        cx = paper_centre.x + (random()-0.5) * (paper_size.x - (max_size + 20))
+        cy = paper_centre.y + (random()-0.5) * (paper_size.y - (max_size + 20))
+        
+        r = random()
+        size = max_size * (0.5 + 0.5 * r)
+        r = random()
+        if r < 0.333:
+            tl = Point(cx-size/2, cy-size/2)
+            line = [Point(1,0), Point(2,0), Point(2,1), Point(3,1), Point(3,2), Point(2,2), Point(2,3), Point(1,3), Point(1,2), Point(0,2), Point(0,1), Point(1,1)]
+            shape = [tl + pt*(size/3) for pt in line]
+        elif r < 0.666:
+            shape = d.make_square(Point(cx-size/2, cy-size/2), size)
+        else:
+            tl = Point(cx-size/2, cy-size/2)
+            line = [Point(0,0), Point(3,0), Point(1.5,3*math.sqrt(3)/2)]
+            shape = [tl + pt*(size/3) for pt in line]
+            
+        fill_lines = []
+        r = random()
+        if r < 0.2:
+            sf = ShapeFiller([shape])
+            w = d.pen_type.pen_width * 0.8 * 3
+            y = cy-size/2 + w
+            while y < cy+size/2:
+                fill_lines.append([Point(cx-size/2, y), Point(cx+size/2, y)])
+                y += w
+            fill_lines = sf.clip(fill_lines, inverse=True)
+        
+        a = random()*math.pi*2
+        fill_lines = [[StandardDrawing.rotate_about(pt, (cx, cy), a) for pt in line] for line in fill_lines]
+        shape = [StandardDrawing.rotate_about(pt, (cx, cy), a) for pt in shape]
+        shape_polyline = [x for x in shape]
+        shape_polyline.append(shape_polyline[0])
+        if len(shapes) == 0:
+            all_shape_polylines.extend([shape_polyline])
+            shapes.append(shape)
+        else:
+            sf = ShapeFiller(shapes)
+            clipped_shape_polylines = sf.clip([shape_polyline], union=True)
+            all_shape_polylines.extend(clipped_shape_polylines)
+            clipped_fill_polylines = sf.clip(fill_lines, union=True)
+            if(len(clipped_fill_polylines) > 0):
+                # print(shape_polyline)
+                # print(clipped_polylines)
+                all_fill_polyline_lists.append(clipped_fill_polylines)
+            shapes.append(shape)
+                
+    d.add_polylines(all_shape_polylines)
+    sub_lists = [[], [], []]
+    for x in all_fill_polyline_lists:
+        r = random()
+        if r < 0.333:
+            sub_lists[0].append(x)
+        elif r < 0.666:
+            sub_lists[1].append(x)
+        else:
+            sub_lists[2].append(x)
+    for x in sub_lists[0]:
+        d.add_polylines(x, container=d.add_layer("1"), stroke=svgwrite.rgb(255, 0, 0, '%'))
+    for x in sub_lists[1]:
+        d.add_polylines(x, container=d.add_layer("1"), stroke=svgwrite.rgb(0, 255, 0, '%'))
+    for x in sub_lists[2]:
+        d.add_polylines(x, container=d.add_layer("1"), stroke=svgwrite.rgb(0, 0, 127, '%'))
+
 def draw_word_square(d):
 
     d.add_polylines(d.make_word_square((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"], angle=math.pi/7))
@@ -1247,7 +1320,7 @@ def draw_truchet2(drawing):
     truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
     truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
 
-def spirograph_test(drawing):
+def add_spirograph(drawing, centre, r, s, scale, container=None):
 
     def gcd(a,b):
         """Compute the greatest common divisor of a and b"""
@@ -1259,10 +1332,7 @@ def spirograph_test(drawing):
         """Compute the lowest common multiple of a and b"""
         return a * b / gcd(a, b)
         
-    paper_centre = Point(102.5, 148)
-    a = [0, 0, 0, 0]
-    r = [80, 35, 8, 3]
-    s = [1, -1, 1, -1]
+    a = [0 for _ in r]
     a_inc = drawing.pen_type.pen_width / r[0]
     path = []
     # need enough incr so both have whole # of rotations
@@ -1270,23 +1340,45 @@ def spirograph_test(drawing):
     n1 = lcm(lcm(lcm(x[0], x[1]), x[2]), x[3]) / r[0]
     circ1 = math.pi * 2 / a_inc
     limit = int(n1 * circ1) + 10
-    print(n1, circ1, limit)
     for i in range(0, limit):
         a[0] += s[0] * a_inc * r[0] / x[0]
         a[1] += s[1] * a_inc * r[0] / x[1]
         a[2] += s[2] * a_inc * r[0] / x[2]
         a[3] += s[3] * a_inc * r[0] / x[3]
-        p = paper_centre
+        p = centre
         for j in range(0,4):
             pt = Point(math.cos(a[j]), math.sin(a[j]))
             mult = 0
             for k in range(j, 4):
                 mult += r[k]*s[k]
             pt = pt * mult * s[j]
-            p = p + pt
+            p = p + pt * scale
         path.append(p)
             
-    drawing.add_polyline(path)
+    drawing.add_polyline(path, container=container)
+
+def spirograph1(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [80, 35, 8, 2]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=0.2)
+    add_spirograph(drawing, paper_centre, r, s, scale=1)
+
+def spirograph2(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [80, 25, 2, 1]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=0.35)
+    add_spirograph(drawing, paper_centre, r, s, scale=1)
+
+def spirograph3(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [70, 30, 13, 7]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=1)
 
 def apollonian_foam(drawing):
 
@@ -1366,7 +1458,7 @@ paper_size = Point(192, 276)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-spirograph_test(d)
+draw_shape_clips3(d)
 
 if False:
     # works in progress
@@ -1402,7 +1494,9 @@ if False:
     lsystem_test(d)
     draw_truchet(d)
     draw_truchet2(d)
-    spirograph_test(d)
+    spirograph1(d)
+    spirograph2(d)
+    spirograph3(d)
 
     # text
     draw_big_a(d)
