@@ -704,6 +704,9 @@ def draw_shape_clips2(d):
 
 def draw_shape_clips3(d):
 
+    # Try developing a shade fill class that we can put in here
+    # Can use for more general area fill art
+    
     paper_centre = Point(102.5, 148)
     paper_size = Point(192, 276)
     all_shape_polylines = []
