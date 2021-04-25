@@ -713,7 +713,7 @@ def draw_shape_clips3(d):
     all_fill_polyline_lists = []
     shapes = []
     max_size = 30
-    for i in range(0, 200):
+    for i in range(0, 50):
         cx = paper_centre.x + (random()-0.5) * (paper_size.x - (max_size + 20))
         cy = paper_centre.y + (random()-0.5) * (paper_size.y - (max_size + 20))
         
@@ -733,10 +733,11 @@ def draw_shape_clips3(d):
             
         fill_lines = []
         r = random()
-        if r < 0.2:
+        if r < 10.5:
             sf = ShapeFiller([shape])
-            w = d.pen_type.pen_width * 0.8 * 3
+            w = d.pen_type.pen_width * 0.8
             y = cy-size/2 + w
+            fill_lines = []
             while y < cy+size/2:
                 fill_lines.append([Point(cx-size/2, y), Point(cx+size/2, y)])
                 y += w
@@ -750,33 +751,51 @@ def draw_shape_clips3(d):
         if len(shapes) == 0:
             all_shape_polylines.extend([shape_polyline])
             shapes.append(shape)
+            clipped_fill_polylines = [[fill_line] for fill_line in fill_lines]
         else:
             sf = ShapeFiller(shapes)
             clipped_shape_polylines = sf.clip([shape_polyline], union=True)
             all_shape_polylines.extend(clipped_shape_polylines)
-            clipped_fill_polylines = sf.clip(fill_lines, union=True)
-            if(len(clipped_fill_polylines) > 0):
-                # print(shape_polyline)
-                # print(clipped_polylines)
-                all_fill_polyline_lists.append(clipped_fill_polylines)
+            
+            # A list of polylines (= list of points)
+            clipped_fill_polylines = [sf.clip([fill_line], union=True) for fill_line in fill_lines]
             shapes.append(shape)
+
+        ix = 0
+        for clipped_fill_polyline in clipped_fill_polylines:
+            if(len(clipped_fill_polyline) > 0):
+                all_fill_polyline_lists.append(clipped_fill_polyline)
+            ix += 1
+                
                 
     d.add_polylines(all_shape_polylines)
-    sub_lists = [[], [], []]
-    for x in all_fill_polyline_lists:
+    sub_lists = [[], [], [], []]
+    mins = paper_centre - paper_size / 2
+    maxs = paper_centre + paper_size / 2
+    for polyline_list in all_fill_polyline_lists:
+        pts = [pt for polyline in polyline_list for pt in polyline]
+        avg = Point(sum(pt.x for pt in pts), sum(pt.y for pt in pts)) / len(pts)
+        cx = min(1, max(0, (avg.x - mins.x)/(maxs.x - mins.x)))
+        cy = min(1, max(0, (avg.y - mins.x)/(maxs.y - mins.y)))
+        r0 = cx
+        r1 = 1-cx
+        r2 = cy
+        r3 = 1-cy
+        rtot = r0 + r1 + r2 + r3 #  + 2
         r = random()
-        if r < 0.333:
-            sub_lists[0].append(x)
-        elif r < 0.666:
-            sub_lists[1].append(x)
-        else:
-            sub_lists[2].append(x)
-    for x in sub_lists[0]:
-        d.add_polylines(x, container=d.add_layer("1"), stroke=svgwrite.rgb(255, 0, 0, '%'))
-    for x in sub_lists[1]:
-        d.add_polylines(x, container=d.add_layer("1"), stroke=svgwrite.rgb(0, 255, 0, '%'))
-    for x in sub_lists[2]:
-        d.add_polylines(x, container=d.add_layer("1"), stroke=svgwrite.rgb(0, 0, 127, '%'))
+        if r < r0/rtot:
+            sub_lists[0].extend(polyline_list)
+        elif r < (r0+r1)/rtot:
+            sub_lists[1].extend(polyline_list)
+        elif r < (r0+r1+r2)/rtot:
+            sub_lists[2].extend(polyline_list)
+        elif r < (r0+r1+r2+r3)/rtot:
+            sub_lists[3].extend(polyline_list)
+            
+    d.add_polylines(sub_lists[0], container=d.add_layer("1-xxx"), stroke=svgwrite.rgb(0, 0, 100, '%'))
+    d.add_polylines(sub_lists[1], container=d.add_layer("2-xxx"), stroke=svgwrite.rgb(50, 50, 100, '%'))
+    d.add_polylines(sub_lists[2], container=d.add_layer("3-xxx"), stroke=svgwrite.rgb(100, 0, 100, '%'))
+    d.add_polylines(sub_lists[3], container=d.add_layer("4-xxx"), stroke=svgwrite.rgb(0, 100, 100, '%'))
 
 def draw_word_square(d):
 
@@ -1240,7 +1259,7 @@ def lsystem_test(drawing):
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
-    all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
+    # all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
@@ -1249,7 +1268,7 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
     # all_lines = lsystem.test_lsystem_bot_example(order=7, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example2(order=5, size=3, start_a=45)
-    # all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
+    all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example4(order=7, size=1.3, start_a=90)
     # all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
 
@@ -1462,6 +1481,7 @@ paper_size = Point(192, 276)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 draw_shape_clips3(d)
+# lsystem_test(d)
 
 if False:
     # works in progress
