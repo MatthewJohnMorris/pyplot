@@ -54,6 +54,26 @@ def createtiles_slash(frawing, tile_size):
     path.append(Point(0,0))
     path.append(Point(tile_size, tile_size))
     return [[path]]
+    
+def createtiles_z(frawing, tile_size):
+
+    path1 = []
+    path1.append(Point(tile_size/2,0))
+    path1.append(Point(0,tile_size/2))
+    path2 = []
+    path2.append(Point(tile_size/2,tile_size))
+    path2.append(Point(tile_size,tile_size/2))
+    tile1 = [path1, path2]
+    
+    path1 = []
+    path1.append(Point(tile_size/2,0))
+    path1.append(Point(tile_size/2,tile_size))
+    path2 = []
+    path2.append(Point(0,tile_size/2))
+    path2.append(Point(tile_size,tile_size/2))
+    tile2 = [path1, path2]
+    
+    return [tile1, tile2]
   
 def createtiles_tri(drawing, tile_size):
 

@@ -792,14 +792,14 @@ def draw_shape_clips3(d):
         elif r < (r0+r1+r2+r3)/rtot:
             sub_lists[3].extend(polyline_list)
             
-    d.add_polylines(sub_lists[0], container=d.add_layer("1-xxx"), stroke=svgwrite.rgb(0, 0, 100, '%'))
-    d.add_polylines(sub_lists[1], container=d.add_layer("2-xxx"), stroke=svgwrite.rgb(50, 50, 100, '%'))
-    d.add_polylines(sub_lists[2], container=d.add_layer("3-xxx"), stroke=svgwrite.rgb(100, 0, 100, '%'))
-    d.add_polylines(sub_lists[3], container=d.add_layer("4-xxx"), stroke=svgwrite.rgb(0, 100, 100, '%'))
+    d.add_polylines(sub_lists[0], container=d.add_layer("1-xxx"), stroke=svgwrite.rgb(100, 100, 50, '%'))
+    d.add_polylines(sub_lists[1], container=d.add_layer("2-xxx"), stroke=svgwrite.rgb(100, 50, 100, '%'))
+    d.add_polylines(sub_lists[2], container=d.add_layer("3-xxx"), stroke=svgwrite.rgb(100, 0, 0, '%'))
+    d.add_polylines(sub_lists[3], container=d.add_layer("4-xxx"), stroke=svgwrite.rgb(50, 50, 100, '%'))
 
 def draw_word_square(d):
 
-    d.add_polylines(d.make_word_square((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"], angle=math.pi/7))
+    d.add_polylines(d.duare((20, 20), 96, 'Caslon Antique', ["SATOR","AREPO","TENET","OPERA","ROTAS"], angle=0))
 
 def draw_tree(d):
     all_polylines = []
@@ -1259,7 +1259,7 @@ def lsystem_test(drawing):
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
-    # all_lines = lsystem.test_lsystem_hilbert(order=7, size=1)
+    all_lines = lsystem.test_lsystem_hilbert(order=8, size=0.7)
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
@@ -1268,7 +1268,7 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
     # all_lines = lsystem.test_lsystem_bot_example(order=7, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example2(order=5, size=3, start_a=45)
-    all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example4(order=7, size=1.3, start_a=90)
     # all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
 
@@ -1328,8 +1328,9 @@ def draw_wakefield(drawing):
 def draw_truchet(drawing):
 
     # func = truchet.createtiles_truchet
-    func = truchet.createtiles_truchet_roundonly
+    # func = truchet.createtiles_truchet_roundonly
     # func = truchet.createtiles_slash
+    func = truchet.createtiles_z
     # func = truchet.createtiles_tri
     # func = truchet.createtiles_semi
     # func = truchet.createtiles_semi_track
@@ -1342,7 +1343,7 @@ def draw_truchet2(drawing):
     truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
     truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
 
-def add_spirograph(drawing, centre, r, s, scale, container=None):
+def add_spirograph(drawing, centre, r, s, scale, container=None, stroke=None):
 
     def gcd(a,b):
         """Compute the greatest common divisor of a and b"""
@@ -1377,7 +1378,7 @@ def add_spirograph(drawing, centre, r, s, scale, container=None):
             p = p + pt * scale
         path.append(p)
             
-    drawing.add_polyline(path, container=container)
+    drawing.add_polyline(path, container=container, stroke=stroke)
 
 def spirograph1(drawing):
 
@@ -1400,6 +1401,44 @@ def spirograph3(drawing):
     paper_centre = Point(102.5, 148)
     r = [70, 30, 13, 7]
     s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=1)
+
+def spirograph4(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [70, 32, 1, 2]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=1)
+
+def spirograph5(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [70, 3, 2, 1]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=1, stroke=svgwrite.rgb(100, 0, 0, '%'), container=drawing.add_layer("1"))
+    r = [60, 22, 3, 1]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=1, stroke=svgwrite.rgb(0, 0, 0, '%'), container=drawing.add_layer("2"))
+    r = [13, 7, 1, 0]
+    s = [1, -1, 1, -1]
+    add_spirograph(drawing, paper_centre, r, s, scale=1, stroke=svgwrite.rgb(50, 0, 0, '%'), container=drawing.add_layer("3"))
+
+def spirograph6(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [70, 3, 2, 1]
+    s = [1, -1, 1, -1]
+    scale = 1
+    for i in range(0, 20):
+        add_spirograph(drawing, paper_centre, r, s, scale=scale, stroke=svgwrite.rgb(0, 0, 0, '%'), container=drawing.add_layer("1"))
+        scale *= 0.9
+    drawing.add_dot(paper_centre, 75, r_start=73, stroke=svgwrite.rgb(50, 0, 0, '%'), container=drawing.add_layer("2"))
+
+def spirograph7(drawing):
+
+    paper_centre = Point(102.5, 148)
+    r = [48, 7, 18, 0]
+    s = [1, 1, -1, 1]
     add_spirograph(drawing, paper_centre, r, s, scale=1)
 
 def apollonian_foam(drawing):
@@ -1480,13 +1519,13 @@ paper_size = Point(192, 276)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-draw_shape_clips3(d)
-# lsystem_test(d)
+draw_truchet(d)
 
 if False:
     # works in progress
     image_sketch(d)
     draw_wakefield(d)
+    draw_shape_clips3(d)
 
     # realised ideas I want to keep
     apollonian_foam(d)
@@ -1520,6 +1559,10 @@ if False:
     spirograph1(d)
     spirograph2(d)
     spirograph3(d)
+    spirograph4(d)
+    spirograph5(d)
+    spirograph6(d)
+    spirograph7(d)
 
     # text
     draw_big_a(d)
