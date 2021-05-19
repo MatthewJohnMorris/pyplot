@@ -120,11 +120,89 @@ def createtiles_semi_track(drawing, tile_size):
             
     return [[path00, path01, path10, path11]]  
 
-def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None):
+def createtiles_thirds1(drawing, tile_size):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+        
+    path0 = []
+    path1 = []
+    path2 = []
+    path3 = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path0.append(Point(math.cos(a), math.sin(a)) / 3 * tile_size)
+        path1.append((Point(1, 0) + Point(-math.cos(a), math.sin(a)) / 3) * tile_size)
+        path2.append((Point(math.cos(2*a), -math.sin(2*a)) / 6 + Point(0.5, 1)) * tile_size)
+    path3 = [Point(0, 2/3)*tile_size, Point(1, 2/3)*tile_size]
+    tile1 = [path0, path1, path2, path3]
+         
+    return [tile1]
+
+def createtiles_thirds2(drawing, tile_size):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+        
+    path0 = []
+    path1 = []
+    path2 = []
+    path3 = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path0.append(Point(math.cos(a), math.sin(a)) / 3 * tile_size)
+        path1.append((Point(1, 0) + Point(-math.cos(a), math.sin(a)) / 3) * tile_size)
+        path2.append((Point(math.cos(2*a), -math.sin(2*a)) / 6 + Point(0.5, 1)) * tile_size)
+    path3 = [Point(0, 2/3)*tile_size, Point(1, 2/3)*tile_size]
+    tile1 = [path0, path1, path2, path3]
+    
+    path0 = []
+    path1 = []
+    path2 = []
+    path3 = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path0.append((Point(math.cos(2*a), -math.sin(2*a)) / 6 + Point(0.5, 1)) * tile_size)
+        path1.append((Point(math.cos(2*a), math.sin(2*a)) / 6 + Point(0.5, 0)) * tile_size)
+    path2 = [Point(0, 1/3)*tile_size, Point(1, 1/3)*tile_size]
+    path3 = [Point(0, 2/3)*tile_size, Point(1, 2/3)*tile_size]
+    tile2 = [path0, path1, path2, path3]
+         
+    return [tile1, tile2]
+
+def createtiles_thirds3(drawing, tile_size):  
+
+    circumference = tile_size * math.pi * 2
+    sections = circumference / drawing.pen_type.pen_width
+    n = int(sections / 4)
+        
+    path0 = []
+    path1 = []
+    path2 = []
+    path3 = []
+    path4 = []
+    path5 = []
+    for i in range(0, n+1):
+        a = math.pi * i / (2*n)
+        path0.append(Point(math.cos(a), math.sin(a)) / 3 * tile_size)
+        path1.append(Point(math.cos(a), math.sin(a)) / 2 * tile_size)
+        path2.append(Point(math.cos(a), math.sin(a)) * 2 / 3 * tile_size)
+        path3.append((Point(1, 1) + Point(-math.cos(a), -math.sin(a)) / 3) * tile_size)
+        path4.append((Point(1, 1) + Point(-math.cos(a), -math.sin(a)) / 2) * tile_size)
+        path5.append((Point(1, 1) + Point(-math.cos(a), -math.sin(a)) * 2 / 3) * tile_size)
+    tile1 = [path0, path1, path2, path3, path4, path5]
+         
+    return [tile1]
+
+def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None, tile_c=None):
 
     paper_centre = Point(102.5, 148)
-    paper_size = Point(192, 276) - Point(10, 10)
-    tile_c = 20
+    paper_size = Point(192, 270) - Point(30, 30)
+
+    paper_centre = Point(102.5, 148)
+    tile_c = 20 if tile_c is None else tile_c
     tile_size = paper_size.x / tile_c
     tile_r = int(paper_size.y / tile_size)
     tile_topleft_00 = paper_centre - Point(tile_c, tile_r) * (tile_size/2)

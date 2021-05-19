@@ -121,6 +121,10 @@ class PenType:
         return PenType('GellyRollMoonlightOnBlack', True, 0.35, '0.25px', BWConverters.InverseAverageIntensity, CMYKConverters.Error)
         
     @staticmethod
+    def PigmaMicron01():
+        return PenType('PigmaMicron05', False, 0.2, '0.14px', BWConverters.AverageIntensity, CMYKConverters.PigmaMicron)
+        
+    @staticmethod
     def PigmaMicron03():
         return PenType('PigmaMicron05', False, 0.35, '0.25px', BWConverters.AverageIntensity, CMYKConverters.PigmaMicron)
         
