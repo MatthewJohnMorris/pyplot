@@ -886,7 +886,7 @@ def draw_3d(d):
     all_polylines = Transform3D.convertToPolylines(all_faces)
                 
     print(f"Adding polylines")
-    d.add_polylines(all_polylines, usenew=True)
+    d.add_polylines(all_polylines)
 
 def mothers_day(d):
 
@@ -1759,7 +1759,7 @@ paper_size = Point(192, 270)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-# draw_truchet(d)
+draw_truchet(d)
 # apollonian_foam(d)
 # test_bounds(d)
 # draw_shape_clips3(d)
@@ -1767,7 +1767,7 @@ paper_size = Point(192, 270)
 # draw_hash(d)
 # draw_hash2(d)
 # draw_hash3(d)
-draw_3d(d)
+# draw_3d(d)
 
 # Try a dual apollonian!
 

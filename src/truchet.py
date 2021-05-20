@@ -239,4 +239,4 @@ def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None
             # drawing.add_square(tile_topleft, tile_size)
          
     print(f"draw_truchet: adding {len(polylines)} polylines")         
-    drawing.add_polylines(polylines, prejoin=True, container=container, stroke=stroke)
+    drawing.add_polylines(polylines, container=container, stroke=stroke)

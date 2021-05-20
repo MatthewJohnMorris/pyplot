@@ -223,9 +223,11 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
 
-    def add_polylines(self, polylines, stroke=None, container=None, prejoin=False, usenew=True):
+    def add_polylines(self, polylines, stroke=None, container=None, prejoin=None, usenew=True):
 
         StandardDrawing.log(f'polylines: {len(polylines)}')
+    
+        prejoin = (not usenew) if prejoin is None else prejoin
 
         if prejoin:
             tStart = time.perf_counter()
