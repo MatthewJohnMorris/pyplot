@@ -19,6 +19,7 @@ import math
 import time
 
 from bezier import *
+import kdtree
 
 class BWConverters:
 
@@ -222,7 +223,7 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
 
-    def add_polylines(self, polylines, stroke=None, container=None, prejoin=False):
+    def add_polylines(self, polylines, stroke=None, container=None, prejoin=False, usenew=True):
 
         StandardDrawing.log(f'polylines: {len(polylines)}')
 
@@ -257,7 +258,7 @@ class StandardDrawing:
         else:
             joined_polylines = polylines
     
-        polylines = StandardDrawing.sort_polylines(joined_polylines)
+        polylines = StandardDrawing.sort_polylines_new(joined_polylines) if usenew else StandardDrawing.sort_polylines_old(joined_polylines)
         container = self.default_container(container)
         stroke = self.default_stroke(stroke)
 
@@ -1061,7 +1062,7 @@ class StandardDrawing:
         return branch_polylines
         
     @staticmethod
-    def sort_polylines(polylines_input):
+    def sort_polylines_old(polylines_input):
 
         tStart = time.perf_counter()
 
@@ -1106,6 +1107,82 @@ class StandardDrawing:
         tEnd = time.perf_counter()
         StandardDrawing.log(F"sort-tot for {len(polylines)} polylines={tEnd - tStart:.2f}s")
         StandardDrawing.log(F"Estimated Comparisons: {n} vs {k*(k+1)/2}")
+
+        return sorted
+        
+    @staticmethod
+    def sort_polylines_new(polylines_input):
+
+        tStart = time.perf_counter()
+
+        # Convert tuples to Points
+        polylines = [[Point.From(pt) for pt in polyline] for polyline in polylines_input]
+
+        startpoints = [polyline[0] for polyline in polylines]
+        endpoints = [polyline[-1] for polyline in polylines]
+        allpoints = startpoints
+        allpoints.extend(endpoints)
+        allpoints_with_indices = [(allpoints[i], i) for i in range(0, len(allpoints))]
+        tree = kdtree.create(allpoints_with_indices, dimensions=2)
+        #print("allpoints", allpoints)
+        #kdtree.visualize(tree)
+        
+        n = len(polylines)
+        unsorted_indices = set([x for x in range(0, 2*n)])
+        unsorted_indices.remove(0)
+        unsorted_indices.remove(n)
+        sorted = [polylines[0]]
+        #print("unsorted_indices", unsorted_indices)
+        
+        while len(unsorted_indices) > 0:
+            curr_end = sorted[-1][-1]
+            #print("curr_end", curr_end)
+            unsorted_results_indices = set([])
+            distance = 1
+            while len(unsorted_results_indices) == 0:
+                #print("distance", distance)
+                results = tree.search_nn_dist(curr_end, distance)
+                results_indices = set([r.index for r in results])
+                #print("results_indices", results_indices)
+                distance *= 2
+                if distance > 1000000000:
+                    print("distance", distance)
+                    print("current", curr_end)
+                    print("# resuls", len(results_indices))
+                    print("Remaining nodes:", len(unsorted_indices))
+                    print("Remaining nodes:", unsorted_indices)
+                    r2 = tree.search_nn_dist(curr_end, 1000000000)
+                    print("bigsearch", len(r2))
+                    print("allpoints", len(allpoints))
+                    for ix in unsorted_indices:
+                        print(allpoints[ix], ix, (allpoints[ix] - curr_end).dist())
+                    raise Exception("distance too big!")
+                unsorted_results_indices = results_indices.intersection(unsorted_indices)
+                #print("unsorted_indices", unsorted_indices)
+                #print("unsorted_results_indices", unsorted_results_indices)
+            min_dist2 = 100000000000
+            min_index = -1
+            for result_index in unsorted_results_indices:
+                result_point = allpoints[result_index]
+                dist2 = (result_point - curr_end).dist2()
+                if dist2 < min_dist2:
+                    min_dist2 = dist2
+                    min_index = result_index
+            #print("removing", min_index)
+            if min_index < n:
+                # start
+                sorted.append(polylines[min_index])
+                unsorted_indices.remove(min_index) 
+                unsorted_indices.remove(min_index + n) 
+            else:
+                # end - need to reverse
+                sorted.append(polylines[min_index - n][::-1])
+                unsorted_indices.remove(min_index) 
+                unsorted_indices.remove(min_index - n) 
+            #print("new unsorted_indices", unsorted_indices)
+    
+        tEnd = time.perf_counter()
+        StandardDrawing.log(F"sort-tot for {len(polylines)} polylines={tEnd - tStart:.2f}s")
 
         return sorted
 

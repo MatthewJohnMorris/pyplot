@@ -281,3 +281,12 @@ def test_clip():
     assert(polylines[0][3] == (20,15))
     assert(polylines[1][0] == (15,10))
     assert(polylines[1][1] == (15,5))
+
+def test_sort():
+
+    n = 100
+    unsorted = [ [Point(0, i), Point(10, i)] for i in range(0, n) ]
+    sorted = StandardDrawing.sort_polylines_new(unsorted)
+    print("hi")
+    print(sorted)
+    assert(False)

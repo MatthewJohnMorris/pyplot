@@ -886,7 +886,7 @@ def draw_3d(d):
     all_polylines = Transform3D.convertToPolylines(all_faces)
                 
     print(f"Adding polylines")
-    d.add_polylines(all_polylines)
+    d.add_polylines(all_polylines, usenew=True)
 
 def mothers_day(d):
 
@@ -1689,7 +1689,7 @@ def make_hash_square3(tl, side, gap, a, pen_width, factor):
         line = []
         x = -r/2
         a1 = 0
-        x_inc = pen_width / 3
+        x_inc = pen_width
         a_inc = math.pi * 2 * (x_inc / gap) * factor
         while x < r/2:
             line.append(centre + Point(x, disp + gap*math.sin(a1)*factor))
@@ -1766,7 +1766,8 @@ paper_size = Point(192, 270)
 # draw_net(d)
 # draw_hash(d)
 # draw_hash2(d)
-draw_hash3(d)
+# draw_hash3(d)
+draw_3d(d)
 
 # Try a dual apollonian!
 
