@@ -265,6 +265,17 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
 
         # final joining sesh
+        joined_polylines = StandardDrawing.simple_join(polylines)
+            
+        StandardDrawing.log(f'add_polylines: Final joining: went from {len(polylines)} to {len(joined_polylines)}')
+            
+        for polyline in joined_polylines:
+            container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
+        
+    @staticmethod
+    def simple_join(polylines):
+    
+        # final joining sesh
         joined_polylines = []
         joined_polyline = []
         for polyline in polylines:
@@ -283,11 +294,7 @@ class StandardDrawing:
                 joined_polyline = polyline
         if len(joined_polyline) > 0:
             joined_polylines.append(joined_polyline)
-            
-        StandardDrawing.log(f'add_polylines: Final joining: went from {len(polylines)} to {len(joined_polylines)}')
-            
-        for polyline in joined_polylines:
-            container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
+        return joined_polylines
         
     def add_layer(self, label):
         layer = self.inkscape.layer(label=label)
