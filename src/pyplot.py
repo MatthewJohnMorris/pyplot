@@ -1143,6 +1143,12 @@ class StandardDrawing:
         sorted = [polylines[0]]
         #print("unsorted_indices", unsorted_indices)
         
+        # I would have expected normally that this would have been a lot smaller!
+        # Anyway, we do seem to be getting decent point ordering, so I'm not about to
+        # burn time checking out why this can't be bound to a bit bigger than the overall
+        # diameter of the point set...
+        LARGE_DISTANCE_BOUND = 1000000000
+        
         while len(unsorted_indices) > 0:
             curr_end = sorted[-1][-1]
             #print("curr_end", curr_end)
@@ -1154,28 +1160,27 @@ class StandardDrawing:
                 results_indices = set([r.index for r in results])
                 #print("results_indices", results_indices)
                 distance *= 2
-                if distance > 1000000000:
+                if distance > LARGE_DISTANCE_BOUND:
                     print("distance", distance)
                     print("current", curr_end)
                     print("# resuls", len(results_indices))
                     print("Remaining nodes:", len(unsorted_indices))
                     print("Remaining nodes:", unsorted_indices)
-                    r2 = tree.search_nn_dist(curr_end, 1000000000)
+                    r2 = tree.search_nn_dist(curr_end, LARGE_DISTANCE_BOUND)
                     print("bigsearch", len(r2))
                     print("allpoints", len(allpoints))
                     for ix in unsorted_indices:
                         print(allpoints[ix], ix, (allpoints[ix] - curr_end).dist())
                     raise Exception("distance too big!")
-                unsorted_results_indices = results_indices.intersection(unsorted_indices)
+                unsorted_results_indices = list(results_indices.intersection(unsorted_indices))
                 #print("unsorted_indices", unsorted_indices)
                 #print("unsorted_results_indices", unsorted_results_indices)
-            min_dist2 = 100000000000
             min_index = -1
             for result_index in unsorted_results_indices:
                 result_point = allpoints[result_index]
                 dist2 = (result_point - curr_end).dist2()
-                if dist2 < min_dist2:
-                    min_dist2 = dist2
+                if min_index == -1 or dist2 < min_dist2:
+                    min_dist2 = dist2;
                     min_index = result_index
             #print("removing", min_index)
             if min_index < n:
