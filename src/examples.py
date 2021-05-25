@@ -23,7 +23,9 @@ from perlin import PerlinNoise
 from bezier import *
 from threed import *
 import truchet
-from apollonius import ApollonianGasket
+import apollonius
+import hash_shading
+import spirograph
 
 def draw_unknown_pleasures(drawing):
 
@@ -888,6 +890,98 @@ def draw_3d(d):
     print(f"Adding polylines")
     d.add_polylines(all_polylines)
 
+def calc_norm(face3d):
+
+    p0 = face3d[0]
+    p1 = face3d[1]
+    p2 = face3d[2]
+    v01 = (p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[3])
+    v12 = (p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[3])
+    xp = (v01[1]*v12[2]-v01[2]*v12[1], v01[2]*v12[0]-v01[0]*v12[2], v01[0]*v12[1]-v01[1]*v12[0])
+    xp_size = math.sqrt(xp[0]*xp[0] + xp[1]*xp[1] + xp[2]*xp[2])
+    xpn = (xp[0] / xp_size, xp[1] / xp_size, xp[2] / xp_size)
+    return xpn
+
+def cube_open_faces(proj_points):
+
+    polylines = []
+    polylines.append([proj_points[0], proj_points[1], proj_points[2], proj_points[3]])
+    polylines.append([proj_points[0], proj_points[4], proj_points[5], proj_points[1]])
+    polylines.append([proj_points[6], proj_points[2], proj_points[1], proj_points[5]])
+    polylines.append([proj_points[6], proj_points[7], proj_points[3], proj_points[2]])
+    polylines.append([proj_points[0], proj_points[3], proj_points[7], proj_points[4]])
+    polylines.append([proj_points[6], proj_points[5], proj_points[4], proj_points[7]])
+    return polylines
+
+def get_cube_proj_lines(t, faces3d):
+
+    proj_face_lines = []
+    for i in range(0, len(faces3d)):
+        face3d = faces3d[i]
+        norm3d = calc_norm(face3d)
+        if norm3d[2] < 0:
+            print(face3d)
+            print(norm3d)
+            line_count = min(30, int(abs(1 / norm3d[2])))
+            print(line_count)
+            line_count = 10
+            s0 = face3d[0]
+            e0 = face3d[1]
+            s1 = face3d[3]
+            e1 = face3d[2]
+            face_lines = []
+            for j in range(0, line_count):
+                p = (j+0.5) / line_count
+                q = 1-p
+                sp = (s0[0]*p + s1[0]*(1-p), s0[1]*p + s1[1]*(1-p), s0[2]*p + s1[2]*(1-p), 1.0)
+                ep = (e0[0]*p + e1[0]*(1-p), e0[1]*p + e1[1]*(1-p), e0[2]*p + e1[2]*(1-p), 1.0)
+                face_lines.append([sp, ep])
+            for face_line in face_lines:
+                proj_face_line = t.project(face_line)
+                proj_face_lines.append(proj_face_line)
+    return proj_face_lines
+
+def draw_3d_shade(d):
+
+    cameraToWorld = numpy.identity(4)
+    cameraToWorld[3][2] = 10
+    t = Transform3D(cameraToWorld, canvasWidth=2, canvasHeight=2, imageWidth=100, imageHeight=100)
+        
+    h = 1
+    s = 0.3
+    base_points = [(s, s, s, h), (s, -s, s, h), (-s, -s, s, h), (-s, s, s, h), (s, s, -s, h), (s, -s, -s, h), (-s, -s, -s, h), (-s, s, -s, h)]
+
+    a = math.pi / 3
+
+    for r in range(0, 3):
+        for c in range(0, 4):
+            dx = 0 + 50 * r
+            dy = 0 + 50 * c
+            a += math.pi / 20
+    
+            all_faces = []
+            
+            world_points = [p for p in base_points]
+            zc = 0
+            xc = 0
+            yc = 0
+            world_points = [(p[0]+xc, p[1]+yc, p[2]+zc, p[3]) for p in world_points]
+            world_points = Transform3D.rotZ(world_points, a)
+            world_points = Transform3D.rotX(world_points, a)
+            world_points = [(p[0], p[1], p[2]+8, p[3]) for p in world_points]
+
+            faces3d = cube_open_faces(world_points)
+            
+            proj_face_lines = get_cube_proj_lines(t, faces3d)
+            proj_face_lines = [[(x[0]+dx, x[1]+dy) for x in proj_face_line] for proj_face_line in proj_face_lines]
+                        
+            # need to progressively clip this based upon the overall face projection
+            # should order by distance, nearest first
+            # hopefully we can sort the face direction, seems a bit wonky at the moment
+                        
+            d.add_polylines(proj_face_lines)
+
+
 def mothers_day(d):
 
     all_polylines = []
@@ -1052,7 +1146,7 @@ def draw_xor_circles_othello(drawing):
 def draw_big_a(drawing):
 
     paper_centre = Point(102.5, 148)
-    fontsize = 96*8
+    fontsize = 96*8*0.5
     family="Arial"
     text = "ﷺ"
     ext = d.text_bound(text, fontsize=fontsize, family=family)
@@ -1060,14 +1154,18 @@ def draw_big_a(drawing):
     letter_paths = d.make_text(text, text_place, fontsize=fontsize, family=family)
     sf = ShapeFiller(letter_paths)
     paths = []
-    for path in sf.get_paths(10*0.4*d.pen_type.pen_width, angle=math.pi/2): # math.pi/2):
+    for path in sf.get_paths(0.4*d.pen_type.pen_width, angle=math.pi/2): # math.pi/2):
         paths.append(path)
-        
-    box = d.make_rect(Point(120, 120), 30, 30)
-    sf2 = ShapeFiller([box])
-    # paths =sf2.clip(paths, inverse=True)
     
-    d.add_polylines(paths)
+    d.add_polylines(paths, container=d.add_layer("1"), stroke=svgwrite.rgb(30, 100, 30, '%'))
+    
+    closed_letter_paths = []
+    for letter_path in letter_paths:
+        x = [_ for _ in letter_path]
+        x.append(x[0])
+        closed_letter_paths.append(x)
+    
+    d.add_polylines(closed_letter_paths, container=d.add_layer("0"))
 
 def star_gen(drawing):
 
@@ -1350,162 +1448,6 @@ def draw_truchet2(drawing):
     truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
     truchet.draw_truchet_for_tiles(drawing, truchet.createtiles_semi_track, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
 
-def add_spirograph(drawing, centre, r, s, scale, container=None, stroke=None):
-
-    def gcd(a,b):
-        """Compute the greatest common divisor of a and b"""
-        while b > 0:
-            a, b = b, a % b
-        return a
-        
-    def lcm(a, b):
-        """Compute the lowest common multiple of a and b"""
-        return a * b / gcd(a, b)
-        
-    a = [0 for _ in r]
-    a_inc = drawing.pen_type.pen_width / r[0]
-    path = []
-    # need enough incr so both have whole # of rotations
-    x = [max(rx, 1) for rx in r]
-    n1 = lcm(lcm(lcm(x[0], x[1]), x[2]), x[3]) / r[0]
-    circ1 = math.pi * 2 / a_inc
-    limit = int(n1 * circ1) + 10
-    for i in range(0, limit):
-        a[0] += s[0] * a_inc * r[0] / x[0]
-        a[1] += s[1] * a_inc * r[0] / x[1]
-        a[2] += s[2] * a_inc * r[0] / x[2]
-        a[3] += s[3] * a_inc * r[0] / x[3]
-        p = centre
-        for j in range(0,4):
-            pt = Point(math.cos(a[j]), math.sin(a[j]))
-            mult = 0
-            for k in range(j, 4):
-                mult += r[k]*s[k]
-            pt = pt * mult * s[j]
-            p = p + pt * scale
-        path.append(p)
-            
-    drawing.add_polyline(path, container=container, stroke=stroke)
-
-def spirograph1(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [80, 35, 8, 2]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=0.2)
-    add_spirograph(drawing, paper_centre, r, s, scale=1)
-
-def spirograph2(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [80, 25, 2, 1]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=0.35)
-    add_spirograph(drawing, paper_centre, r, s, scale=1)
-
-def spirograph3(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [70, 30, 13, 7]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=1)
-
-def spirograph4(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [70, 32, 1, 2]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=1)
-
-def spirograph5(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [70, 3, 2, 1]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=1, stroke=svgwrite.rgb(100, 0, 0, '%'), container=drawing.add_layer("1"))
-    r = [60, 22, 3, 1]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=1, stroke=svgwrite.rgb(0, 0, 0, '%'), container=drawing.add_layer("2"))
-    r = [13, 7, 1, 0]
-    s = [1, -1, 1, -1]
-    add_spirograph(drawing, paper_centre, r, s, scale=1, stroke=svgwrite.rgb(50, 0, 0, '%'), container=drawing.add_layer("3"))
-
-def spirograph6(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [70, 3, 2, 1]
-    s = [1, -1, 1, -1]
-    scale = 1
-    for i in range(0, 20):
-        add_spirograph(drawing, paper_centre, r, s, scale=scale, stroke=svgwrite.rgb(0, 0, 0, '%'), container=drawing.add_layer("1"))
-        scale *= 0.9
-    drawing.add_dot(paper_centre, 75, r_start=73, stroke=svgwrite.rgb(50, 0, 0, '%'), container=drawing.add_layer("2"))
-
-def spirograph7(drawing):
-
-    paper_centre = Point(102.5, 148)
-    r = [48, 7, 18, 0]
-    s = [1, 1, -1, 1]
-    add_spirograph(drawing, paper_centre, r, s, scale=1)
-
-def spirograph8(drawing):
-
-    layers = [drawing.add_layer("1"), drawing.add_layer("2"), drawing.add_layer("3")]
-    strokes = [svgwrite.rgb(100, 0, 0, '%'), svgwrite.rgb(0, 100, 0, '%'), svgwrite.rgb(0, 0, 100, '%')]
-
-    paper_centre = Point(102.5, 148)
-    rnd = 0
-    for r1 in range(10, 71, 10):
-        r = [r1, 2, 1, 2]
-        s = [1, -1, 1, -1]
-
-        add_spirograph(drawing, paper_centre, r, s, scale=0.85, container=layers[rnd], stroke=strokes[rnd])
-        add_spirograph(drawing, paper_centre, r, s, scale=0.9, container=layers[rnd], stroke=strokes[rnd])
-        add_spirograph(drawing, paper_centre, r, s, scale=0.95, container=layers[rnd], stroke=strokes[rnd])
-        add_spirograph(drawing, paper_centre, r, s, scale=1, container=layers[rnd], stroke=strokes[rnd])
-        add_spirograph(drawing, paper_centre, r, s, scale=1.05, container=layers[rnd], stroke=strokes[rnd])
-        add_spirograph(drawing, paper_centre, r, s, scale=1.1, container=layers[rnd], stroke=strokes[rnd])
-        add_spirograph(drawing, paper_centre, r, s, scale=1.15, container=layers[rnd], stroke=strokes[rnd])
-        rnd = rnd + 1
-        if rnd == 3:
-            rnd = 0
-
-def apollonian_foam(drawing):
-
-    # From https://github.com/lsandig/apollon/blob/master/apollon.py
-    # Sort out how this works and ditch the baggage
-    paper_centre = Point(102.5, 148)
-    overall_radius = 80
-    g = ApollonianGasket(1, 1, 1, paper_centre, overall_radius)
-    
-    g.generate(20)
-
-    all_circles = [c for c in g.genCircles]
-
-    gaskets = [g]
-    foam_limit = 4
-    
-    while len(gaskets) > 0:
-        g = gaskets.pop()
-        foam_circles = [c for c in g.genCircles[1:] if abs(c.r.real) > foam_limit]
-        a = 0 # math.pi # random() * math.pi * 2
-        for c in foam_circles:
-            current_ratio = 1 + (1 - (abs(c.r) / overall_radius))
-            centre = Point(c.m.real, c.m.imag)
-            g2 = ApollonianGasket(current_ratio, current_ratio, 1, centre, abs(c.r))
-            g2.generate(20)
-            g2.rotate(centre, a)
-            all_circles.extend([c1 for c1 in g2.genCircles[1:]])
-            gaskets.append(g2)
-
-    polylines = []
-    for c in all_circles:
-        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
-        polyline.append(polyline[0])
-        polylines.append(polyline)
-            
-    drawing.add_polylines(polylines, prejoin=True)
-
 def test_line_colour(d):
 
     base_pos = Point(20, 20)
@@ -1532,6 +1474,26 @@ def test_bounds(d):
     polyline = [topleft, topleft + Point(0, paper_size.y), topleft + paper_size, topleft + Point(paper_size.x, 0), topleft]
     d.add_polyline(polyline)
 
+def warp_inward(point, centre, edge):
+
+    diff = point - centre
+    dist = diff.dist()
+    if dist >= edge:
+        return point
+    r = dist/edge
+    mult = 1 + 0.3 * math.exp(1-r) - 0.3* math.exp(0)
+    return centre + diff / (mult*mult)
+
+def warp_outward(point, centre, edge):
+
+    diff = point - centre
+    dist = diff.dist()
+    if dist >= edge:
+        return point
+    r = dist/edge
+    mult = 1 + 0.3 * math.exp(1-r) - 0.3* math.exp(0)
+    return centre + diff * (mult*mult)
+
 def draw_net(d):
 
     paper_centre = Point(102.5, 148)
@@ -1550,15 +1512,15 @@ def draw_net(d):
             a = random() * 2 * math.pi
             points[i][j] = points[i][j] + Point(math.cos(a), math.sin(a)) * size * 0.1 * 0
             
-    for i in []: # range(0, n+1):
+    for i in range(0, n+1):
         for j in range(0, n+1):
-            diff = points[i][j] - paper_centre
-            dist = math.sqrt(diff.x*diff.x + diff.y*diff.y)
-            edge = n/2*size/3
-            if dist < edge:
-                r = dist/edge
-                mult = 1 + 0.3 * math.exp(1-r) - 0.3* math.exp(0)
-                points[i][j] = paper_centre + diff / (mult*mult)
+            points[i][j] = warp_inward(points[i][j], paper_centre, n/2*size/3)
+            points[i][j] = warp_inward(points[i][j], paper_centre + Point(+1,+1) * n*size/4, n/2*size/3)
+            points[i][j] = warp_inward(points[i][j], paper_centre + Point(-1,-1) * n*size/4, n/2*size/3)
+            points[i][j] = warp_inward(points[i][j], paper_centre + Point(+1,-1) * n*size/4, n/2*size/3)
+            points[i][j] = warp_inward(points[i][j], paper_centre + Point(-1,+1) * n*size/4, n/2*size/3)
+            points[i][j] = warp_outward(points[i][j], paper_centre, n/2*size)
+            points[i][j] = warp_outward(points[i][j], paper_centre, n/2*size/3)
             
     for i in range(0, n+1):
         polyline = []
@@ -1574,174 +1536,15 @@ def draw_net(d):
             
     d.add_polylines(polylines)
 
-def make_hash_square(tl, side, gap, a):
-
-    centre = tl + Point(1, 1) * side / 2
-    r = side * math.sqrt(2)
-    gap = 2
-    disp = 0
-    while disp > -r / 2:
-        disp -= gap
-    unclipped_lines = []
-    while disp < r / 2:
-        unclipped_lines.append([centre + Point(- r/2,   disp), centre + Point(r/2, + disp)])
-        disp += gap
-        
-    unclipped_lines = [[StandardDrawing.rotate_about(x, centre, a) for x in line] for line in unclipped_lines]
-    c = math.cos(a)
-    
-    shape = [tl, tl + Point(side, 0), tl + Point(side, side), tl + Point(0, side)]
-    sf = ShapeFiller([shape])
-    return sf.clip(unclipped_lines, inverse=True)
-
-def draw_hash_squares(d, base, side, gap, nlines):
-
-    for r in range(0, 5):
-        for c in range(0, 2):
-            tl = base + Point(r, c) * side
-    
-            n = 0
-            for i in range(0, nlines):
-                one_big_line = []
-                lines = make_hash_square(tl, side, gap, math.pi * random())
-                for line in lines:
-                    n += 1
-                    if n % 2 == 0:
-                        line = line[::-1]
-                    one_big_line.extend(line)
-                d.add_polyline(one_big_line)
-
-def draw_hash(d):
-
-    side = 20
-    gap = 2
-    draw_hash_squares(d, Point(30, 30), side, gap, 1)
-    draw_hash_squares(d, Point(30, 80), side, gap, 2)
-    draw_hash_squares(d, Point(30, 130), side, gap, 3)
-    draw_hash_squares(d, Point(30, 180), side, gap, 4)
-    draw_hash_squares(d, Point(30, 230), side, gap, 5)
-        
-def make_hash_square2(tl, side, gap, a, factor):
-
-    centre = tl + Point(1, 1) * side / 2
-    r = side * math.sqrt(2)
-    gap = 2
-    disp = 0
-    while disp > -r / 2:
-        disp -= gap
-    unclipped_lines = []
-    while disp < r / 2:
-        line = []
-        x = -r/2
-        indic = -1
-        while x < r/2:
-            line.append(centre + Point(x, disp + indic*gap*factor))
-            indic *= -1
-            x += gap
-        unclipped_lines.append(line)
-        disp += gap
-        
-    unclipped_lines = [[StandardDrawing.rotate_about(x, centre, a) for x in line] for line in unclipped_lines]
-    c = math.cos(a)
-    
-    shape = [tl, tl + Point(side, 0), tl + Point(side, side), tl + Point(0, side)]
-    sf = ShapeFiller([shape])
-    return sf.clip(unclipped_lines, inverse=True)
-
-
-def draw_hash_squares2(d, base, side, gap, factor):
-
-    for r in range(0, 5):
-        for c in range(0, 2):
-            tl = base + Point(r, c) * side
-    
-            n = 0
-            one_big_line = []
-            lines = make_hash_square2(tl, side, gap, math.pi * random(), factor)
-            for line in lines:
-                n += 1
-                if n % 2 == 0:
-                    line = line[::-1]
-                one_big_line.extend(line)
-            # d.add_polyline(one_big_line)
-            d.add_polylines(lines)
-
-def draw_hash2(d):
-
-    side = 20
-    gap = 2
-    draw_hash_squares2(d, Point(30, 30), side, gap, 0.5)
-    draw_hash_squares2(d, Point(30, 80), side, gap, 0.75)
-    draw_hash_squares2(d, Point(30, 130), side, gap, 1)
-    draw_hash_squares2(d, Point(30, 180), side, gap, 1.25)
-    draw_hash_squares2(d, Point(30, 230), side, gap, 1.5)
-
-def make_hash_square3(tl, side, gap, a, pen_width, factor):
-
-    centre = tl + Point(1, 1) * side / 2
-    r = side * math.sqrt(2)
-    gap = 2
-    disp = 0
-    while disp > -r / 2:
-        disp -= gap
-    unclipped_lines = []
-    while disp < r / 2:
-        line = []
-        x = -r/2
-        a1 = 0
-        x_inc = pen_width
-        a_inc = math.pi * 2 * (x_inc / gap) * factor
-        while x < r/2:
-            line.append(centre + Point(x, disp + gap*math.sin(a1)*factor))
-            x += x_inc
-            a1 += a_inc
-        unclipped_lines.append(line)
-        disp += gap
-        
-    unclipped_lines = [[StandardDrawing.rotate_about(x, centre, a) for x in line] for line in unclipped_lines]
-    c = math.cos(a)
-    
-    shape = [tl, tl + Point(side, 0), tl + Point(side, side), tl + Point(0, side)]
-    sf = ShapeFiller([shape])
-    return sf.clip(unclipped_lines, inverse=True)
-
-
-def draw_hash_squares3(d, base, side, gap, factor):
-
-    for r in range(0, 5):
-        for c in range(0, 2):
-            tl = base + Point(r, c) * side
-    
-            n = 0
-            one_big_line = []
-            lines = make_hash_square3(tl, side, gap, math.pi * random(), d.pen_type.pen_width, factor)
-            for line in lines:
-                n += 1
-                if n % 2 == 0:
-                    line = line[::-1]
-                one_big_line.extend(line)
-            # d.add_polyline(one_big_line)
-            d.add_polylines(lines)
-
-def draw_hash3(d):
-
-    side = 20
-    gap = 2
-    draw_hash_squares3(d, Point(30, 30), side, gap, 0.4)
-    draw_hash_squares3(d, Point(30, 80), side, gap, 0.55)
-    draw_hash_squares3(d, Point(30, 130), side, gap, 0.7)
-    draw_hash_squares3(d, Point(30, 180), side, gap, 0.85)
-    draw_hash_squares3(d, Point(30, 230), side, gap, 1.0)
-
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
 # d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
-d = StandardDrawing(pen_type = PenType.PigmaMicron01())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron01())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment05())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment03())
@@ -1759,17 +1562,12 @@ paper_size = Point(192, 270)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-draw_truchet(d)
-# apollonian_foam(d)
+
 # test_bounds(d)
 # draw_shape_clips3(d)
 # draw_net(d)
-# draw_hash(d)
-# draw_hash2(d)
-# draw_hash3(d)
-# draw_3d(d)
-
-# Try a dual apollonian!
+draw_3d_shade(d)
+# draw_big_a(d)
 
 if False:
     # works in progress
@@ -1778,7 +1576,7 @@ if False:
     draw_shape_clips3(d)
 
     # realised ideas I want to keep
-    apollonian_foam(d)
+    apollonius.apollonian_foam(d)
     valentine(d)
     draw_snowflake(d)
     mothers_day(d)
@@ -1795,6 +1593,11 @@ if False:
     test_shape_filler(d)
     plot_perlin_drape_spiral(d, 6)
     plot_perlin_drape_spiral(d, 8)
+    
+    # hashing
+    hash_shading.draw_hash(d)
+    hash_shading.draw_hash2(d)
+    hash_shading.draw_hash3(d)
 
     # op art
     draw_riley_blaze(d)
@@ -1806,13 +1609,16 @@ if False:
     lsystem_test(d)
     draw_truchet(d)
     draw_truchet2(d)
-    spirograph1(d)
-    spirograph2(d)
-    spirograph3(d)
-    spirograph4(d)
-    spirograph5(d)
-    spirograph6(d)
-    spirograph7(d)
+    spirograph.spirograph1(d)
+    spirograph.spirograph2(d)
+    spirograph.spirograph3(d)
+    spirograph.spirograph4(d)
+    spirograph.spirograph5(d)
+    spirograph.spirograph6(d)
+    spirograph.spirograph7(d)
+    spirograph.spirograph8(d)
+    spirograph.spirograph9(d)
+    spirograph.spirograph10(d)
 
     # text
     draw_big_a(d)

@@ -1133,7 +1133,7 @@ class StandardDrawing:
         allpoints.extend(endpoints)
         allpoints_with_indices = [(allpoints[i], i) for i in range(0, len(allpoints))]
         tree = kdtree.create(allpoints_with_indices, dimensions=2)
-        #print("allpoints", allpoints)
+        #StandardDrawing.log("allpoints", allpoints)
         #kdtree.visualize(tree)
         
         n = len(polylines)
@@ -1151,30 +1151,30 @@ class StandardDrawing:
         
         while len(unsorted_indices) > 0:
             curr_end = sorted[-1][-1]
-            #print("curr_end", curr_end)
+            #StandardDrawing.log("curr_end", curr_end)
             unsorted_results_indices = set([])
             distance = 1
             while len(unsorted_results_indices) == 0:
-                #print("distance", distance)
+                #StandardDrawing.log("distance", distance)
                 results = tree.search_nn_dist(curr_end, distance)
                 results_indices = set([r.index for r in results])
-                #print("results_indices", results_indices)
+                #StandardDrawing.log("results_indices", results_indices)
                 distance *= 2
                 if distance > LARGE_DISTANCE_BOUND:
-                    print("distance", distance)
-                    print("current", curr_end)
-                    print("# resuls", len(results_indices))
-                    print("Remaining nodes:", len(unsorted_indices))
-                    print("Remaining nodes:", unsorted_indices)
+                    StandardDrawing.log("distance", distance)
+                    StandardDrawing.log("current", curr_end)
+                    StandardDrawing.log("# resuls", len(results_indices))
+                    StandardDrawing.log("Remaining nodes:", len(unsorted_indices))
+                    StandardDrawing.log("Remaining nodes:", unsorted_indices)
                     r2 = tree.search_nn_dist(curr_end, LARGE_DISTANCE_BOUND)
-                    print("bigsearch", len(r2))
-                    print("allpoints", len(allpoints))
+                    StandardDrawing.log("bigsearch", len(r2))
+                    StandardDrawing.log("allpoints", len(allpoints))
                     for ix in unsorted_indices:
-                        print(allpoints[ix], ix, (allpoints[ix] - curr_end).dist())
+                        StandardDrawing.log(allpoints[ix], ix, (allpoints[ix] - curr_end).dist())
                     raise Exception("distance too big!")
                 unsorted_results_indices = list(results_indices.intersection(unsorted_indices))
-                #print("unsorted_indices", unsorted_indices)
-                #print("unsorted_results_indices", unsorted_results_indices)
+                #StandardDrawing.log("unsorted_indices", unsorted_indices)
+                #StandardDrawing.log("unsorted_results_indices", unsorted_results_indices)
             min_index = -1
             for result_index in unsorted_results_indices:
                 result_point = allpoints[result_index]
@@ -1182,7 +1182,7 @@ class StandardDrawing:
                 if min_index == -1 or dist2 < min_dist2:
                     min_dist2 = dist2;
                     min_index = result_index
-            #print("removing", min_index)
+            #StandardDrawing.log("removing", min_index)
             if min_index < n:
                 # start
                 sorted.append(polylines[min_index])
@@ -1193,7 +1193,7 @@ class StandardDrawing:
                 sorted.append(polylines[min_index - n][::-1])
                 unsorted_indices.remove(min_index) 
                 unsorted_indices.remove(min_index - n) 
-            #print("new unsorted_indices", unsorted_indices)
+            #StandardDrawing.log("new unsorted_indices", unsorted_indices)
     
         tEnd = time.perf_counter()
         StandardDrawing.log(F"sort-tot for {len(polylines)} polylines={tEnd - tStart:.2f}s")

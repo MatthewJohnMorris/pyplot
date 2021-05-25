@@ -26,6 +26,8 @@ from cmath import *
 import math
 import random
 
+from pyplot import Point
+
 class Circle(object):
     """
     A circle represented by center point as complex number and radius.
@@ -229,4 +231,41 @@ class ApollonianGasket(object):
     def rotate (self, centre, angle):
         
         self.genCircles = [c.rotate(centre, angle) for c in self.genCircles]
+        
+def apollonian_foam(drawing):
+
+    # From https://github.com/lsandig/apollon/blob/master/apollon.py
+    # Sort out how this works and ditch the baggage
+    paper_centre = Point(102.5, 148)
+    overall_radius = 80
+    g = ApollonianGasket(1, 1, 1, paper_centre, overall_radius)
+    
+    g.generate(20)
+
+    all_circles = [c for c in g.genCircles]
+
+    gaskets = [g]
+    foam_limit = 4
+    
+    while len(gaskets) > 0:
+        g = gaskets.pop()
+        foam_circles = [c for c in g.genCircles[1:] if abs(c.r.real) > foam_limit]
+        a = 0 # math.pi # random() * math.pi * 2
+        for c in foam_circles:
+            current_ratio = 1 + (1 - (abs(c.r) / overall_radius))
+            centre = Point(c.m.real, c.m.imag)
+            g2 = ApollonianGasket(current_ratio, current_ratio, 1, centre, abs(c.r))
+            g2.generate(20)
+            g2.rotate(centre, a)
+            all_circles.extend([c1 for c1 in g2.genCircles[1:]])
+            gaskets.append(g2)
+
+    polylines = []
+    for c in all_circles:
+        polyline = drawing.make_circle(Point(c.m.real, c.m.imag), abs(c.r.real))
+        polyline.append(polyline[0])
+        polylines.append(polyline)
+            
+    drawing.add_polylines(polylines, prejoin=True)
+
         
