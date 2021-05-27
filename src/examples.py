@@ -913,32 +913,49 @@ def cube_open_faces(proj_points):
     polylines.append([proj_points[6], proj_points[5], proj_points[4], proj_points[7]])
     return polylines
 
-def get_cube_proj_lines(t, faces3d):
+def get_face_draw_lines(t, face3d):
 
     proj_face_lines = []
-    for i in range(0, len(faces3d)):
-        face3d = faces3d[i]
-        norm3d = calc_norm(face3d)
-        if norm3d[2] < 0:
-            print(face3d)
-            print(norm3d)
-            line_count = min(30, int(abs(1 / norm3d[2])))
-            print(line_count)
-            line_count = 10
-            s0 = face3d[0]
-            e0 = face3d[1]
-            s1 = face3d[3]
-            e1 = face3d[2]
-            face_lines = []
-            for j in range(0, line_count):
-                p = (j+0.5) / line_count
-                q = 1-p
-                sp = (s0[0]*p + s1[0]*(1-p), s0[1]*p + s1[1]*(1-p), s0[2]*p + s1[2]*(1-p), 1.0)
-                ep = (e0[0]*p + e1[0]*(1-p), e0[1]*p + e1[1]*(1-p), e0[2]*p + e1[2]*(1-p), 1.0)
-                face_lines.append([sp, ep])
-            for face_line in face_lines:
-                proj_face_line = t.project(face_line)
-                proj_face_lines.append(proj_face_line)
+    line_count = 10
+    s0 = face3d[0]
+    e0 = face3d[1]
+    s1 = face3d[3]
+    e1 = face3d[2]
+    face_lines = []
+    for j in range(0, line_count):
+        p = (j+0.5) / line_count
+        q = 1-p
+        sp = (s0[0]*p + s1[0]*(1-p), s0[1]*p + s1[1]*(1-p), s0[2]*p + s1[2]*(1-p), 1.0)
+        ep = (e0[0]*p + e1[0]*(1-p), e0[1]*p + e1[1]*(1-p), e0[2]*p + e1[2]*(1-p), 1.0)
+        face_lines.append([sp, ep])
+    for face_line in face_lines:
+        proj_face_line = t.project(face_line)
+        proj_face_lines.append(proj_face_line)
+    return proj_face_lines
+
+def get_face_draw_lines2(t, face3d):
+
+    proj_face_lines = []
+    line_count = 10
+    origin = face3d[0]
+    endx = face3d[1]
+    endy = face3d[3]
+    diffx = (endx[0] - origin[0], endx[1] - origin[1], endx[2] - origin[2])
+    diffy = (endy[0] - origin[0], endy[1] - origin[1], endy[2] - origin[2])
+    line1 = []
+    line2 = []
+    line3 = []
+    n = 200
+    for i in range(0, n+1):
+        a = math.pi * 2 * i / n
+        line1.append(Point(1 + math.cos(a), 1 + math.sin(a)) * 0.5)
+        line2.append(Point(1.333 + math.cos(a), 1.333 + math.sin(a)) * 0.375)
+        line3.append(Point(2 + math.cos(a), 2 + math.sin(a)) * 0.25)
+    lines = [line1, line3] # , line3]
+    face_lines = [[(origin[0] + diffx[0] * p.x + diffy[0] * p.y, origin[1] + diffx[1] * p.x + diffy[1] * p.y, origin[2] + diffx[2] * p.x + diffy[2] * p.y, 1.0) for p in line] for line in lines]
+    for face_line in face_lines:
+        proj_face_line = t.project(face_line)
+        proj_face_lines.append(proj_face_line)
     return proj_face_lines
 
 def draw_3d_shade(d):
@@ -953,11 +970,12 @@ def draw_3d_shade(d):
 
     a = math.pi / 3
 
-    for r in range(0, 3):
-        for c in range(0, 4):
-            dx = 0 + 50 * r
-            dy = 0 + 50 * c
-            a += math.pi / 20
+    for r in range(0, 6):
+        for c in range(0, 8):
+            scale = 0.75
+            dx = 0 + 25 * r
+            dy = 0 + 25 * c
+            a += math.pi / 30
     
             all_faces = []
             
@@ -971,15 +989,21 @@ def draw_3d_shade(d):
             world_points = [(p[0], p[1], p[2]+8, p[3]) for p in world_points]
 
             faces3d = cube_open_faces(world_points)
-            
-            proj_face_lines = get_cube_proj_lines(t, faces3d)
-            proj_face_lines = [[(x[0]+dx, x[1]+dy) for x in proj_face_line] for proj_face_line in proj_face_lines]
-                        
-            # need to progressively clip this based upon the overall face projection
+
             # should order by distance, nearest first
-            # hopefully we can sort the face direction, seems a bit wonky at the moment
+            # need to progressively clip this based upon the overall face projection
+            # pass in the face drawing as a method?
+            
+            for face3d in faces3d:
+                proj_face_points = t.project(face3d)
+                print(proj_face_points)
+                if Transform3D.isForward(proj_face_points):
+                    proj_face_lines = get_face_draw_lines2(t, face3d)
+                    proj_face_lines = [[(x[0]*scale+dx, x[1]*scale+dy) for x in proj_face_line] for proj_face_line in proj_face_lines]
+                    d.add_polylines(proj_face_lines)
                         
-            d.add_polylines(proj_face_lines)
+            
+                        
 
 
 def mothers_day(d):
