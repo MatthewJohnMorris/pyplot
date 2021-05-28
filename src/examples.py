@@ -933,7 +933,29 @@ def get_face_draw_lines(t, face3d):
         proj_face_lines.append(proj_face_line)
     return proj_face_lines
 
-def get_face_draw_lines2(t, face3d):
+def scale_to_unit_square(paths):
+
+    min_x = paths[0][0].x
+    max_x = paths[0][0].x
+    min_y = paths[0][0].y
+    max_y = paths[0][0].y
+    for text_path in paths:
+        for pt in text_path:
+            min_x = min(min_x, pt.x)
+            max_x = max(max_x, pt.x)
+            min_y = min(min_y, pt.y)
+            max_y = max(max_y, pt.y)
+    extent_x = max_x - min_x
+    extent_y = max_y - min_y
+    extent_max = max(extent_x, extent_y)
+    cx = (max_x + min_x) * 0.5
+    cy = (max_y + min_y) * 0.5
+    scale_dist = 0.8 / extent_max
+    # extent_max maps to 0.8, centred on (cx, cy)
+    map_pt = lambda pt: Point(0.5 + (pt.x - cx) * scale_dist, 0.5 + (pt.y - cy) * scale_dist)
+    return [[map_pt(pt) for pt in path] for path in paths]
+
+def get_face_draw_text(t, face3d, text):
 
     proj_face_lines = []
     line_count = 10
@@ -945,13 +967,26 @@ def get_face_draw_lines2(t, face3d):
     line1 = []
     line2 = []
     line3 = []
+    # surround = [Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0), Point(0, 0)]
+    surround = [Point(0, 0.05), Point(0, 0.95), Point(0.05, 1), Point(0.95, 1), Point(1, 0.95), Point(1, 0.05), Point(0.95, 0), Point(0.05, 0), Point(0, 0.05)]
     n = 200
+
+    mapped_text_paths = []
+    if text != " ":
+        text_paths = StandardDrawing.make_text(text, Point(0, 0), 12)
+        for text_path in text_paths:
+            text_path.append(text_path[0])
+        mapped_text_paths = scale_to_unit_square(text_paths)
+    
     for i in range(0, n+1):
         a = math.pi * 2 * i / n
         line1.append(Point(1 + math.cos(a), 1 + math.sin(a)) * 0.5)
         line2.append(Point(1.333 + math.cos(a), 1.333 + math.sin(a)) * 0.375)
         line3.append(Point(2 + math.cos(a), 2 + math.sin(a)) * 0.25)
-    lines = [line1, line3] # , line3]
+    # lines = [surround, line1, line3] # , line3]
+    
+    lines = mapped_text_paths
+    lines.append(surround)
     face_lines = [[(origin[0] + diffx[0] * p.x + diffy[0] * p.y, origin[1] + diffx[1] * p.x + diffy[1] * p.y, origin[2] + diffx[2] * p.x + diffy[2] * p.y, 1.0) for p in line] for line in lines]
     for face_line in face_lines:
         proj_face_line = t.project(face_line)
@@ -970,12 +1005,22 @@ def draw_3d_shade(d):
 
     a = math.pi / 3
 
+    letters = [x for x in "random message "]
+    ix_letter = 0
+
     for r in range(0, 6):
-        for c in range(0, 8):
+        for c in range(0, 9):
             scale = 0.75
             dx = 0 + 25 * r
             dy = 0 + 25 * c
             a += math.pi / 30
+
+            letter = letters[ix_letter]
+            ix_letter += 1
+            if ix_letter == len(letters):
+                ix_letter = 0
+            letter = "֎"
+
     
             all_faces = []
             
@@ -996,9 +1041,9 @@ def draw_3d_shade(d):
             
             for face3d in faces3d:
                 proj_face_points = t.project(face3d)
-                print(proj_face_points)
+                # StandardDrawing.log(proj_face_points)
                 if Transform3D.isForward(proj_face_points):
-                    proj_face_lines = get_face_draw_lines2(t, face3d)
+                    proj_face_lines = get_face_draw_text(t, face3d, letter)
                     proj_face_lines = [[(x[0]*scale+dx, x[1]*scale+dy) for x in proj_face_line] for proj_face_line in proj_face_lines]
                     d.add_polylines(proj_face_lines)
                         

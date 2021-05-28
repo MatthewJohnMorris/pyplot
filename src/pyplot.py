@@ -510,10 +510,10 @@ class StandardDrawing:
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths
     # * No longer need to use Object->Path to print things out in Inkscape
     # * Far more potential options for warping/manipulating the shape of letters, and using paths to bound fills
-    def make_text(self, text, base_position, fontsize, family='Arial', transform=None):
+    @staticmethod
+    def make_text(text, base_position, scaled_fontsize, family='Arial', transform=None):
 
         base_position = Point.From(base_position)
-        fontsize = self.default_fontsize(fontsize)
         transform = (lambda x: x) if transform is None else transform
 
         # Don't import cairo unless we need it (for text placement that needs to size letters)
@@ -525,7 +525,7 @@ class StandardDrawing:
         cr.select_font_face(family, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         
         # Adjust the font size we actually use based on our overall scaling factor
-        cr.set_font_size(fontsize * self.scale)
+        cr.set_font_size(scaled_fontsize)
         cr.text_path(text)   
         path = cr.copy_path()
 
@@ -590,7 +590,7 @@ class StandardDrawing:
         container = self.default_container(container)
         fontsize = self.default_fontsize(fontsize)
         
-        all_polylines = self.make_text(text, position, fontsize, family, transform)
+        all_polylines = StandardDrawing.make_text(text, position, fontsize*self.scale, family, transform)
                 
         # Add into the container
         for polyline in all_polylines:
@@ -612,7 +612,7 @@ class StandardDrawing:
         # e.g. it's relative to (0,0)
         transform = lambda x: StandardDrawing.rotate_about(x, (0, radius), angle)
         
-        all_polylines = self.make_text(letter, letter_position, fontsize, family=family, transform=transform)
+        all_polylines = StandardDrawing.make_text(letter, letter_position, fontsize*self.scale, family=family, transform=transform)
         
         return ((w, h), all_polylines)
 
@@ -928,7 +928,7 @@ class StandardDrawing:
                 ext = self.text_bound(letter, fontsize, family)
                 pos_square_centre = use_position + Point((c+0.5) * square_size, (r+0.5) * square_size)
                 pos_square_text = pos_square_centre - Point(ext.width/2, ext.height/2)
-                text_paths = self.make_text(letter, pos_square_text, fontsize=fontsize, family=family)
+                text_paths = StandardDrawing.make_text(letter, pos_square_text, scaled_fontsize=fontsize*self.scale, family=family)
                 sf = ShapeFiller(text_paths)
                 filled_text_paths = sf.get_paths(self.pen_type.pen_width / 5)
                 for p in filled_text_paths:
