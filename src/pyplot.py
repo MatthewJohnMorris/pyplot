@@ -223,7 +223,7 @@ class StandardDrawing:
         stroke = self.default_stroke(stroke)
         container.add(self.dwg.polyline(points, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
 
-    def add_polylines(self, polylines, stroke=None, container=None, prejoin=None, usenew=True):
+    def optimise_polylines(self, polylines, prejoin=None, usenew=True):
 
         StandardDrawing.log(f'polylines: {len(polylines)}')
     
@@ -261,14 +261,21 @@ class StandardDrawing:
             joined_polylines = polylines
     
         polylines = StandardDrawing.sort_polylines_new(joined_polylines) if usenew else StandardDrawing.sort_polylines_old(joined_polylines)
-        container = self.default_container(container)
-        stroke = self.default_stroke(stroke)
 
         # final joining sesh
         joined_polylines = StandardDrawing.simple_join(polylines)
             
         StandardDrawing.log(f'add_polylines: Final joining: went from {len(polylines)} to {len(joined_polylines)}')
             
+        return joined_polylines
+
+    def add_polylines(self, polylines, stroke=None, container=None, prejoin=None, usenew=True):
+
+        joined_polylines = self.optimise_polylines(polylines, prejoin, usenew)
+
+        container = self.default_container(container)
+        stroke = self.default_stroke(stroke)
+
         for polyline in joined_polylines:
             container.add(self.dwg.polyline(polyline, stroke=stroke, stroke_width=self.pen_type.stroke_width, fill='none'))
         

@@ -49,8 +49,9 @@ paper_size = Point(192, 270)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
+truchet.draw_truchet(d, redline=True)
 
-if True:
+if False:
     # works in progress
     sketch.image_sketch(d)
 

@@ -1,9 +1,11 @@
 from random import random, seed
 import math
 
+seed(103)
+
 import svgwrite
 
-from pyplot import Point, ShapeFiller
+from pyplot import Point, ShapeFiller, StandardDrawing
 
 def createtiles_truchet(drawing, tile_size, nlines=None):  
 
@@ -198,10 +200,12 @@ def createtiles_thirds3(drawing, tile_size):
          
     return [tile1]
 
-def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None, tile_c=None):
+def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None, tile_c=None, redline=None):
 
     paper_centre = Point(102.5, 148)
     paper_size = Point(192, 270) - Point(30, 30)
+
+    redline = False if redline is None else True
 
     paper_centre = Point(102.5, 148)
     tile_c = 20 if tile_c is None else tile_c
@@ -239,11 +243,30 @@ def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None
                         
             polylines.extend(tile_paths)
             # drawing.add_square(tile_topleft, tile_size)
-         
-    print(f"draw_truchet: adding {len(polylines)} polylines")         
-    drawing.add_polylines(polylines, container=container, stroke=stroke)
 
-def draw_truchet(drawing):
+    polylines = drawing.optimise_polylines(polylines)
+    polylines = drawing.optimise_polylines(polylines)
+    polylines = drawing.optimise_polylines(polylines)
+            
+    max_len = len(polylines[0])
+    max_ix = 0
+    for i in range(1, len(polylines)):
+        if len(polylines[i]) > max_len:
+            max_ix = i
+            max_len  = len(polylines[i])
+    StandardDrawing.log(f"max_ix={max_ix}, max_len = {max_len}")
+         
+    StandardDrawing.log(f"draw_truchet: adding {len(polylines)} polylines")         
+    if not redline:
+        drawing.add_polylines(polylines, container=container, stroke=stroke)
+    else:
+        StandardDrawing.log("redline")
+        redline_path = polylines[max_ix]
+        del polylines[max_ix]
+        drawing.add_polylines(polylines, container=container, stroke=stroke)
+        drawing.add_polylines([redline_path], container=drawing.add_layer("1"), stroke=svgwrite.rgb(255, 0, 0, '%'))
+
+def draw_truchet(drawing, redline=None):
 
     # func = createtiles_truchet
     # func = createtiles_truchet_roundonly
@@ -256,7 +279,7 @@ def draw_truchet(drawing):
     # func = createtiles_semi
     # func = createtiles_semi_track
     
-    draw_truchet_for_tiles(drawing, func, tile_c=30)
+    draw_truchet_for_tiles(drawing, func, tile_c=30, redline=redline)
     
 def draw_truchet2(drawing):
 
