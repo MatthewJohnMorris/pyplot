@@ -179,3 +179,39 @@ def test_lsystem_fass(order, size, start_a=0):
         .add_entry("F", ACTION_FWD, "F") \
         .add_entry("X", ACTION_FWD, "X+F+X--F--X+F+X") \
         .process(order, size, "FX++FX++FX++FX", start_a=start_a)
+
+def lsystem_test(drawing):
+    # A good source for new ideas: http://paulbourke.net/fractals/lsys/
+
+    import lsystem
+    # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
+    all_lines = lsystem.test_lsystem_hilbert(order=8, size=0.7)
+    # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
+    # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
+    # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
+    # all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
+    # all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
+    # all_lines = lsystem.test_lsystem_pentaplexity(order=5, size=0.8)
+    # all_lines = lsystem.test_lsystem_bot_example(order=7, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example2(order=5, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
+    # all_lines = lsystem.test_lsystem_bot_example4(order=7, size=1.3, start_a=90)
+    # all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
+
+    def centre_on(polylines, new_centre):
+        n = 0
+        sumx = 0
+        sumy = 0
+        for line in polylines:
+            for point in line[:-1]:
+                n += 1
+                sumx += point.x
+                sumy += point.y
+        centre = Point(sumx / n, sumy / n)
+        adj = paper_centre - centre
+        return [[p + adj for p in line] for line in polylines]
+    
+    # centre the drawing on the paper
+    paper_centre = Point(102.5, 148)
+    drawing.add_polylines(centre_on(all_lines, paper_centre))
+

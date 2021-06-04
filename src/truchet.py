@@ -1,6 +1,8 @@
 from random import random, seed
 import math
 
+import svgwrite
+
 from pyplot import Point, ShapeFiller
 
 def createtiles_truchet(drawing, tile_size, nlines=None):  
@@ -240,3 +242,25 @@ def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None
          
     print(f"draw_truchet: adding {len(polylines)} polylines")         
     drawing.add_polylines(polylines, container=container, stroke=stroke)
+
+def draw_truchet(drawing):
+
+    # func = createtiles_truchet
+    # func = createtiles_truchet_roundonly
+    # func = createtiles_slash
+    # func = createtiles_z
+    # func = createtiles_tri
+    # func = createtiles_thirds1
+    # func = createtiles_thirds2
+    func = createtiles_thirds3
+    # func = createtiles_semi
+    # func = createtiles_semi_track
+    
+    draw_truchet_for_tiles(drawing, func, tile_c=30)
+    
+def draw_truchet2(drawing):
+
+    draw_truchet_for_tiles(drawing, createtiles_semi_track, container=drawing.add_layer("1-yellow"), stroke=svgwrite.rgb(0, 255, 255, '%'))
+    draw_truchet_for_tiles(drawing, createtiles_semi_track, container=drawing.add_layer("2-magenta"), stroke=svgwrite.rgb(255, 255, 0, '%'))
+    draw_truchet_for_tiles(drawing, createtiles_semi_track, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(255, 0, 255, '%'))
+
