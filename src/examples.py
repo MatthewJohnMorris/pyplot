@@ -4,7 +4,9 @@
 # * pycairo (for text)
 # * svgwrite
 
-from pyplot import PenType, Point, StandardDrawing
+from pyplot import PenType, Point, ShapeFiller, StandardDrawing
+import math
+import svgwrite
 
 import apollonius
 import calibration
@@ -23,6 +25,77 @@ import sketch
 import spirograph
 import threed
 import truchet
+
+def make_diamond(centre, size):
+
+    return [centre + Point(-size, 0), centre + Point(0, -size), centre + Point(size, 0), centre + Point(0, size), centre + Point(-size, 0)]
+
+
+def draw_diamonds(d):
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 270)
+    size = 10
+    lines = []
+    nr = 8
+    nc = 12
+    for r in range(0, nr):
+        for c in range(0, nc):
+            d_centre = paper_centre + Point(r - (nr-1)/2, c - (nc-1)/2) * size * 2
+            lines.append(make_diamond(d_centre, size))
+            
+            line1 = make_diamond(d_centre, size/3)
+            line2 = make_diamond(d_centre, size*2/3)
+            sf = ShapeFiller([line1, line2])
+            fill = sf.get_paths(d.pen_type.pen_width * 0.4)
+            lines.extend(fill)
+                
+    for r in range(0, nr-1):
+        for c in range(0, nc-1):
+            d_centre = paper_centre + Point(r - (nr-2)/2, c - (nc-2)/2) * size * 2
+            
+            line1 = make_diamond(d_centre, size/2)
+            line2 = make_diamond(d_centre, size*3/4)
+            sf = ShapeFiller([line1, line2])
+            fill = sf.get_paths(d.pen_type.pen_width * 0.4)
+            lines.extend(fill)
+                
+            line3 = make_diamond(d_centre, size/4)
+            sf = ShapeFiller([line3])
+            fill = sf.get_paths(d.pen_type.pen_width * 0.4)
+            lines.extend(fill)
+                
+    d.add_polylines(lines)
+    
+def draw_inward_radials(d):
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 270)
+    r_inner = 25
+    r_outer = 80
+    gap = d.pen_type.pen_width
+    n = int(2 * math.pi * r_inner / gap) + 1
+    lines1 = []
+    lines2 = []
+    lines3 = []
+    for i in range(0, n):
+        a = math.pi * 2 * i / n
+        s = math.sin(a)
+        c = math.cos(a)
+        rad = Point(c, s)
+        
+        c2 = paper_centre + Point(0, 0)
+        lines1.append([paper_centre + rad * (r_inner + 25), paper_centre + rad * r_outer])
+        
+        lines2.append([paper_centre + rad * r_inner, paper_centre + rad * (r_inner + 20)])
+        
+    lines3.append(d.make_dot(paper_centre, r_inner+23, r_start=r_inner+22))
+
+    d.add_polylines(lines1, container=d.add_layer("1"), stroke=svgwrite.rgb(0, 100, 100, '%'))
+    d.add_polylines(lines2, container=d.add_layer("2"), stroke=svgwrite.rgb(100, 0, 100, '%'))
+    d.add_polylines(lines3, container=d.add_layer("3"), stroke=svgwrite.rgb(100, 100, 0, '%'))
+    
+
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -49,7 +122,8 @@ paper_size = Point(192, 270)
 
 # import cProfile
 # cProfile.run('draw_3d(d)')
-truchet.draw_truchet(d, redline=True)
+# draw_diamonds(d)
+draw_inward_radials(d)
 
 if False:
     # works in progress
