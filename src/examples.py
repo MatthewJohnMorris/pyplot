@@ -71,38 +71,45 @@ def draw_inward_radials(d):
 
     paper_centre = Point(102.5, 148)
     paper_size = Point(192, 270)
-    r_inner = 25
+    r_inner = 10
     r_outer = 80
-    gap = d.pen_type.pen_width
+    gap = d.pen_type.pen_width * 1
     n = int(2 * math.pi * r_inner / gap) + 1
     lines1 = []
     lines2 = []
     lines3 = []
     for i in range(0, n):
-        a = math.pi * 2 * i / n
+        a = math.pi * 2 * (i+20) / n
         s = math.sin(a)
         c = math.cos(a)
+        a2 = math.pi * 2 * (i+20) / n
+        s2 = math.sin(a2)
+        c2 = math.cos(a2)
+        a3 = math.pi * 2 * (i+40) / n
+        s3 = math.sin(a3)
+        c3 = math.cos(a3)
         rad = Point(c, s)
+        rad2 = Point(c2, s2)
+        rad3 = Point(c3, s3)
         
         c2 = paper_centre + Point(0, 0)
-        lines1.append([paper_centre + rad * (r_inner + 25), paper_centre + rad * r_outer])
+        lines1.append([paper_centre + rad2 * r_inner, paper_centre + rad * r_outer])
+        lines1.append([paper_centre + rad3 * r_inner, paper_centre + rad * r_outer])
         
-        lines2.append([paper_centre + rad * r_inner, paper_centre + rad * (r_inner + 20)])
-        
-    lines3.append(d.make_dot(paper_centre, r_inner+23, r_start=r_inner+22))
+    # lines3.append(d.make_dot(paper_centre, r_inner+23, r_start=r_inner+22))
 
-    d.add_polylines(lines1, container=d.add_layer("1"), stroke=svgwrite.rgb(0, 100, 100, '%'))
-    d.add_polylines(lines2, container=d.add_layer("2"), stroke=svgwrite.rgb(100, 0, 100, '%'))
-    d.add_polylines(lines3, container=d.add_layer("3"), stroke=svgwrite.rgb(100, 100, 0, '%'))
+    d.add_polylines(lines1, container=d.add_layer("1")) # , stroke=svgwrite.rgb(0, 100, 100, '%'))
+    # d.add_polylines(lines2, container=d.add_layer("2"), stroke=svgwrite.rgb(100, 0, 100, '%'))
+    # d.add_polylines(lines3, container=d.add_layer("3"), stroke=svgwrite.rgb(100, 100, 0, '%'))
     
 
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
-# d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
+d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
-d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron01())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
@@ -123,7 +130,8 @@ paper_size = Point(192, 270)
 # import cProfile
 # cProfile.run('draw_3d(d)')
 # draw_diamonds(d)
-draw_inward_radials(d)
+# draw_inward_radials(d)
+mandala.star_gen2(d)
 
 if False:
     # works in progress
