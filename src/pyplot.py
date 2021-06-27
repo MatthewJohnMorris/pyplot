@@ -271,6 +271,9 @@ class StandardDrawing:
 
     def add_polylines(self, polylines, stroke=None, container=None, prejoin=None, usenew=True):
 
+        if len(polylines) == 0:
+            return
+
         joined_polylines = self.optimise_polylines(polylines, prejoin, usenew)
 
         container = self.default_container(container)
@@ -511,7 +514,6 @@ class StandardDrawing:
         ext2 = self.text_bound(f"XX", fontsize, family)
         ext3 = self.text_bound(letter, fontsize, family)
         w = ext1.width - ext2.width
-        return (w, ext3.height)
         return (w, ext3.height)
         
     # Why not use svg's drawing.text()? There are two main advantages to writing out the paths

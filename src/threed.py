@@ -372,12 +372,17 @@ def draw_3d_shade(d):
 
     a = math.pi / 3
 
+    family="Wingdings"
     letters = [x for x in "`¬!£$%&*()_+={:<>?@}~[;,./'#]"]
     letters = [x for x in "^_`abcdefghi"]
+    
+    family='Arial'
+    letters = [x for x in "happy anniversary b xxx  "]
+    
     ix_letter = 0
 
-    for c in range(0, 9):
-        for r in range(0, 6):
+    for c in range(2, 7):
+        for r in range(1, 5):
             scale = 0.75
             dx = 0 + 25 * r
             dy = 0 + 25 * c
@@ -411,7 +416,7 @@ def draw_3d_shade(d):
                 # StandardDrawing.log(proj_face_points)
                 if Transform3D.isForward(proj_face_points):
                     if letter != " ":
-                        proj_face_lines = get_face_draw_text(d, t, face3d, letter, family='Wingdings')
+                        proj_face_lines = get_face_draw_text(d, t, face3d, letter, family=family)
                         proj_face_lines = [[(x[0]*scale+dx, x[1]*scale+dy) for x in proj_face_line] for proj_face_line in proj_face_lines]
                         sf = ShapeFiller(proj_face_lines)
                         paths = sf.get_paths(d.pen_type.pen_width / 5 * 2)

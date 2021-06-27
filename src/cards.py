@@ -1,4 +1,5 @@
 import math
+import random
 import svgwrite
 
 from pyplot import Point, ShapeFiller, StandardDrawing
@@ -223,3 +224,95 @@ def draw_snowflake(drawing):
     fill = sf.get_paths(2*drawing.pen_type.pen_width / 5)
     drawing.add_polylines(fill, container=drawing.add_layer("3-cyan"), stroke=svgwrite.rgb(0, 255, 255, '%'))
 
+def draw_bridge_card(d):    
+
+    centre = Point(102.5, 148)
+    angle = 0
+    family = 'Arial'
+    cards = "♠♥♦♣"
+    
+    # try 24? 18 is a little blobby on the black
+    fontsizeCards = 36
+    fontsizeLetters = 18
+    
+    ext = d.text_bound(cards, fontsizeCards, family)
+    h = ext.height * 1.2
+    w = ext.width / 4 * 1.2
+    
+    fill = True
+    
+    nr = 18 # 24 # 24
+    nc = 20 # 26 # 1
+    i = 0
+    lines1 = []
+    lines2 = []
+    lines3 = []
+    letters = [ \
+        (2, 2, "H"),(2, 3, "A"),(2, 4, "P"),(2, 5, "P"),(2, 6, "Y"), \
+        (4, 2, "B"),(4, 3, "I"),(4, 4, "R"),(4, 5, "T"),(4, 6, "H"),(4, 7, "D"),(4, 8, "A"),(4, 9, "Y"), \
+        (6, 2, "T"),(6, 3, "I"),(6, 4, "M") \
+        ]
+    letters = []
+
+    linesPre = []
+    r = -8
+    c = nc / 2 + 1
+    xm = c - 0.5 * (nc-1)
+    ym = r - 0.5 * (nr-1)
+    letter = "♥"
+    pos_square_centre = centre + Point(w * xm, h * ym)
+    letter_ext = d.text_bound(letter, fontsizeCards, family)
+    pos_square_text = pos_square_centre - Point(letter_ext.width/2, -letter_ext.height/2)
+    text_paths = d.make_text(letter, pos_square_text, fontsize=fontsizeCards, family=family)    
+    if fill:
+        sf = ShapeFiller(text_paths)
+        filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+        for p in filled_text_paths:
+            linesPre.append(p)
+    else:
+        linesPre.extend(text_paths)
+    d.add_polylines(linesPre, container=d.add_layer("5-pre_2"), stroke=svgwrite.rgb(0, 0, 100, '%'))
+        
+    for r in range(0, nr):
+        for c in range(0, nc):
+            i += 1
+            
+            a = [x[2] for x in letters if x[0] == r and x[1] == c]
+            if len(a) == 1:
+                letter = a[0]
+                lines = lines3
+                fontsize = fontsizeLetters
+            else:
+                fontsize = fontsizeCards
+                indic = random.random() - 0.5 < 0
+                is_black = (r + c % 2) % 2 == 0
+                if is_black:
+                    letter = cards[0] if indic else cards[3]
+                    lines = lines1
+                else:
+                    letter = cards[1] if indic else cards[2]
+                    lines = lines2
+                    
+            xm = c - 0.5 * (nc-1)
+            ym = r - 0.5 * (nr-1)
+            pos_square_centre = centre + Point(w * xm, h * ym)
+            letter_ext = d.text_bound(letter, fontsize, family)
+            pos_square_text = pos_square_centre - Point(letter_ext.width/2, -letter_ext.height/2)
+            text_paths = d.make_text(letter, pos_square_text, fontsize=fontsize, family=family)
+
+            if fill:
+                sf = ShapeFiller(text_paths)
+                filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+                for p in filled_text_paths:
+                    lines.append(p)
+            else:
+                lines.extend(text_paths)
+            
+    d.add_polylines(lines1, container=d.add_layer("1-black"), stroke=svgwrite.rgb(0, 0, 0, '%'))
+    d.add_polylines(lines2, container=d.add_layer("2-red"), stroke=svgwrite.rgb(100, 0, 0, '%'))
+    d.add_polylines(lines3, container=d.add_layer("3-green"), stroke=svgwrite.rgb(0, 0, 100, '%'))
+    
+    bound_w = 150
+    bound_h = 148
+    bound_tl = centre - Point(bound_w, bound_h) / 2
+    d.add_rect(bound_tl, bound_w, bound_h, container=d.add_layer("4-border"))

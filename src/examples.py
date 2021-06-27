@@ -6,6 +6,7 @@
 
 from pyplot import PenType, Point, ShapeFiller, StandardDrawing
 import math
+import random
 import svgwrite
 
 import apollonius
@@ -29,7 +30,6 @@ import truchet
 def make_diamond(centre, size):
 
     return [centre + Point(-size, 0), centre + Point(0, -size), centre + Point(size, 0), centre + Point(0, size), centre + Point(-size, 0)]
-
 
 def draw_diamonds(d):
 
@@ -102,14 +102,125 @@ def draw_inward_radials(d):
     # d.add_polylines(lines2, container=d.add_layer("2"), stroke=svgwrite.rgb(100, 0, 100, '%'))
     # d.add_polylines(lines3, container=d.add_layer("3"), stroke=svgwrite.rgb(100, 100, 0, '%'))
     
+def text_in_circle(d, centre, text, radius, fontsize, family, fill, container=None):
 
+    container = d.default_container(container)
+    angle = - math.pi / 2 * 0.9
+    lines = []
+    for letter in text:
+        ext = d.text_bound_letter(letter, fontsize, family)
+        w = ext[0]
+        angle_diff = w / radius * 1.2
+        ((w, h), text_paths) = d.make_spiral_letter(letter, fontsize, centre, radius, angle=angle, family=family)
+        angle += angle_diff
+        if len(text_paths) > 0:
+            if fill:
+                sf = ShapeFiller(text_paths)
+                filled_text_paths = sf.get_paths(d.pen_type.pen_width / 5)
+                lines.extend(filled_text_paths)
+            else:
+                lines.extend(text_paths)
+        
+    d.add_polylines(lines, container=container)
+    
+    if False: # fill:
+        d.add_dot(centre, radius + 7.3, r_start = radius  + 5.8, stroke=svgwrite.rgb(0, 0, 0, '%'), container=container)
+        d.add_dot(centre, radius - 1.8, r_start = radius  - 3.3, stroke=svgwrite.rgb(0, 0, 0, '%'), container=container)    
+    else:
+        d.add_circle(centre, radius + 7.3)
+        d.add_circle(centre, radius + 5.8)
+        d.add_circle(centre, radius - 1.9)
+        d.add_circle(centre, radius - 3.3)
+    
+    lines = []
+    lines.append(d.make_circle(centre, radius + 8.3))
+    lines.append(d.make_circle(centre, radius - 4.3))
+    return lines
+
+def draw_faff(d, r_initial=None, r_per_circle=None):    
+
+    scale = 80
+    direction = 1
+    centre = Point(102.5, 148)
+    points = []
+    r = 0 if r_initial is None else r_initial # initial radius
+    a = 0 # starting angle
+    r_per_circle = 6 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
+    c_size = 0.5 # constant distance travelled: something like the nib width is probably best
+    
+    # draw until we've hit the desired size
+    while r <= scale:
+    
+        # Archimedian spiral with constant length of path
+        r_floored = max(r, 0.5)
+        a_inc = c_size / r_floored
+        a += a_inc * direction
+        r += r_per_circle * a_inc / (2 * math.pi)
+        # 0 -> 0
+        # scale => 0
+        factor = math.sin(math.pi * r / scale / 2)
+        factor = factor * factor * 2
+        # factor = r / scale
+        # r_use = r + 1 * (2 * (random.random() - 0.5)) * factor
+        
+        # output location
+        s = math.sin(a)
+        c = math.cos(a)
+        pt = centre + Point(c, s) * r
+
+        perturb_angle = math.pi * 2 * random.random()
+        perturb = Point(math.cos(perturb_angle), math.sin(perturb_angle)) * factor
+        pt = pt + perturb
+        
+        points.append(pt)
+
+    d.add_polyline(points)
+
+def draw_redblue(d):
+
+    # note here that we are writing the lines out one by one to avoid reversing in add_polylines
+    # this drastically improves the alignment of lines between the blue & red layers
+
+    layer1 = d.add_layer("1-red")
+    layer2 = d.add_layer("2-blue")
+    layer3 = d.add_layer("3-black")
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 270)
+    r_inner = 30
+    r_outer = 80
+    gap = d.pen_type.pen_width * 1
+    n = int(2 * math.pi * r_inner / gap) + 1
+    lines1 = []
+    lines2 = []
+    lines3 = []
+    gap = 10
+    for i in range(0, n):
+        a = math.pi * 2 * i / n
+        s = math.sin(a)
+        c = math.cos(a)
+        unit_line = Point(s, c)
+        r_red_1 = r_inner - random.random() * gap
+        r_red_2 = r_outer + random.random() * gap
+        r_blue_1 = r_inner - random.random() * gap
+        r_blue_2 = r_outer + random.random() * gap
+        
+        lines1.append([paper_centre + unit_line * r_red_1, paper_centre + unit_line * r_red_2])
+        lines2.append([paper_centre + unit_line * r_blue_1, paper_centre + unit_line * r_blue_2])
+        lines3.append([paper_centre + unit_line * r_inner, paper_centre + unit_line * r_outer])
+     
+    for line in lines1:
+        d.add_polyline(line, container=layer1, stroke=svgwrite.rgb(100, 0, 0, '%'))
+    for line in lines2:
+        d.add_polyline(line, container=layer2, stroke=svgwrite.rgb(0, 0, 100, '%'))
+    # d.add_polylines(lines3, container=d.add_layer("3"), stroke=svgwrite.rgb(0, 0, 0, '%'))
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
-d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
+# d = StandardDrawing(pen_type = PenType.GellyRollMetallicOnBlack())
 # d = StandardDrawing(pen_type = PenType.GellyRollMoonlightOnBlack())
-# d = StandardDrawing(pen_type = PenType.PigmaMicron05())
+d = StandardDrawing(pen_type = PenType.PigmaMicron05())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron03())
 # d = StandardDrawing(pen_type = PenType.PigmaMicron01())
 # d = StandardDrawing(pen_type = PenType.StaedtlerPigment08())
@@ -131,11 +242,14 @@ paper_size = Point(192, 270)
 # cProfile.run('draw_3d(d)')
 # draw_diamonds(d)
 # draw_inward_radials(d)
-mandala.star_gen2(d)
+
+# draw_faff(d)
+draw_redblue(d)
 
 if False:
     # works in progress
     sketch.image_sketch(d)
+    sketch.image_sketch2(d)
 
     # realised ideas I want to keep
     apollonius.apollonian_foam(d)
@@ -144,6 +258,7 @@ if False:
     cards.valentine(d)
     cards.draw_snowflake(d)
     cards.mothers_day(d)
+    cards.draw_bridge_card(d)
     colour.random_coloured_rects(d)
     colour.test_line_colour(d)
     mandala.star_gen(d)

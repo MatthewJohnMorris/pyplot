@@ -185,7 +185,8 @@ def lsystem_test(drawing):
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
-    all_lines = lsystem.test_lsystem_hilbert(order=8, size=0.7)
+    # all_lines = lsystem.test_lsystem_hilbert(order=8, size=0.7)
+    all_lines = lsystem.test_lsystem_hilbert(order=7, size=1.4)
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
     # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)

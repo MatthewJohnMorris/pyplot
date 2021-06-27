@@ -2,6 +2,8 @@ import cv2
 import math
 import random
 
+from pyplot import Point
+
 def get_image_intensity(image, x, y):
 
     (xsize_image,ysize_image,c) = image.shape
@@ -129,3 +131,51 @@ def image_sketch(d):
     for polyline in polylines:
         d.add_polyline([(p[0]+offset[0], p[1]+offset[1]) for p in polyline])
 
+def image_sketch2(d):
+
+    layer1 = d.add_layer("1")
+    layer2 = d.add_layer("1")
+
+    image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
+    (image_xsize,iamge_ysize,c) = image.shape
+    
+    print(image.shape)
+    
+    x_extent = 100
+    # mm per pixel
+    scale = x_extent / iamge_ysize
+    y_extent = scale * image_xsize
+    offset = Point(20, 20)
+    x_c = 60
+    side = x_extent / x_c
+    image_side = iamge_ysize / x_c
+    y_c = int(y_extent * x_c / x_extent)
+    
+    intensity = lambda x, y: get_image_intensity(image, x, y)
+    
+    polylines = []
+    
+    for x_i in range(0, x_c):
+        for y_i in range(0, y_c):
+            image_tl = Point(y_i, x_i) * image_side
+            n_intensity = 0
+            tot_intensity = 0
+            for image_x in range(int(image_tl.x), int(image_tl.x + image_side)):
+                for image_y in range(int(image_tl.y), int(image_tl.y + image_side)):
+                    n_intensity += 1
+                    tot_intensity += intensity(image_x, image_y)
+            ratio_intensity  = (tot_intensity / n_intensity)
+            # print(image_tl, x_i, y_i, x_c, y_c, tot_intensity, n_intensity, ratio_intensity)
+            tl = offset + Point(x_i, y_i) * side
+            centre = tl + Point(1, 1) * side / 2
+            if ratio_intensity > 0:
+                r_outer = (1-ratio_intensity) * side
+                r_start = r_outer - 0.2
+                if r_start <= 0:
+                    r_start = None
+                polylines.append(d.make_dot(centre, r_outer, r_start=r_start))
+        
+    print(len(polylines))
+        
+    for polyline in polylines:
+        d.add_polyline([(p[0]+offset[0], p[1]+offset[1]) for p in polyline])
