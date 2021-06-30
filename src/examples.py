@@ -244,7 +244,8 @@ paper_size = Point(192, 270)
 # draw_inward_radials(d)
 
 # draw_faff(d)
-draw_redblue(d)
+# draw_redblue(d)
+sketch.image_sketch3(d)
 
 if False:
     # works in progress

@@ -2,7 +2,7 @@ import cv2
 import math
 import random
 
-from pyplot import Point
+from pyplot import Point,StandardDrawing
 
 def get_image_intensity(image, x, y):
 
@@ -13,6 +13,28 @@ def get_image_intensity(image, x, y):
         return 0
     return image[x_int, y_int][0] / 255
 
+def get_image_intensity_int(image, x, y):
+
+    return image[x, y][0] / 255
+
+def get_image_intensity_fract(image, x, y):
+
+    (xsize_image,ysize_image,c) = image.shape
+    if x < 0 or x >= xsize_image-1 or y < 0 or y >= ysize_image-1:
+        return 0
+    fx = 1 - (x - int(x))
+    fy = 1 - (y - int(y))
+    x0 = int(x)
+    x1 = x0 + 1
+    y0 = int(y)
+    y1 = y0 + 1
+    i00 = get_image_intensity_int(image, x0, y0)
+    i01 = get_image_intensity_int(image, x0, y1)
+    i10 = get_image_intensity_int(image, x1, y0)
+    i11 = get_image_intensity_int(image, x1, y1)
+    blended_intensity = i00*fx*fy + i01*fx*(1-fy) + i10*(1-fx)*fy + i11*(1-fx)*(1-fy)
+    return blended_intensity
+
 def set_image_intensity(image, x, y, value):
 
     (xsize_image,ysize_image,c) = image.shape
@@ -21,6 +43,10 @@ def set_image_intensity(image, x, y, value):
     if x_int < 0 or x_int >= xsize_image or y_int < 0 or y_int >= ysize_image:
         return
     image[x_int, y_int][0] = value
+
+def set_image_intensity_int(image, x, y, value):
+
+    image[x, y][0] = value * 255
 
 def image_sketch(d):
 
@@ -134,7 +160,7 @@ def image_sketch(d):
 def image_sketch2(d):
 
     layer1 = d.add_layer("1")
-    layer2 = d.add_layer("1")
+    layer2 = d.add_layer("2")
 
     image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
     (image_xsize,iamge_ysize,c) = image.shape
@@ -146,7 +172,7 @@ def image_sketch2(d):
     scale = x_extent / iamge_ysize
     y_extent = scale * image_xsize
     offset = Point(20, 20)
-    x_c = 60
+    x_c = 15
     side = x_extent / x_c
     image_side = iamge_ysize / x_c
     y_c = int(y_extent * x_c / x_extent)
@@ -169,13 +195,155 @@ def image_sketch2(d):
             tl = offset + Point(x_i, y_i) * side
             centre = tl + Point(1, 1) * side / 2
             if ratio_intensity > 0:
-                r_outer = (1-ratio_intensity) * side
-                r_start = r_outer - 0.2
-                if r_start <= 0:
-                    r_start = None
-                polylines.append(d.make_dot(centre, r_outer, r_start=r_start))
+                r_outer = (1-ratio_intensity) * side / 2
+                while r_outer > 0:
+                    line = d.make_circle(centre, r_outer)
+                    line.append(line[0])
+                    polylines.append(line)
+                    r_outer -= d.pen_type.pen_width * 2
         
     print(len(polylines))
         
     for polyline in polylines:
         d.add_polyline([(p[0]+offset[0], p[1]+offset[1]) for p in polyline])
+        
+def image_sketch3(d):
+
+    layer1 = d.add_layer("1")
+    layer2 = d.add_layer("1")
+
+    image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
+    image = cv2.imread('woolf.jpg') #The function to read from an image into OpenCv is imread()
+    (xsize_image,ysize_image,c) = image.shape
+    
+    StandardDrawing.log(image.shape)
+    StandardDrawing.log(f'PointCount={xsize_image*ysize_image}')
+
+    ntrigs = 36 # 37 # 13 # 93 # 11 # 37
+    n = 9000 # 8000
+    drop_mult = 5
+    path_div = 40
+    
+    x_extent = 150
+    # mm per pixel
+    scale = x_extent / ysize_image
+    path_len = int(min(xsize_image, ysize_image)/ path_div)
+    StandardDrawing.log(f'path_len={path_len}')
+    # r = 6
+    offset = (20, 20)
+
+    StandardDrawing.log("Invert drawing")
+    for x_image in range(0, xsize_image):
+        for y_image in range(0, ysize_image):
+            image[x_image, y_image][0] = 255 - image[x_image, y_image][0]
+            
+    
+    intensity = lambda x, y: get_image_intensity_fract(image, x, y)
+    
+    polylines = []
+    angles = [i * 2 * math.pi / ntrigs for i in range(0, ntrigs)]
+    trigs = [(math.cos(a), math.sin(a)) for a in angles]
+    polyline = []
+    pt = None
+    expavg_ntries = 0
+    
+    # get starting point - max intensity
+    StandardDrawing.log("Find starting point")
+    start = None
+    for x_image in range(0, xsize_image):
+        for y_image in range(0, ysize_image):
+            xy_intensity = intensity(x_image, y_image)
+            if start is None:
+                start = (x_image, y_image, xy_intensity)
+            elif xy_intensity > start[2]:
+                start = (x_image, y_image, xy_intensity)
+    StandardDrawing.log(f"start={start}")
+
+    drop = scale * d.pen_type.pen_width * 2 * drop_mult
+    #print(x_extent)
+    #print(ysize_image)
+    #print(scale)
+    #print(d.pen_type.pen_width)
+    #print(scale * d.pen_type.pen_width)
+    #print(drop)
+
+    StandardDrawing.log("Drawing")
+    pt = start
+    percent = 0
+    for i in range(0, n): # 10000): # 6000):
+        i_percent = int(100*i/n)
+        if i_percent > percent:
+            percent = i_percent
+            StandardDrawing.log(f"points={i} ({percent}%)")
+            # raise Exception("blah")
+
+        best_avg_intensity = -1
+        max_trig = None
+        for trig in trigs:
+            total_intensity = 0
+            for jj in range(1, path_len):
+                k = intensity(pt[0]+jj*trig[0], pt[1]+jj*trig[1])
+                # penalise crossing very light areas
+                if k < 0.2:
+                    k = -0.2
+                total_intensity += k
+            avg_intensity = total_intensity / path_len
+            if avg_intensity > best_avg_intensity:
+                best_avg_intensity = avg_intensity
+                max_trig = trig
+                
+        #print(i, pt, best_avg_intensity, max_trig)
+                
+        # print(best_max_avg_intensity)
+        if best_avg_intensity == 0.0:
+
+            print(pt)
+            for trig in trigs:
+                total_intensity = 0
+                for jj in range(1, path_len):
+                    k = intensity(pt[0]+jj*trig[0], pt[1]+jj*trig[1])
+                    total_intensity += k
+                avg_intensity = total_intensity / path_len
+
+            max_trig = trigs[int(random.random() * len(trigs))]
+            #print("random", max_trig)
+                
+        # zero out in the image
+        # set_image_intensity(image, pt[0], pt[1], 0)
+        if len(polyline) == 0:
+            polyline = [(offset[0]+pt[1]*scale, offset[1]+pt[0]*scale)]
+
+        for j in range(0, path_len-1):
+            pt_j = (pt[0]+j*max_trig[0], pt[1]+j*max_trig[1])
+
+            x = pt_j[0]
+            y = pt_j[1]
+            fx = 1 - (x - int(x))
+            fy = 1 - (y - int(y))
+            x0 = int(x)
+            y0 = int(y)
+            if x0 < xsize_image and y0 < ysize_image:
+                x1 = min(xsize_image-1, x0 + 1)
+                y1 = min(ysize_image-1, y0 + 1)
+                set_image_intensity_int(image, x0, y0, max(0, intensity(x0, y0) - drop * fx     * fy))
+                set_image_intensity_int(image, x1, y0, max(0, intensity(x1, y0) - drop * fx     * (1-fy)))
+                set_image_intensity_int(image, x0, y1, max(0, intensity(x0, y1) - drop * (1-fx) * fy))
+                set_image_intensity_int(image, x1, y1, max(0, intensity(x1, y1) - drop * (1-fx) * (1-fy)))
+
+        line_end = (pt[0]+path_len*max_trig[0], pt[1]+path_len*max_trig[1])
+        #print(f"{pt}->{line_end} (unadj)")
+        line_end = (max(0, line_end[0]), line_end[1])
+        line_end = (min(xsize_image-1, line_end[0]), line_end[1])
+        line_end = (line_end[0], max(0, line_end[1]))
+        line_end = (line_end[0], min(ysize_image-1, line_end[1]))
+        polyline.append((offset[0] + line_end[1]*scale, offset[1] + line_end[0]*scale))
+        #print(f"{pt}->{line_end} (adj)")
+        pt = line_end
+
+                
+        
+    StandardDrawing.log(len(polyline))
+    # print(polyline)
+        
+    d.add_polyline(polyline)
+
