@@ -374,12 +374,12 @@ class StandardDrawing:
     def default_circle_path_count(self, r):
         return int(2 * math.pi * r / self.pen_type.pen_width) + 1
 
-    def make_circle(self, middle, r, n=None, stroke=None, x_scale=None):
+    def make_circle(self, middle, r, n=None, stroke=None, x_scale=None, phase=0):
         n = self.default_circle_path_count(r) if n is None else n
         stroke = self.default_stroke(stroke)
         points = []
         for i in range(0, n):    
-            angle = 2 * math.pi * i / n
+            angle = 2 * math.pi * (i / n + phase)
             p = self.get_circle_point(middle, r, angle, x_scale)
             points.append( p )
         return points

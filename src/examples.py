@@ -137,7 +137,7 @@ def text_in_circle(d, centre, text, radius, fontsize, family, fill, container=No
     lines.append(d.make_circle(centre, radius - 4.3))
     return lines
 
-def draw_faff(d, r_initial=None, r_per_circle=None):    
+def draw_spiral_noise(d, inverse=False, r_initial=None, r_per_circle=None):    
 
     scale = 80
     direction = 1
@@ -160,6 +160,8 @@ def draw_faff(d, r_initial=None, r_per_circle=None):
         # scale => 0
         factor = math.sin(math.pi * r / scale / 2)
         factor = factor * factor * 2
+        if inverse:
+            factor = 2 - factor
         # factor = r / scale
         # r_use = r + 1 * (2 * (random.random() - 0.5)) * factor
         
@@ -175,6 +177,31 @@ def draw_faff(d, r_initial=None, r_per_circle=None):
         points.append(pt)
 
     d.add_polyline(points)
+
+def close(line):
+
+    if line[0] != line[-1]:
+        line.append(line[0])
+    return line
+
+def circles(d, r_per_circle=None):    
+
+    scale = 80
+    centre = Point(102.5, 148)
+    r_per_circle = 3 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
+    
+    lines = []
+    
+    for i in range(1, 20):
+        radius = i * r_per_circle
+        centre_i = centre + Point(21 * r_per_circle, 0) - Point(radius, 0)
+        lines.append(close(d.make_circle(centre_i, radius, phase=0.25)))
+    for i in range(20, 40):
+        radius = i * r_per_circle
+        centre_i = centre - Point(19 * r_per_circle, 0) + Point(radius, 0)
+        lines.append(close(d.make_circle(centre_i, radius, phase=0.75)))
+    
+    d.add_polylines(lines)
 
 def draw_redblue(d):
 
@@ -215,6 +242,36 @@ def draw_redblue(d):
         d.add_polyline(line, container=layer2, stroke=svgwrite.rgb(0, 0, 100, '%'))
     # d.add_polylines(lines3, container=d.add_layer("3"), stroke=svgwrite.rgb(0, 0, 0, '%'))
 
+def thingy(d):
+
+    paper_centre = Point(102.5, 148)
+    paper_size = Point(192, 270)
+    
+    lines = []
+    
+    size = 3
+    n = 20
+    for r in range(0, n+1):
+        for c in range(0, n+1):
+            pt = paper_centre + Point(0, 5) * (r - n/2) + Point(5, 0) * (c - n/2)
+            a = random.random() * math.pi * 2
+            line = d.make_square(pt, size)
+            line.append(line[0])
+            c = pt + Point(1,1) * size/2
+            line = [d.rotate_about(pt, c, a) for pt in line]
+            lines.append(line)
+            
+            line = d.make_circle(c, size/4)
+            lines.append(line)
+            
+            line = d.make_square(pt + Point(1,1)*size/4, size/2)
+            line.append(line[0])
+            c = pt + Point(1,1) * size/2
+            line = [d.rotate_about(pt, c, a) for pt in line]
+            # lines.append(line)
+
+    d.add_polylines(lines)
+
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
 # before plotting, or use the "Layers" tab to plot - by default everything is written to layer "0-default"
@@ -243,14 +300,15 @@ paper_size = Point(192, 270)
 # draw_diamonds(d)
 # draw_inward_radials(d)
 
-# draw_faff(d)
-# draw_redblue(d)
-sketch.image_sketch3(d)
+# draw_spiral_noise(d, True)
+circles(d)
+# thingy(d)
 
 if False:
     # works in progress
     sketch.image_sketch(d)
     sketch.image_sketch2(d)
+    sketch.image_sketch3(d)
 
     # realised ideas I want to keep
     apollonius.apollonian_foam(d)
@@ -272,6 +330,9 @@ if False:
     prophets.burroughs_medal(d)
     prophets.wakefield_medal(d)
     prophets.draw_wakefield(d)
+    
+    # redblue
+    draw_redblue(d)
     
     # 3d
     threed.draw_3d(d)

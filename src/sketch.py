@@ -206,19 +206,24 @@ def image_sketch2(d):
         
     for polyline in polylines:
         d.add_polyline([(p[0]+offset[0], p[1]+offset[1]) for p in polyline])
-        
-def image_sketch3(d):
+
+def image_sketch3_woolf(d):
 
     layer1 = d.add_layer("1")
     layer2 = d.add_layer("1")
 
-    image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
-    image = cv2.imread('woolf.jpg') #The function to read from an image into OpenCv is imread()
-    (xsize_image,ysize_image,c) = image.shape
+    disk_image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
+    disk_image = cv2.imread('woolf.jpg') #The function to read from an image into OpenCv is imread()
+    (xsize_image,ysize_image,c) = disk_image.shape
     
-    StandardDrawing.log(image.shape)
+    StandardDrawing.log(disk_image.shape)
     StandardDrawing.log(f'PointCount={xsize_image*ysize_image}')
 
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 8000
+    drop_mult = 20
+    path_div = 40
+    
     ntrigs = 36 # 37 # 13 # 93 # 11 # 37
     n = 9000 # 8000
     drop_mult = 5
@@ -231,12 +236,17 @@ def image_sketch3(d):
     StandardDrawing.log(f'path_len={path_len}')
     # r = 6
     offset = (20, 20)
+    
+    mem_image = MemImage(disk_image)
+    
+    image = mem_image
+    image = disk_image
 
     StandardDrawing.log("Invert drawing")
     for x_image in range(0, xsize_image):
         for y_image in range(0, ysize_image):
+            a = image[x_image, y_image]
             image[x_image, y_image][0] = 255 - image[x_image, y_image][0]
-            
     
     intensity = lambda x, y: get_image_intensity_fract(image, x, y)
     
@@ -286,6 +296,247 @@ def image_sketch3(d):
                 # penalise crossing very light areas
                 if k < 0.2:
                     k = -0.2
+                total_intensity += k
+            avg_intensity = total_intensity / path_len
+            if avg_intensity > best_avg_intensity:
+                best_avg_intensity = avg_intensity
+                max_trig = trig
+                
+        #print(i, pt, best_avg_intensity, max_trig)
+                
+        # print(best_max_avg_intensity)
+        if best_avg_intensity == 0.0:
+
+            print(pt)
+            for trig in trigs:
+                total_intensity = 0
+                for jj in range(1, path_len):
+                    k = intensity(pt[0]+jj*trig[0], pt[1]+jj*trig[1])
+                    total_intensity += k
+                avg_intensity = total_intensity / path_len
+
+            max_trig = trigs[int(random.random() * len(trigs))]
+            #print("random", max_trig)
+                
+        # zero out in the image
+        # set_image_intensity(image, pt[0], pt[1], 0)
+        if len(polyline) == 0:
+            polyline = [(offset[0]+pt[1]*scale, offset[1]+pt[0]*scale)]
+
+        for j in range(0, path_len-1):
+            pt_j = (pt[0]+j*max_trig[0], pt[1]+j*max_trig[1])
+
+            x = pt_j[0]
+            y = pt_j[1]
+            fx = 1 - (x - int(x))
+            fy = 1 - (y - int(y))
+            x0 = int(x)
+            y0 = int(y)
+            if x0 < xsize_image and y0 < ysize_image:
+                x1 = min(xsize_image-1, x0 + 1)
+                y1 = min(ysize_image-1, y0 + 1)
+                set_image_intensity_int(image, x0, y0, max(0, intensity(x0, y0) - drop * fx     * fy))
+                set_image_intensity_int(image, x1, y0, max(0, intensity(x1, y0) - drop * fx     * (1-fy)))
+                set_image_intensity_int(image, x0, y1, max(0, intensity(x0, y1) - drop * (1-fx) * fy))
+                set_image_intensity_int(image, x1, y1, max(0, intensity(x1, y1) - drop * (1-fx) * (1-fy)))
+
+        line_end = (pt[0]+path_len*max_trig[0], pt[1]+path_len*max_trig[1])
+        #print(f"{pt}->{line_end} (unadj)")
+        line_end = (max(0, line_end[0]), line_end[1])
+        line_end = (min(xsize_image-1, line_end[0]), line_end[1])
+        line_end = (line_end[0], max(0, line_end[1]))
+        line_end = (line_end[0], min(ysize_image-1, line_end[1]))
+        polyline.append((offset[0] + line_end[1]*scale, offset[1] + line_end[0]*scale))
+        #print(f"{pt}->{line_end} (adj)")
+        pt = line_end
+
+                
+        
+    StandardDrawing.log(len(polyline))
+    # print(polyline)
+        
+    d.add_polyline(polyline)
+
+        
+class MemImage:
+
+    def __init__(self, disk_image):
+        self.shape = disk_image.shape
+        (xsize_image,ysize_image,c) = self.shape    
+        self.a = []
+        for x_image in range(0, xsize_image):
+            x_array = []
+            for y_image in range(0, ysize_image):
+                x_array.append([disk_image[x_image, y_image][0]])
+            self.a.append(x_array)
+        
+    def __getitem__(self, arg):
+        (x,y) = arg
+        return self.a[x][y]
+        
+def image_sketch3(d):
+
+    layer1 = d.add_layer("1")
+    layer2 = d.add_layer("1")
+
+    disk_image = cv2.imread('burroughs2.jpg') #The function to read from an image into OpenCv is imread()
+    disk_image = cv2.imread('woolf.jpg') #The function to read from an image into OpenCv is imread()
+    
+    disk_image = cv2.imread('kahlo.jpg') #The function to read from an image into OpenCv is imread()
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 8000
+    drop_mult = 20
+    path_div = 40
+    penalty = 0.1
+    
+    disk_image = cv2.imread('gove2.jpg') #The function to read from an image into OpenCv is imread()
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 12000 # 12000
+    drop_mult = 30
+    path_div = 70
+    penalty = 0.1
+    
+    disk_image = cv2.imread('morrissey.jpg')
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 12000
+    drop_mult = 1
+    path_div = 60
+    penalty = 0.1
+    
+    disk_image = cv2.imread('morrissey.jpg')
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 7000 # 12000
+    drop_mult = 0.5
+    path_div = 30
+    penalty = 0.1
+    
+    disk_image = cv2.imread('morrissey.jpg')
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 4350 # 12000
+    drop_mult = 0.5
+    path_div = 30
+    penalty = 0.1
+
+    disk_image = cv2.imread('mickey.jpg')
+    ntrigs = 37 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 8050 # 12000
+    drop_mult = 80
+    path_div = 40
+    penalty = 0.0
+    
+    disk_image = cv2.imread('768px-Margaret_Thatcher_(1983).jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 25000
+    drop_mult = 1
+    path_div = 30
+    penalty = 0.0
+    
+    disk_image = cv2.imread('768px-Margaret_Thatcher_(1983).jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 137500 # 13000 # 12000 # 14000 # 16000 # 18000 # 20000 # 25000
+    drop_mult = 5
+    path_div = 30
+    penalty = 0.0
+    
+    disk_image = cv2.imread('768px-Margaret_Thatcher_(1983).jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 18000 # 18000 # 20000 # 25000
+    drop_mult = 3 # 1
+    path_div = 30
+    penalty = 0.0
+
+    disk_image = cv2.imread('nixon.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 18000 # 20000 # 25000
+    drop_mult = 160 # 1
+    path_div = 30
+    penalty = 0.0
+
+    disk_image = cv2.imread('nixon.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 4000 # 18000 # 20000 # 25000
+    drop_mult = 160 # 1
+    path_div = 8
+    penalty = 0.0
+
+    disk_image = cv2.imread('nixon.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 24000 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 160 # 1
+    path_div = 60
+    penalty = 0.0
+
+    (xsize_image,ysize_image,c) = disk_image.shape
+    StandardDrawing.log(disk_image.shape)
+    StandardDrawing.log(f'PointCount={xsize_image*ysize_image}')
+        
+    x_extent = 150
+    # mm per pixel
+    scale = x_extent / ysize_image
+    path_len = int(min(xsize_image, ysize_image)/ path_div)
+    StandardDrawing.log(f'path_len={path_len}')
+    # r = 6
+    offset = (20, 20)
+    
+    mem_image = MemImage(disk_image)
+    
+    image = mem_image
+    # image = disk_image
+
+    StandardDrawing.log("Invert drawing")
+    for x_image in range(0, xsize_image):
+        for y_image in range(0, ysize_image):
+            a = image[x_image, y_image]
+            image[x_image, y_image][0] = 255 - image[x_image, y_image][0]
+    
+    intensity = lambda x, y: get_image_intensity_fract(image, x, y)
+    
+    polylines = []
+    angles = [i * 2 * math.pi / ntrigs for i in range(0, ntrigs)]
+    trigs = [(math.cos(a), math.sin(a)) for a in angles]
+    polyline = []
+    pt = None
+    expavg_ntries = 0
+    
+    # get starting point - max intensity
+    StandardDrawing.log("Find starting point")
+    start = None
+    for x_image in range(0, xsize_image):
+        for y_image in range(0, ysize_image):
+            xy_intensity = intensity(x_image, y_image)
+            if start is None:
+                start = (x_image, y_image, xy_intensity)
+            elif xy_intensity > start[2]:
+                start = (x_image, y_image, xy_intensity)
+    StandardDrawing.log(f"start={start}")
+
+    drop = scale * d.pen_type.pen_width * 2 * drop_mult
+    #print(x_extent)
+    #print(ysize_image)
+    #print(scale)
+    #print(d.pen_type.pen_width)
+    #print(scale * d.pen_type.pen_width)
+    #print(drop)
+
+    StandardDrawing.log("Drawing")
+    pt = start
+    percent = 0
+    for i in range(0, n): # 10000): # 6000):
+        i_percent = int(100*i/n)
+        if i_percent > percent:
+            percent = i_percent
+            StandardDrawing.log(f"points={i} ({percent}%)")
+            # raise Exception("blah")
+
+        best_avg_intensity = -1
+        max_trig = None
+        for trig in trigs:
+            total_intensity = 0
+            for jj in range(1, path_len):
+                k = intensity(pt[0]+jj*trig[0], pt[1]+jj*trig[1])
+                # penalise crossing very light areas
+                if k < penalty:
+                    k = -penalty
                 total_intensity += k
             avg_intensity = total_intensity / path_len
             if avg_intensity > best_avg_intensity:

@@ -180,15 +180,25 @@ def test_lsystem_fass(order, size, start_a=0):
         .add_entry("X", ACTION_FWD, "X+F+X--F--X+F+X") \
         .process(order, size, "FX++FX++FX++FX", start_a=start_a)
 
+def test_lsystem_penrose(order, size, start_a=0):
+
+    return lsystem_map(36) \
+        .add_entry("M", ACTION_FWD, "OA++PA----NA[-OA----MA]++") \
+        .add_entry("N", ACTION_FWD, "+OA--PA[---MA--NA]+") \
+        .add_entry("O", ACTION_FWD, "-MA++NA[+++OA++PA]-") \
+        .add_entry("P", ACTION_FWD, "--OA++++MA[+PA++++NA]--NA") \
+        .add_entry("A", ACTION_FWD, "") \
+        .process(order, size, "[N]++[N]++[N]++[N]++[N]", start_a=start_a)
+
 def lsystem_test(drawing):
     # A good source for new ideas: http://paulbourke.net/fractals/lsys/
 
     import lsystem
     # all_lines = lsystem.test_lsystem_gosper(order=5, size=1)
     # all_lines = lsystem.test_lsystem_hilbert(order=8, size=0.7)
-    all_lines = lsystem.test_lsystem_hilbert(order=7, size=1.4)
+    # all_lines = lsystem.test_lsystem_hilbert(order=7, size=1.4)
     # all_lines = lsystem.test_lsystem_arrowhead(order=8, size=0.5)
-    # all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
+    all_lines = lsystem.test_lsystem_arrowhead(order=9, size=0.3)
     # all_lines = lsystem.test_lsystem_tree(order=7, size=1)
     # all_lines = lsystem.test_lsystem_barnsley_fern(order=6, size=1)
     # all_lines = lsystem.test_lsystem_koch_snowflake(order=5, size=0.5)
@@ -198,6 +208,7 @@ def lsystem_test(drawing):
     # all_lines = lsystem.test_lsystem_bot_example3(order=7, size=3, start_a=45)
     # all_lines = lsystem.test_lsystem_bot_example4(order=7, size=1.3, start_a=90)
     # all_lines = lsystem.test_lsystem_fass(order=6, size=0.75, start_a=90)
+    # all_lines = lsystem.test_lsystem_penrose(order=5, size=3)
 
     def centre_on(polylines, new_centre):
         n = 0
