@@ -184,24 +184,51 @@ def close(line):
         line.append(line[0])
     return line
 
+# Big difference in quality between 1k and 3k - 2k has some noticeable degredation too
 def circles(d, r_per_circle=None):    
 
     scale = 80
     centre = Point(102.5, 148)
     r_per_circle = 3 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
-    
-    lines = []
-    
+
+    lines1 = []
+    lines2 = []
+    lines3 = []
+
     for i in range(1, 20):
         radius = i * r_per_circle
         centre_i = centre + Point(21 * r_per_circle, 0) - Point(radius, 0)
-        lines.append(close(d.make_circle(centre_i, radius, phase=0.25)))
+        lines1.append(close(d.make_circle(centre_i, radius, phase=0.25)))
+        
     for i in range(20, 40):
         radius = i * r_per_circle
         centre_i = centre - Point(19 * r_per_circle, 0) + Point(radius, 0)
-        lines.append(close(d.make_circle(centre_i, radius, phase=0.75)))
+        lines2.append(close(d.make_circle(centre_i, radius, phase=0.75)))
     
-    d.add_polylines(lines)
+    for i in range(40, 60):
+        radius = i * r_per_circle
+        centre_i = centre + Point(61 * r_per_circle, 0) - Point(radius, 0)
+        lines3.append(close(d.make_circle(centre_i, radius, phase=0.25)))
+        
+    lines = []
+    any = True
+    while any:
+        any = False
+        if len(lines1) > 0:
+            lines.append(lines1[0])
+            del lines1[0]
+            any = True
+        if len(lines2) > 0:
+            lines.append(lines2[0])
+            del lines2[0]
+            any = True
+        if len(lines3) > 0:
+            lines.append(lines3[0])
+            del lines3[0]
+            any = True
+            
+    for line in lines:
+        d.add_polyline(line)
 
 def draw_redblue(d):
 
@@ -299,6 +326,8 @@ paper_size = Point(192, 270)
 # cProfile.run('draw_3d(d)')
 # draw_diamonds(d)
 # draw_inward_radials(d)
+
+# Try other pen types on black heavy plots - do they clog less than Pigmas?
 
 # draw_spiral_noise(d, True)
 circles(d)
