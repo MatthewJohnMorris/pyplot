@@ -230,6 +230,34 @@ def circles(d, r_per_circle=None):
     for line in lines:
         d.add_polyline(line)
 
+# Big difference in quality between 1k and 3k - 2k has some noticeable degredation too
+def circles2(d, r_per_circle=None):    
+
+    scale = 80
+    centre = Point(102.5, 148)
+    r_per_circle = 3 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
+
+    lines = []
+
+    phase_radians = 0
+
+    r_per_circle /= 2
+    n = 120
+
+    for i in range(n, 0, -1):
+        radius = i * r_per_circle
+        phase_fraction = phase_radians / (2 * math.pi)
+        lines.append(close(d.make_circle(centre, radius, phase=phase_fraction)))
+        # phase_radians += math.pi * 2 / 60 #  * (1 + (random.random() - 0.5) * 10)
+        if i % 10 == 0:
+            phase_radians += math.pi * 2 / 6
+        c = math.cos(phase_radians)
+        s = math.sin(phase_radians)
+        centre = centre + Point(s,-c) * r_per_circle
+    
+    for line in lines[::-1]:
+        d.add_polyline(line)
+
 def draw_redblue(d):
 
     # note here that we are writing the lines out one by one to avoid reversing in add_polylines
@@ -275,29 +303,43 @@ def thingy(d):
     paper_size = Point(192, 270)
     
     lines = []
+    lines_r = []
+    lines_g = []
+    lines_b = []
     
     size = 3
-    n = 20
-    for r in range(0, n+1):
-        for c in range(0, n+1):
-            pt = paper_centre + Point(0, 5) * (r - n/2) + Point(5, 0) * (c - n/2)
+    nr = 50
+    nc = 30
+    for r in range(0, nr+1):
+        for c in range(0, nc+1):
+            pt = paper_centre + Point(0, 5) * (r - nr/2) + Point(5, 0) * (c - nc/2)
             a = random.random() * math.pi * 2
             line = d.make_square(pt, size)
             line.append(line[0])
-            c = pt + Point(1,1) * size/2
-            line = [d.rotate_about(pt, c, a) for pt in line]
+            centre = pt + Point(1,1) * size/2
+            line = [d.rotate_about(pt, centre, a) for pt in line]
             lines.append(line)
             
-            line = d.make_circle(c, size/4)
-            lines.append(line)
+            line = d.make_circle(centre, size/4)
+            lines_circle = lines_b
+            x = random.random()
+            if x < 0.333:
+                lines_circle = lines_r
+            elif x < 0.666:
+                lines_circle = lines_g
+                
+            lines_circle.append(line)
             
             line = d.make_square(pt + Point(1,1)*size/4, size/2)
             line.append(line[0])
-            c = pt + Point(1,1) * size/2
-            line = [d.rotate_about(pt, c, a) for pt in line]
+            centre = pt + Point(1,1) * size/2
+            line = [d.rotate_about(pt, centre, a) for pt in line]
             # lines.append(line)
 
-    d.add_polylines(lines)
+    d.add_polylines(lines, container=d.add_layer("1"))
+    d.add_polylines(lines_r, container=d.add_layer("2"), stroke=svgwrite.rgb(100, 0, 0, '%'))
+    d.add_polylines(lines_g, container=d.add_layer("3"), stroke=svgwrite.rgb(0, 50, 0, '%'))
+    d.add_polylines(lines_b, container=d.add_layer("4"), stroke=svgwrite.rgb(0, 0, 100, '%'))
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -330,7 +372,8 @@ paper_size = Point(192, 270)
 # Try other pen types on black heavy plots - do they clog less than Pigmas?
 
 # draw_spiral_noise(d, True)
-circles(d)
+# circles(d)
+circles2(d)
 # thingy(d)
 
 if False:
