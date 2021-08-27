@@ -155,3 +155,71 @@ def spiral_moire(drawing):
     # drawing.add_spiral(centre + Point(+side/2, h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
     # drawing.add_spiral(centre + Point(0, -2*h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
     # drawing.add_spiral(centre + Point(-disp, +disp), scale, r_per_circle = (factor/1.08) * drawing.pen_type.pen_width)
+    
+def spiral_moire2(drawing):
+
+    centre = Point(102.5, 148)
+    scale = 80
+    factor = 3
+    
+    side = 2
+    h = side * 0.5 * math.sqrt(3)
+    
+    base_width = drawing.pen_type.pen_width
+    
+    drawing.add_spiral(centre + Point(0, 0), scale, r_per_circle = (factor*1.00) * base_width)
+
+    drawing.add_spiral(centre + Point(0, 5), scale, r_per_circle = (factor*1.09) * base_width)
+    
+    # for d in range(int(scale * 1), 0, -1):
+    #    drawing.add_square(centre - Point(d, d), d*2)
+        
+    # drawing.add_spiral(centre + Point(+side/2, h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
+    # drawing.add_spiral(centre + Point(0, -2*h/3), scale, r_per_circle = (factor/1.05) * drawing.pen_type.pen_width)
+    # drawing.add_spiral(centre + Point(-disp, +disp), scale, r_per_circle = (factor/1.08) * drawing.pen_type.pen_width)
+
+# Big difference in quality between 1k and 3k - 2k has some noticeable degredation too
+def circles(d, r_per_circle=None):    
+
+    def close(line):
+
+        if line[0] != line[-1]:
+            line.append(line[0])
+        return line
+
+    scale = 80
+    centre = Point(102.5, 148)
+    r_per_circle = 3 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
+
+    lines = []
+
+    # 3-180-degree
+    phase_radians = math.pi / 2
+    r_per_circle *= 1
+    n = 60
+    per_change = 20
+    per_phase = 0.5
+
+    # More varied
+    phase_radians = math.pi / 2
+    r_per_circle *= 2/3
+    n = 90
+    per_change = 15
+    per_phase = 0.5
+
+    for i in range(n, 0, -1):
+        radius = i * r_per_circle
+        # adjust the circle-draw phase so the circle starts from the common contact point for this phase
+        phase_fraction = phase_radians / (2 * math.pi)
+        lines.append(close(d.make_circle(centre, radius, phase=phase_fraction)))
+        # phase_radians += math.pi * 2 / 60 #  * (1 + (random.random() - 0.5) * 10)
+        if i % per_change == 0:
+            phase_radians += math.pi * 2 * per_phase
+        # adjust where the circle stasrts from
+        c = math.cos(phase_radians)
+        s = math.sin(phase_radians)
+        centre = centre + Point(s,-c) * r_per_circle
+    
+    for line in lines[::-1]:
+        d.add_polyline(line)
+

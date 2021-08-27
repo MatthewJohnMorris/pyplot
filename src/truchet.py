@@ -81,7 +81,7 @@ def createtiles_z(frawing, tile_size):
   
 def createtiles_tri(drawing, tile_size):
 
-    delta = drawing.pen_type.pen_width * 0.75
+    delta = drawing.pen_type.pen_width * 1.1 # 1.5 # 0.75
     diag = math.sqrt(2)
     shape = [Point(delta,delta), Point(delta,tile_size-delta), Point(tile_size-delta,delta)]
     sf = ShapeFiller([shape])
@@ -268,18 +268,20 @@ def draw_truchet_for_tiles(drawing, tile_paths_func, container=None, stroke=None
 
 def draw_truchet(drawing, redline=None):
 
-    # func = createtiles_truchet
+    func = createtiles_truchet
     # func = createtiles_truchet_roundonly
     # func = createtiles_slash
     # func = createtiles_z
     # func = createtiles_tri
     # func = createtiles_thirds1
     # func = createtiles_thirds2
-    func = createtiles_thirds3
+    # func = createtiles_thirds3
     # func = createtiles_semi
     # func = createtiles_semi_track
     
-    draw_truchet_for_tiles(drawing, func, tile_c=30, redline=redline)
+    count = 20
+    count = 30
+    draw_truchet_for_tiles(drawing, func, tile_c=count, redline=redline)
     
 def draw_truchet2(drawing):
 

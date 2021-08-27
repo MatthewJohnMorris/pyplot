@@ -178,86 +178,6 @@ def draw_spiral_noise(d, inverse=False, r_initial=None, r_per_circle=None):
 
     d.add_polyline(points)
 
-def close(line):
-
-    if line[0] != line[-1]:
-        line.append(line[0])
-    return line
-
-# Big difference in quality between 1k and 3k - 2k has some noticeable degredation too
-def circles(d, r_per_circle=None):    
-
-    scale = 80
-    centre = Point(102.5, 148)
-    r_per_circle = 3 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
-
-    lines1 = []
-    lines2 = []
-    lines3 = []
-
-    for i in range(1, 20):
-        radius = i * r_per_circle
-        centre_i = centre + Point(21 * r_per_circle, 0) - Point(radius, 0)
-        lines1.append(close(d.make_circle(centre_i, radius, phase=0.25)))
-        
-    for i in range(20, 40):
-        radius = i * r_per_circle
-        centre_i = centre - Point(19 * r_per_circle, 0) + Point(radius, 0)
-        lines2.append(close(d.make_circle(centre_i, radius, phase=0.75)))
-    
-    for i in range(40, 60):
-        radius = i * r_per_circle
-        centre_i = centre + Point(61 * r_per_circle, 0) - Point(radius, 0)
-        lines3.append(close(d.make_circle(centre_i, radius, phase=0.25)))
-        
-    lines = []
-    any = True
-    while any:
-        any = False
-        if len(lines1) > 0:
-            lines.append(lines1[0])
-            del lines1[0]
-            any = True
-        if len(lines2) > 0:
-            lines.append(lines2[0])
-            del lines2[0]
-            any = True
-        if len(lines3) > 0:
-            lines.append(lines3[0])
-            del lines3[0]
-            any = True
-            
-    for line in lines:
-        d.add_polyline(line)
-
-# Big difference in quality between 1k and 3k - 2k has some noticeable degredation too
-def circles2(d, r_per_circle=None):    
-
-    scale = 80
-    centre = Point(102.5, 148)
-    r_per_circle = 3 * d.pen_type.pen_width if r_per_circle is None else r_per_circle # gap between spiral paths: 1 is tightest
-
-    lines = []
-
-    phase_radians = 0
-
-    r_per_circle /= 2
-    n = 120
-
-    for i in range(n, 0, -1):
-        radius = i * r_per_circle
-        phase_fraction = phase_radians / (2 * math.pi)
-        lines.append(close(d.make_circle(centre, radius, phase=phase_fraction)))
-        # phase_radians += math.pi * 2 / 60 #  * (1 + (random.random() - 0.5) * 10)
-        if i % 10 == 0:
-            phase_radians += math.pi * 2 / 6
-        c = math.cos(phase_radians)
-        s = math.sin(phase_radians)
-        centre = centre + Point(s,-c) * r_per_circle
-    
-    for line in lines[::-1]:
-        d.add_polyline(line)
-
 def draw_redblue(d):
 
     # note here that we are writing the lines out one by one to avoid reversing in add_polylines
@@ -340,6 +260,45 @@ def thingy(d):
     d.add_polylines(lines_r, container=d.add_layer("2"), stroke=svgwrite.rgb(100, 0, 0, '%'))
     d.add_polylines(lines_g, container=d.add_layer("3"), stroke=svgwrite.rgb(0, 50, 0, '%'))
     d.add_polylines(lines_b, container=d.add_layer("4"), stroke=svgwrite.rgb(0, 0, 100, '%'))
+    
+def linked_shapes(d):
+
+    paper_centre = Point(102.5, 148)
+    radius = 70
+    node_size = 5
+    n = 29
+
+    pts_and_angles = []
+    for i in range(0, n):
+        a = math.pi * 2 * i / n
+        c = math.cos(a)
+        s = math.sin(a)
+        pt = paper_centre + Point(c, s) * radius
+        pts_and_angles.append((pt, a))
+        
+    unclipped_lines = []
+    for i1 in range(0, len(pts_and_angles)):
+        for i2 in range(0, i1):
+            (pt1, _) = pts_and_angles[i1]
+            (pt2, _) = pts_and_angles[i2]
+            if pt1.x != pt2.x or pt1.y != pt2.y:
+                unclipped_lines.append([pt1, pt2])
+
+    shapes = []
+    for (pt, a) in pts_and_angles:
+        shape = [pt + Point(1,1)*node_size/2, pt + Point(1,-1)*node_size/2, pt + Point(-1,-1)*node_size/2, pt + Point(-1,1)*node_size/2]
+        shape = [StandardDrawing.rotate_about(x, pt, a) for x in shape]
+        shapes.append(shape)
+        
+    sf = ShapeFiller(shapes)
+    clipped_lines = sf.clip(unclipped_lines)
+    for shape in shapes:
+        closed_shape = [x for x in shape]
+        closed_shape.append(shape[0])
+        clipped_lines.append(closed_shape)
+    
+    d.add_polylines(clipped_lines)
+
 
 # Note - if you use GellyRollOnBlack you will have a black rectangle added (on a layer whose name starts with "x") so you
 # can get some idea of what things will look like - SVG doesn't let you set a background colour. You should either delete this rectangle
@@ -372,9 +331,10 @@ paper_size = Point(192, 270)
 # Try other pen types on black heavy plots - do they clog less than Pigmas?
 
 # draw_spiral_noise(d, True)
-# circles(d)
-circles2(d)
 # thingy(d)
+# linked_shapes(d)
+# sketch.image_sketch3(d)
+truchet.draw_truchet(d)
 
 if False:
     # works in progress
@@ -426,6 +386,8 @@ if False:
     opart.draw_riley_backoff_test(d)
     opart.draw_xor_circles_othello(d)
     opart.spiral_moire(d)
+    opart.circles(d)
+    opart.spiral_moire2(d)
     
     # lsystems, tiling, spirograph
     lsystem.lsystem_test(d)

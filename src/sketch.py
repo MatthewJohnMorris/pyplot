@@ -424,27 +424,6 @@ def image_sketch3(d):
     path_div = 40
     penalty = 0.0
     
-    disk_image = cv2.imread('768px-Margaret_Thatcher_(1983).jpg')
-    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
-    n = 25000
-    drop_mult = 1
-    path_div = 30
-    penalty = 0.0
-    
-    disk_image = cv2.imread('768px-Margaret_Thatcher_(1983).jpg')
-    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
-    n = 137500 # 13000 # 12000 # 14000 # 16000 # 18000 # 20000 # 25000
-    drop_mult = 5
-    path_div = 30
-    penalty = 0.0
-    
-    disk_image = cv2.imread('768px-Margaret_Thatcher_(1983).jpg')
-    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
-    n = 18000 # 18000 # 20000 # 25000
-    drop_mult = 3 # 1
-    path_div = 30
-    penalty = 0.0
-
     disk_image = cv2.imread('nixon.jpg')
     ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
     n = 10000 # 18000 # 20000 # 25000
@@ -465,6 +444,108 @@ def image_sketch3(d):
     drop_mult = 160 # 1
     path_div = 60
     penalty = 0.0
+
+    disk_image = cv2.imread('psycho.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 20000 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 10 # 1
+    path_div = 60
+    penalty = 0.0
+
+    disk_image = cv2.imread('psycho.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 10 # 1
+    path_div = 30
+    penalty = 0.0
+
+    disk_image = cv2.imread('psycho.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 5000 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 10 # 1
+    path_div = 15
+    penalty = 0.0
+
+    disk_image = cv2.imread('lincoln.jpg')
+    ntrigs = 23 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 10 # 1
+    path_div = 60
+    penalty = 0.0
+    
+    disk_image = cv2.imread('dali.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 9500 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 1 # 1
+    path_div = 50
+    penalty = 0.1
+    
+    disk_image = cv2.imread('dali.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 2300 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 1 # 1
+    path_div = 10
+    penalty = 0.0
+    
+    disk_image = cv2.imread('dali.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 6500 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 1 # 1
+    path_div = 30
+    penalty = 0.1
+
+    disk_image = cv2.imread('hendrix.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 16750 # 17500 # 20000
+    drop_mult = 1 # 1
+    path_div = 50
+    penalty = 0.1
+    
+    disk_image = cv2.imread('hendrix.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 8000 # 6500 
+    drop_mult = 1 # 1
+    path_div = 30
+    penalty = 0.1
+    
+    disk_image = cv2.imread('hendrix.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 2750 # 2500 # 2000 # 3000 # 4000 # 5000
+    drop_mult = 1 # 1
+    path_div = 10
+    penalty = 0.1
+    
+    disk_image = cv2.imread('che.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 24000 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 3 # 1
+    path_div = 80
+    penalty = 0.0
+    
+    disk_image = cv2.imread('che.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 10000 # 8000 # 6500 
+    drop_mult = 1 # 1
+    path_div = 30
+    penalty = 0.3
+   
+    disk_image = cv2.imread('che.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 2400 # 21000 # 24000 # 16000 # 20000 # 25000
+    drop_mult = 3 # 1
+    path_div = 10
+    penalty = 0.1
+   
+    disk_image = cv2.imread('buster.jpg')
+    ntrigs = 19 # 13 # 37 # 13 # 93 # 11 # 37
+    n = 4000 # 22000 # 21000 # 18000 # 12000 # 24000
+    drop_mult = 2 # 1
+    path_div = 30
+    penalty = 0.2
+    
+    # dali
+    # hendrix
+    # che
 
     (xsize_image,ysize_image,c) = disk_image.shape
     StandardDrawing.log(disk_image.shape)
@@ -523,6 +604,7 @@ def image_sketch3(d):
     percent = 0
     for i in range(0, n): # 10000): # 6000):
         i_percent = int(100*i/n)
+        i_percent -= (i_percent % 5)
         if i_percent > percent:
             percent = i_percent
             StandardDrawing.log(f"points={i} ({percent}%)")
